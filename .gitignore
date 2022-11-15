@@ -33,3 +33,7 @@
 
 # Other files
 dataset*/
+.vscode/
+
+# CMake files
+build*/
