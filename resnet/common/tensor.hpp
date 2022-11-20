@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.h"
+#include "ops.hpp"
 
 class Tensor
 {
@@ -40,6 +41,13 @@ public:
         // TODO
     }
 
+    Tensor clone()
+    {
+        // TODO
+    }
+
+    float *data_ptr() { return data; }
+
     float index(const std::vector<int> &indices)
     {
         int offset = 0;
@@ -48,13 +56,11 @@ public:
         return data[offset];
     }
 
-    void reshape(const std::vector<int> &new_shape)
-    {
-        // TODO
-    }
+    std::vector<int> sizes() { return shape; }
 
     void view(const std::vector<int> &shape)
     {
+        // HACK: DO NOT support -1
         this->shape = shape;
         n_dim = shape.size();
         strides.resize(n_dim);
@@ -67,6 +73,12 @@ public:
     void to(DeviceType device)
     {
         // TODO
+    }
+
+public:
+    Tensor operator+=(const Tensor &other)
+    {
+        return add(*this, other);
     }
 
     std::ostream &operator<<(std::ostream &out)

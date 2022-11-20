@@ -3,12 +3,12 @@
 #include "common.h"
 #include "tensor.hpp"
 
-void relu(Tensor &x)
+Tensor relu(Tensor x)
 {
     // TODO
 }
 
-void add(Tensor &x, float y)
+Tensor add(Tensor x, Tensor y)
 {
     // TODO
 }

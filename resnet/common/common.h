@@ -9,6 +9,7 @@
 #include <cassert>
 #include <chrono>
 #include <algorithm>
+#include <memory>
 
 // utility functions
 enum DeviceType
