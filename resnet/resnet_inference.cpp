@@ -30,7 +30,7 @@ public:
         addModule("bn1", bn1);
         addModule("conv2", conv2);
         addModule("bn2", bn2);
-        if (!downsample->empty())
+        if (!downsample.empty())
             addModule("downsample", downsample);
     }
 
@@ -40,7 +40,7 @@ public:
 
         x = conv1.forward(x);
         x = bn1.forward(x);
-        x = relu(x);
+        TensorOps::relu_(x);
 
         x = conv2.forward(x);
         x = bn2.forward(x);
@@ -48,8 +48,8 @@ public:
         if (!downsample.empty())
             identity = downsample.forward(identity);
 
-        x += identity;
-        x = relu(x);
+        TensorOps::add_(x, identity);
+        TensorOps::relu_(x);
 
         return x;
     }
@@ -62,10 +62,10 @@ private:
     Conv2d conv1;
     BatchNorm2d bn1;
     MaxPool2d maxpool;
-    std::vector<Module> layer1;
-    std::vector<Module> layer2;
-    std::vector<Module> layer3;
-    std::vector<Module> layer4;
+    ModuleList layer1;
+    ModuleList layer2;
+    ModuleList layer3;
+    ModuleList layer4;
     AdaptiveAvgPool2d avgpool;
     Linear fc;
 
@@ -97,7 +97,7 @@ public:
     {
         x = conv1.forward(x);
         x = bn1.forward(x);
-        x = relu(x);
+        TensorOps::relu_(x);
         x = maxpool.forward(x);
 
         x = layer1.forward(x);
@@ -106,7 +106,8 @@ public:
         x = layer4.forward(x);
 
         x = avgpool.forward(x);
-        x.view({x.sizes()[0], -1});
+        auto x_shape = x.sizes();
+        x.view({x_shape[0], x.totalSize() / x_shape[0]});
         x = fc.forward(x);
 
         return x;
@@ -136,6 +137,16 @@ int main()
     // 1. load resnet18 model
     // 2. load image dataset
     // 3. inference
+
+    Tensor x({50, 3, 224, 224});
+    ResNet18 resnet18("path");
+    resnet18.printModule("resnet18");
+
+    x = resnet18.forward(x);
+    auto shape = x.sizes();
+    for (const auto &s : shape)
+        std::cout << s << " ";
+    std::cout << std::endl;
 
     return 0;
 }

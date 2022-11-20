@@ -9,9 +9,25 @@ class Module
 
     // TODO
 public:
-    virtual void loadWeights(const std::string &path) {}
-    virtual Tensor forward(Tensor x) {}
-    virtual void to(DeviceType device) {}
+    virtual void loadWeights(const std::string &path)
+    {
+        checkCppErrorsMsg(true, "Not Implemented");
+    }
+
+    virtual Tensor forward(Tensor x)
+    {
+        checkCppErrorsMsg(true, "Not Implemented");
+    }
+
+    virtual void to(DeviceType device)
+    {
+        checkCppErrorsMsg(true, "Not Implemented");
+    }
+
+    virtual void printModule(const std::string &prefix)
+    {
+        checkCppErrorsMsg(true, "Not Implemented");
+    }
 };
 
 class ModuleList : public Module
@@ -51,5 +67,11 @@ public:
     {
         for (auto &named_module : module_list)
             named_module.module.to(device);
+    }
+
+    void printModule(const std::string &prefix)
+    {
+        for (auto &named_module : module_list)
+            named_module.module.printModule(prefix + "_" + named_module.name);
     }
 };
