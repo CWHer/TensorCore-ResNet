@@ -3,14 +3,17 @@
 #include "common.h"
 #include "tensor.hpp"
 
-Tensor relu(Tensor x)
+namespace TensorOps
 {
+    void relu_(Tensor &x)
+    {
+        // TODO
+    }
+
+    void add_(Tensor &x, Tensor y)
+    {
+        // TODO
+    }
+
     // TODO
 }
-
-Tensor add(Tensor x, Tensor y)
-{
-    // TODO
-}
-
-// TODO
