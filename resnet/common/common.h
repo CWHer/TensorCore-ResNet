@@ -18,30 +18,27 @@ enum DeviceType
     CUDA
 };
 
-enum ErrorType
-{
-    CUDA_ERROR,
-    CPP_ERROR
-};
-
 template <typename T>
-void printError(T result, char const *const msg,
-                ErrorType type, const char *const file, int const line)
+void printCudaError(T result, char const *const msg,
+                    const char *const file, int const line)
 {
     if (result)
     {
-        switch (type)
-        {
-        case CUDA_ERROR:
-            std::cerr << "CUDA [Error] at: " << file << ":" << line << " code="
-                      << static_cast<unsigned int>(result) << "(" << cudaGetErrorName(result) << ")"
-                      << " \"" << msg << "\"" << std::endl;
-            break;
-        case CPP_ERROR:
-            std::cerr << "CPP [Error] at: " << file << ":" << line
-                      << " \"" << msg << "\"" << std::endl;
-            break;
-        }
+        std::cerr << "CUDA [Error] at: " << file << ":" << line << " code="
+                  << static_cast<unsigned int>(result) << "(" << cudaGetErrorName(result) << ")"
+                  << " \"" << msg << "\"" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+}
+
+template <typename T>
+void printCppError(T result, char const *const msg,
+                   const char *const file, int const line)
+{
+    if (result)
+    {
+        std::cerr << "CPP [Error] at: " << file << ":" << line
+                  << " \"" << msg << "\"" << std::endl;
         exit(EXIT_FAILURE);
     }
 }
@@ -54,16 +51,15 @@ void printWarning(T result, char const *const msg,
     {
         std::cerr << "[Warning] at: " << file << ":" << line
                   << " \"" << msg << "\" = " << result << std::endl;
-        break;
     }
 }
 
 // This will output the proper CUDA error strings in the event
 // that a CUDA host call returns an error
-#define checkCudaErrors(result) printError((result), #result, ErrorType::CUDA_ERROR, __FILE__, __LINE__)
+#define checkCudaErrors(result) printCudaError((result), #result, __FILE__, __LINE__)
 
-#define checkCppErrors(result) printError((result), #result, ErrorType::CPP_ERROR, __FILE__, __LINE__)
-#define checkCppErrorsMsg(result, msg) printError((result), msg, ErrorType::CPP_ERROR, __FILE__, __LINE__)
+#define checkCppErrors(result) printCppError((result), #result, __FILE__, __LINE__)
+#define checkCppErrorsMsg(result, msg) printCppError((result), msg, __FILE__, __LINE__)
 
 #define checkWarning(result) printWarning((result), #result, __FILE__, __LINE__)
 #define checkWarningMsg(result, msg) printWarning((result), msg, __FILE__, __LINE__)

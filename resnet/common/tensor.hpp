@@ -1,12 +1,11 @@
 #pragma once
 
 #include "common.h"
-#include "ops.hpp"
 
 class Tensor
 {
 private:
-    int64_t sizes;
+    int64_t total_size;
     int32_t n_dim;
     std::vector<int32_t> shape;
     std::vector<int32_t> strides;
@@ -17,19 +16,20 @@ public:
     // TODO
     Tensor() {}
 
-    Tensor(float *data, const std::vector<int> &shape)
+    Tensor(const std::vector<int> &shape)
     {
-        this->data = data;
         this->shape = shape;
         n_dim = shape.size();
         strides = std::vector<int>(n_dim);
         strides.back() = 1;
         for (int i = n_dim - 1; i > 0; i--)
             strides[i - 1] = strides[i] * shape[i];
-        sizes = strides[0] * shape[0];
+        total_size = strides[0] * shape[0];
+        this->data = new float[total_size];
     }
 
-    ~Tensor() {}
+    // HACK: FIXME:
+    // ~Tensor() { delete[] data; }
 
     void load(const std::string &path)
     {
@@ -47,6 +47,8 @@ public:
     }
 
     float *data_ptr() { return data; }
+
+    int64_t totalSize() { return total_size; }
 
     float index(const std::vector<int> &indices)
     {
@@ -67,7 +69,7 @@ public:
         strides.back() = 1;
         for (int i = n_dim - 1; i > 0; i--)
             strides[i - 1] = strides[i] * shape[i];
-        checkCppErrorsMsg(strides[0] * shape[0] != sizes, "Invalid shape");
+        checkCppErrorsMsg(strides[0] * shape[0] != total_size, "Invalid shape");
     }
 
     void to(DeviceType device)
@@ -76,11 +78,6 @@ public:
     }
 
 public:
-    Tensor operator+=(const Tensor &other)
-    {
-        return add(*this, other);
-    }
-
     std::ostream &operator<<(std::ostream &out)
     {
         std::cout << "Tensor(";
