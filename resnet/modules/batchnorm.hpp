@@ -14,7 +14,7 @@ public:
         // TODO
     }
 
-    Tensor forward(Tensor x)
+    Tensor forward(Tensor x) override
     {
         // TODO
         return Tensor(x.sizes());
@@ -22,6 +22,6 @@ public:
 
     void printModule(const std::string &prefix) override
     {
-        std::cout << prefix << "BatchNorm2d" << std::endl;
+        std::cout << prefix << ":BatchNorm2d" << std::endl;
     }
 };

@@ -12,7 +12,7 @@ private:
     struct NamedTensor
     {
         std::string name;
-        std::shared_ptr<Tensor> tensor;
+        Tensor &tensor;
     };
 
     std::vector<NamedTensor> tensor_list;
@@ -22,7 +22,7 @@ public:
 
     virtual void printModule(const std::string &prefix) = 0;
 
-    void addTensor(const std::string &name, std::shared_ptr<Tensor> tensor)
+    void addTensor(const std::string &name, Tensor &tensor)
     {
         tensor_list.emplace_back(NamedTensor{name, tensor});
     }
@@ -30,13 +30,13 @@ public:
     virtual void loadWeights(const std::string &path)
     {
         for (auto &named_tensor : tensor_list)
-            named_tensor.tensor->load(path + "_" + named_tensor.name);
+            named_tensor.tensor.load(path + "_" + named_tensor.name);
     }
 
     virtual void to(DeviceType device)
     {
         for (auto &named_tensor : tensor_list)
-            named_tensor.tensor->to(device);
+            named_tensor.tensor.to(device);
     }
 };
 

@@ -14,9 +14,11 @@ public:
         : weight({out_features, in_features}), bias({out_features})
     {
         // TODO
+        addTensor("weight", weight);
+        addTensor("bias", bias);
     }
 
-    Tensor forward(Tensor x)
+    Tensor forward(Tensor x) override
     {
         // TODO
         return Tensor({x.sizes()[0], weight.sizes()[0]});
@@ -24,6 +26,6 @@ public:
 
     void printModule(const std::string &prefix) override
     {
-        std::cout << prefix << "Linear" << std::endl;
+        std::cout << prefix << ":Linear" << std::endl;
     }
 };
