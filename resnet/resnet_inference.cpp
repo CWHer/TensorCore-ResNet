@@ -11,11 +11,11 @@
 class BasicBlock : public ModuleList
 {
 private:
-    Conv2d conv1;
-    BatchNorm2d bn1;
-    Conv2d conv2;
-    BatchNorm2d bn2;
-    ModuleList downsample;
+    std::shared_ptr<Conv2d> conv1;
+    std::shared_ptr<BatchNorm2d> bn1;
+    std::shared_ptr<Conv2d> conv2;
+    std::shared_ptr<BatchNorm2d> bn2;
+    std::shared_ptr<ModuleList> downsample;
 
 public:
     static const int expansion = 1;
@@ -23,30 +23,33 @@ public:
 public:
     BasicBlock(int64_t inplanes, int64_t planes, int64_t stride = 1,
                ModuleList downsample = ModuleList())
-        : conv1(inplanes, planes, 3, stride), bn1(planes),
-          conv2(planes, planes, 3), bn2(planes), downsample(downsample)
+        : conv1(std::make_shared<Conv2d>(inplanes, planes, 3, stride)),
+          bn1(std::make_shared<BatchNorm2d>(planes)),
+          conv2(std::make_shared<Conv2d>(planes, planes, 3)),
+          bn2(std::make_shared<BatchNorm2d>(planes)),
+          downsample(std::make_shared<ModuleList>(downsample))
     {
         addModule("conv1", conv1);
         addModule("bn1", bn1);
         addModule("conv2", conv2);
         addModule("bn2", bn2);
         if (!downsample.empty())
-            addModule("downsample", downsample);
+            addModule("downsample", this->downsample);
     }
 
     Tensor forward(Tensor x) override
     {
         Tensor identity(x.clone());
 
-        x = conv1.forward(x);
-        x = bn1.forward(x);
+        x = conv1->forward(x);
+        x = bn1->forward(x);
         TensorOps::relu_(x);
 
-        x = conv2.forward(x);
-        x = bn2.forward(x);
+        x = conv2->forward(x);
+        x = bn2->forward(x);
 
-        if (!downsample.empty())
-            identity = downsample.forward(identity);
+        if (!downsample->empty())
+            identity = downsample->forward(identity);
 
         TensorOps::add_(x, identity);
         TensorOps::relu_(x);
@@ -59,26 +62,29 @@ class ResNet18 : public ModuleList
 {
 private:
     int64_t inplanes = 64;
-    Conv2d conv1;
-    BatchNorm2d bn1;
-    MaxPool2d maxpool;
-    ModuleList layer1;
-    ModuleList layer2;
-    ModuleList layer3;
-    ModuleList layer4;
-    AdaptiveAvgPool2d avgpool;
-    Linear fc;
+    std::shared_ptr<Conv2d> conv1;
+    std::shared_ptr<BatchNorm2d> bn1;
+    std::shared_ptr<MaxPool2d> maxpool;
+    std::shared_ptr<ModuleList> layer1;
+    std::shared_ptr<ModuleList> layer2;
+    std::shared_ptr<ModuleList> layer3;
+    std::shared_ptr<ModuleList> layer4;
+    std::shared_ptr<AdaptiveAvgPool2d> avgpool;
+    std::shared_ptr<Linear> fc;
 
 public:
     ResNet18(const std::string &model_path,
              std::vector<int> layers = {2, 2, 2, 2},
              int64_t num_classes = 1000)
-        : conv1(3, inplanes, 7, 2, 3), bn1(inplanes), maxpool(3, 2, 1),
-          layer1(makeLayer(64, layers[0])),
-          layer2(makeLayer(128, layers[1], 2)),
-          layer3(makeLayer(256, layers[2], 2)),
-          layer4(makeLayer(512, layers[3], 2)),
-          avgpool(1), fc(512 * BasicBlock::expansion, num_classes)
+        : conv1(std::make_shared<Conv2d>(3, inplanes, 7, 2, 3)),
+          bn1(std::make_shared<BatchNorm2d>(inplanes)),
+          maxpool(std::make_shared<MaxPool2d>(3, 2, 1)),
+          layer1(std::make_shared<ModuleList>(makeLayer(64, layers[0]))),
+          layer2(std::make_shared<ModuleList>(makeLayer(128, layers[1], 2))),
+          layer3(std::make_shared<ModuleList>(makeLayer(256, layers[2], 2))),
+          layer4(std::make_shared<ModuleList>(makeLayer(512, layers[3], 2))),
+          avgpool(std::make_shared<AdaptiveAvgPool2d>(1)),
+          fc(std::make_shared<Linear>(512 * BasicBlock::expansion, num_classes))
     {
         addModule("conv1", conv1);
         addModule("bn1", bn1);
@@ -95,20 +101,20 @@ public:
 
     Tensor forward(Tensor x) override
     {
-        x = conv1.forward(x);
-        x = bn1.forward(x);
+        x = conv1->forward(x);
+        x = bn1->forward(x);
         TensorOps::relu_(x);
-        x = maxpool.forward(x);
+        x = maxpool->forward(x);
 
-        x = layer1.forward(x);
-        x = layer2.forward(x);
-        x = layer3.forward(x);
-        x = layer4.forward(x);
+        x = layer1->forward(x);
+        x = layer2->forward(x);
+        x = layer3->forward(x);
+        x = layer4->forward(x);
 
-        x = avgpool.forward(x);
+        x = avgpool->forward(x);
         auto x_shape = x.sizes();
         x.view({x_shape[0], x.totalSize() / x_shape[0]});
-        x = fc.forward(x);
+        x = fc->forward(x);
 
         return x;
     }
@@ -119,15 +125,18 @@ private:
         ModuleList downsample;
         if (stride != 1 || inplanes != planes * BasicBlock::expansion)
         {
-            downsample.addModule("0", Conv2d(inplanes, planes * BasicBlock::expansion, 1, stride));
-            downsample.addModule("1", BatchNorm2d(planes * BasicBlock::expansion));
+            downsample.addModule("0", std::make_shared<Conv2d>(
+                                          inplanes, planes * BasicBlock::expansion, 1, stride));
+            downsample.addModule("1", std::make_shared<BatchNorm2d>(
+                                          planes * BasicBlock::expansion));
         }
 
         ModuleList layers;
-        layers.addModule("0", BasicBlock(inplanes, planes, stride, downsample));
+        layers.addModule("0", std::make_shared<BasicBlock>(
+                                  inplanes, planes, stride, downsample));
         inplanes = planes * BasicBlock::expansion;
         for (int64_t i = 1; i < blocks; i++)
-            layers.addModule(std::to_string(i), BasicBlock(inplanes, planes));
+            layers.addModule(std::to_string(i), std::make_shared<BasicBlock>(inplanes, planes));
         return layers;
     }
 };
@@ -141,12 +150,10 @@ int main()
     Tensor x({50, 3, 224, 224});
     ResNet18 resnet18("path");
     resnet18.printModule("resnet18");
+    std::cout << std::endl;
 
     x = resnet18.forward(x);
-    auto shape = x.sizes();
-    for (const auto &s : shape)
-        std::cout << s << " ";
-    std::cout << std::endl;
+    std::cout << x << std::endl;
 
     return 0;
 }
