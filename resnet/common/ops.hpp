@@ -10,7 +10,7 @@ namespace TensorOps
         // TODO
     }
 
-    void add_(Tensor &x, Tensor y)
+    void add_(Tensor &x, const Tensor &y)
     {
         // TODO
     }

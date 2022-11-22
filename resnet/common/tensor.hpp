@@ -14,7 +14,10 @@ private:
 
 public:
     // TODO
-    Tensor() {}
+    Tensor()
+    {
+        // TODO
+    }
 
     Tensor(const std::vector<int> &shape)
     {
@@ -36,10 +39,8 @@ public:
         // TODO
     }
 
-    void save(const std::string &path)
-    {
-        // TODO
-    }
+    // HACK: DO NOT support save
+    // void save(const std::string &path) {}
 
     Tensor clone()
     {
@@ -78,11 +79,11 @@ public:
     }
 
 public:
-    std::ostream &operator<<(std::ostream &out)
+    friend std::ostream &operator<<(std::ostream &out, const Tensor &x)
     {
         std::cout << "Tensor(";
-        for (int i = 0; i < n_dim; i++)
-            std::cout << shape[i] << (i == n_dim - 1 ? "" : ", ");
+        for (int i = 0; i < x.n_dim; i++)
+            std::cout << x.shape[i] << (i == x.n_dim - 1 ? "" : ", ");
         std::cout << ")" << std::endl;
     }
 };
