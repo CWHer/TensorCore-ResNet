@@ -57,11 +57,11 @@ class DataPrefetcher():
 
 def writeTensor(tensor: torch.Tensor, filename: str):
     # NOTE: content,
-    #   1KB header (int_64 shape)
+    #   1KB header (int_32 shape)
     #   indefinite data (float_32)
     DATA_OFFSET = 1024
 
-    shape = np.array(tensor.shape, dtype=np.int64)
+    shape = np.array(tensor.shape, dtype=np.int32)
     assert shape.size * shape.itemsize < DATA_OFFSET
 
     tensor = tensor.to(torch.float32).contiguous()
