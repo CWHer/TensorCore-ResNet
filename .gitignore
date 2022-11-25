@@ -37,3 +37,6 @@ dataset*/
 
 # CMake files
 build*/
+
+# Tensor
+*.bin
