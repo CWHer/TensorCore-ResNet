@@ -10,6 +10,13 @@
 #include <chrono>
 #include <algorithm>
 #include <memory>
+//Volta structure only allows FP16 to be multiplied.
+#include <cuda_fp16.h>
+
+// Type aliases
+
+typedef __half float_16;
+typedef float float_32;
 
 // utility functions
 enum DeviceType
