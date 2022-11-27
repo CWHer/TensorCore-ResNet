@@ -91,7 +91,6 @@ template<int block_col_warps, int block_row_warps> static __global__ void gemm_n
   }
 }
 
-
 template<int block_col_warps, int block_row_warps>
 void gemm_naive_caller(const float_16 *A, const float_16 *B, float_32 *Result, size_t M, size_t N, size_t K) {
   constexpr int tile_m = block_row_warps * volta_m_factor;
@@ -107,22 +106,42 @@ void gemm_naive_caller(const float_16 *A, const float_16 *B, float_32 *Result, s
   check_cuda_error();
 }
 
-
 void gemm_naive(const float_16 *A, const float_16 *B, float_32 *Result, size_t M, size_t N, size_t K) {
   float_16 *d_A, *d_B;
   float_32 *d_C;
 
-  cudaMalloc(&d_A, M * K * sizeof(float_16));
-  cudaMalloc(&d_B, K * N * sizeof(float_16));
-  cudaMalloc(&d_C, M * N * sizeof(float_32));
+  // If M and N are not by 16, we need to pad them.
+  auto padded_M = (M + (volta_m_factor - 1)) / volta_m_factor * volta_m_factor;
+  auto padded_N = (N + (volta_n_factor - 1)) / volta_n_factor * volta_n_factor;
 
-  cudaMemcpy(d_A, A, M * K * sizeof(float_16), cudaMemcpyHostToDevice);
+  cudaMalloc(&d_A, padded_M * K * sizeof(float_16));
+  cudaMalloc(&d_B, K * padded_N * sizeof(float_16));
+  cudaMalloc(&d_C, padded_M * padded_N * sizeof(float_32));
+
+  // Copy A and B by padding to device
+  // A needs padding
+  if (padded_M != M) {
+    cudaMemset(d_A, 0, padded_M * K * sizeof(float_16));
+    for (int i = 0; i < K; i++) {
+      cudaMemcpy(d_A + i * padded_M, A + i * M, M * sizeof(float_16), cudaMemcpyHostToDevice);
+    }
+  } else {
+    cudaMemcpy(d_A, A, M * K * sizeof(float_16), cudaMemcpyHostToDevice);
+  }
+  // B have same leading dimension
   cudaMemcpy(d_B, B, K * N * sizeof(float_16), cudaMemcpyHostToDevice);
 
-  // Fixme: this template parameter is adjustable
-  gemm_naive_caller<4, 4>(d_A, d_B, d_C, M, N, K);
 
-  cudaMemcpy(Result, d_C, M * N * sizeof(float_32), cudaMemcpyDeviceToHost);
+  // Fixme: this template parameter is adjustable
+  gemm_naive_caller<4, 4>(d_A, d_B, d_C, padded_M, padded_N, K);
+
+  if (padded_N == N && padded_M == M) {
+    cudaMemcpy(Result, d_C, M * N * sizeof(float_32), cudaMemcpyDeviceToHost);
+  } else {
+    for (int i = 0; i < N; i++) {
+      cudaMemcpy(Result + i * M, d_C + i * padded_M, M * sizeof(float_32), cudaMemcpyDeviceToHost);
+    }
+  }
   check_cuda_error();
 
   cudaFree(d_A);

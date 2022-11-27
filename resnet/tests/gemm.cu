@@ -68,12 +68,12 @@ void gemm_cuBLAS_reference(const float *A, const float *B, float *Result, size_t
               (int) K,
               &alpha,
               d_A,
-              (int) N,
+              (int) M,
               d_B,
               (int) K,
               &beta,
               d_Result,
-              (int) N);
+              (int) M);
 
   cublasDestroy(handle);
   cudaMemcpy(Result, d_Result, M * N * sizeof(float), cudaMemcpyDeviceToHost);
@@ -86,28 +86,30 @@ void gemm_cuBLAS_reference(const float *A, const float *B, float *Result, size_t
 
 TEST(gemm, test_gemm_cuBLAS_param) {
   // Test if we entered the correct cuBLAS parameters
-  auto *A = new float[256 * 128];
-  auto *B = new float[128 * 256];
+  auto *A = new float[12 * 34];
+  auto *B = new float[34 * 56];
 
   // Randomly initialize A, B
   default_random_engine generator(RANDOM_SEED);
   uniform_real_distribution<float> matrix_dist(-1.0e2, 1.0e2);
 
-  for (int i = 0; i < 128 * 256; i++) {
+  for (int i = 0; i < 12 * 34; i++) {
     A[i] = matrix_dist(generator);
+  }
+  for (int i = 0; i < 34 * 56; i++) {
     B[i] = matrix_dist(generator);
   }
 
   // Create float matrix C
-  auto *C = new float[256 * 256];
-  auto *C_cublas = new float[256 * 256];
+  auto *C = new float[12 * 56];
+  auto *C_cublas = new float[12 * 56];
 
   // Compute C = A * B
-  gemm_CPU_reference(A, B, C, 256, 256, 128);
-  gemm_cuBLAS_reference(A, B, C_cublas, 256, 256, 128);
+  gemm_CPU_reference(A, B, C, 12, 56, 34);
+  gemm_cuBLAS_reference(A, B, C_cublas, 12, 56, 34);
 
   // Check if C is correct
-  for (int i = 0; i < 256 * 256; i++) {
+  for (int i = 0; i < 12 * 56; i++) {
     EXPECT_NEAR(C[i], C_cublas[i], 1.0f);
   }
 
@@ -183,5 +185,60 @@ TEST(gemm, test_gemm_naive_rectangular) {
   for (int i = 0; i < 256 * 256; i++) {
     ASSERT_NEAR(C[i], C_cublas[i], 1.0f);
   }
+
+  delete[] A;
+  delete[] B;
+  delete[] A_float_16;
+  delete[] B_float_16;
+  delete[] C;
+  delete[] C_cublas;
+
+}
+
+TEST(gemm, test_gemm_naive_irregular) {
+  const int M = 7;
+  const int N = 5;
+  const int K = 3;
+  // Create float matrices A, B
+  auto *A = new float[M * K];
+  auto *B = new float[K * N];
+  auto *A_float_16 = new float_16[M * K];
+  auto *B_float_16 = new float_16[K * N];
+
+  // Randomly initialize A, B
+  default_random_engine generator(RANDOM_SEED);
+  uniform_real_distribution<float> matrix_dist(-1.0e2, 1.0e2);
+
+  for (int i = 0; i < M * K; i++) {
+    // Make sure the matrix have the same float
+    float_16 a_float_16 = __float2half(matrix_dist(generator));
+    A[i] = __half2float(a_float_16);
+    A_float_16[i] = a_float_16;
+  }
+  for (int i = 0; i < K * N; i++) {
+    float_16 b_float_16 = __float2half(matrix_dist(generator));
+    B[i] = __half2float(b_float_16);
+    B_float_16[i] = b_float_16;
+  }
+
+  // Create float matrix C
+  auto *C = new float[M * N];
+  auto *C_cublas = new float[M * N];
+
+  // Compute C = A * B
+  gemm_naive(A_float_16, B_float_16, C, M, N, K);
+  gemm_cuBLAS_reference(A, B, C_cublas, M, N, K);
+
+  // Check if C is correct
+  for (int i = 0; i < M * N; i++) {
+    ASSERT_NEAR(C[i], C_cublas[i], 1.0f);
+  }
+  delete[] A;
+  delete[] B;
+  delete[] A_float_16;
+  delete[] B_float_16;
+  delete[] C;
+  delete[] C_cublas;
+
 }
 
