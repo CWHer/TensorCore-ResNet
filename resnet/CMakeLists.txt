@@ -23,11 +23,6 @@ add_compile_options(
 # Find CUDA
 find_package(CUDA REQUIRED)
 
-# Set CUDA architecture to Volta (to prevent CUDA printing errors)
-set(CMAKE_CUDA_ARCHITECTURES 70)
-
-# Set CUDA architecture flags
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-arch=${CMAKE_CUDA_ARCHITECTURES})
 
 # Use cuBLAS library requires this
 find_package(CUDAToolkit REQUIRED)
@@ -39,6 +34,29 @@ set(CUDA_EXTRA_LIB
     cublas
     curand
 )
+
+# HACK testing: Torch library might have CUDA library conflict.
+find_package(Torch)
+
+if (Torch_FOUND)
+    message(STATUS "Found torch, using torch's cuda configurations")
+    # Use #if WITH_TORCH to enable torch related code in testing.
+    set(TEST_ADDITIONAL_DEFINITIONS "${TEST_ADDITIONAL_DEFINITIONS};WITH_TORCH")
+    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${TORCH_CUDA_FLAGS})
+    include_directories(${TORCH_INCLUDE_DIRS})
+    # If using Torch, cublas should not be additionally linked
+    # as libtorch_cuda.so already have them linked.
+    set(TEST_ADDITIONAL_LIB ${TEST_ADDITIONAL_LIB} ${TORCH_LIBRARIES})
+else ()
+    # Set CUDA architecture to Volta (to prevent CUDA printing errors)
+    set(CMAKE_CUDA_ARCHITECTURES 70)
+
+    # Set CUDA architecture flags
+    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};-arch=${CMAKE_CUDA_ARCHITECTURES}")
+    # Add CUDA_EXTRA_LIB to testing
+    set(TEST_ADDITIONAL_LIB ${TEST_ADDITIONAL_LIB} ${CUDA_EXTRA_LIB})
+endif ()
+
 
 # ################################ Executables ##################################
 include(sources.cmake)
@@ -56,10 +74,12 @@ if(GTest_FOUND)
     enable_testing()
     add_executable(gtest_exc ${TEST_SOURCE} ${SOURCE_FILES})
 
+    target_compile_definitions(gtest_exc PRIVATE ${TEST_ADDITIONAL_DEFINITIONS})
+
     target_link_libraries(gtest_exc
-        GTest::gtest GTest::gtest_main
-        ${CUDA_EXTRA_LIB}
-    )
+            GTest::gtest GTest::gtest_main
+            ${TEST_ADDITIONAL_LIB}
+            )
 
     gtest_discover_tests(gtest_exc)
 else()
