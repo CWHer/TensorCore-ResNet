@@ -1,19 +1,25 @@
-/** @file gemm.hpp
+/** @file gemm_col_major.hpp
 */#ifndef TENSORCORE_RESNET_COMMON_FUNCTIONAL_GEMM_HPP
 #define TENSORCORE_RESNET_COMMON_FUNCTIONAL_GEMM_HPP
 
 #include "common.h"
 #include "tensor.hpp"
 
-// Remember that all the functions in this file are column-major
-// This is resolvable by transposing the input matrices:
-// $B^T A^T = C^T$
+void gemm_naive(const float_16 *A, const float_16 *B, float_32 *C, size_t M, size_t N, size_t K);
 
-void gemm_naive(const float_16 *, const float_16 *, float_32 *, size_t, size_t, size_t);
-
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "ArgumentSelectionDefects"
 // Currently redirect GEMM to naive implementation.
-inline void gemm(const float_16 *A, const float_16 *B, float_32 *C, size_t M, size_t N, size_t K) {
+inline void gemm_col_major(const float_16 *A, const float_16 *B, float_32 *C, size_t M, size_t N, size_t K) {
   gemm_naive(A, B, C, M, N, K);
 }
+
+// GEMM row-major
+inline void gemm_row_major(const float_16 *A, const float_16 *B, float_32 *C, size_t M, size_t N, size_t K) {
+  gemm_naive(B, A, C, N, M, K);
+}
+#pragma clang diagnostic pop
+
+Tensor Mul(const Tensor &A, const Tensor &B);
 
 #endif //TENSORCORE_RESNET_COMMON_FUNCTIONAL_GEMM_HPP

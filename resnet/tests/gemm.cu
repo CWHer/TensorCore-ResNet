@@ -14,12 +14,7 @@
 
 using namespace std;
 
-__attribute((unused)) static void gemm_CPU_reference_row_major(const float *A,
-                                                               const float *B,
-                                                               float *Result,
-                                                               size_t M,
-                                                               size_t N,
-                                                               size_t K) {
+static void gemm_CPU_reference_row_major(const float *A, const float *B, float *Result, size_t M, size_t N, size_t K) {
 // This is row-major
   for (size_t i = 0; i < M; i++) {
     for (size_t j = 0; j < N; j++) {
@@ -32,7 +27,7 @@ __attribute((unused)) static void gemm_CPU_reference_row_major(const float *A,
   }
 }
 
-static void gemm_CPU_reference(const float *A, const float *B, float *Result, size_t M, size_t N, size_t K) {
+static void gemm_CPU_reference_col_major(const float *A, const float *B, float *Result, size_t M, size_t N, size_t K) {
   // This is column-major
   for (size_t i = 0; i < M; i++) {
     for (size_t j = 0; j < N; j++) {
@@ -45,7 +40,12 @@ static void gemm_CPU_reference(const float *A, const float *B, float *Result, si
   }
 }
 
-void gemm_cuBLAS_reference(const float *A, const float *B, float *Result, size_t M, size_t N, size_t K) {
+static void gemm_cuBLAS_reference_col_major(const float *A,
+                                            const float *B,
+                                            float *Result,
+                                            size_t M,
+                                            size_t N,
+                                            size_t K) {
   float *d_A, *d_B, *d_Result;
   auto start = std::chrono::high_resolution_clock::now();
   cudaMalloc(&d_A, M * K * sizeof(float));
@@ -84,121 +84,59 @@ void gemm_cuBLAS_reference(const float *A, const float *B, float *Result, size_t
 
 }
 
-TEST(gemm, test_gemm_cuBLAS_param) {
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "ArgumentSelectionDefects"
+static void gemm_cuBLAS_reference_row_major(const float *A,
+                                            const float *B,
+                                            float *Result,
+                                            size_t M,
+                                            size_t N,
+                                            size_t K) {
+  return gemm_cuBLAS_reference_col_major(B, A, Result, N, M, K);
+}
+#pragma clang diagnostic pop
+
+typedef void (*gemm32_func)(const float *A, const float *B, float *Result, size_t M, size_t N, size_t K);
+typedef void (*gemm16_func)(const float_16 *A, const float_16 *B, float_32 *Result, size_t M, size_t N, size_t K);
+
+static void func_test_32(size_t M, size_t N, size_t K, gemm32_func func1, gemm32_func func2, float eps = 5.0) {
   // Test if we entered the correct cuBLAS parameters
-  auto *A = new float[12 * 34];
-  auto *B = new float[34 * 56];
+  auto *A = new float[M * K];
+  auto *B = new float[K * N];
 
   // Randomly initialize A, B
   default_random_engine generator(RANDOM_SEED);
   uniform_real_distribution<float> matrix_dist(-1.0e2, 1.0e2);
 
-  for (int i = 0; i < 12 * 34; i++) {
+  for (int i = 0; i < M * K; i++) {
     A[i] = matrix_dist(generator);
   }
-  for (int i = 0; i < 34 * 56; i++) {
+  for (int i = 0; i < K * N; i++) {
     B[i] = matrix_dist(generator);
   }
 
   // Create float matrix C
-  auto *C = new float[12 * 56];
-  auto *C_cublas = new float[12 * 56];
+  auto *C = new float[M * N];
+  auto *C_ref = new float[M * N];
 
   // Compute C = A * B
-  gemm_CPU_reference(A, B, C, 12, 56, 34);
-  gemm_cuBLAS_reference(A, B, C_cublas, 12, 56, 34);
+  func1(A, B, C, M, N, K);
+  func2(A, B, C_ref, M, N, K);
 
   // Check if C is correct
-  for (int i = 0; i < 12 * 56; i++) {
-    EXPECT_NEAR(C[i], C_cublas[i], 1.0f);
-  }
-
-}
-
-TEST(gemm, test_gemm_naive_basic) {
-  // Create float matrices A, B
-  auto *A = new float[256 * 256];
-  auto *B = new float[256 * 256];
-  auto *A_float_16 = new float_16[256 * 256];
-  auto *B_float_16 = new float_16[256 * 256];
-
-  // Randomly initialize A, B
-  default_random_engine generator(RANDOM_SEED);
-  uniform_real_distribution<float> matrix_dist(-1.0e2, 1.0e2);
-
-  for (int i = 0; i < 256 * 256; i++) {
-    // Make sure the matrix have the same float
-    float_16 a_float_16 = __float2half(matrix_dist(generator));
-    float_16 b_float_16 = __float2half(matrix_dist(generator));
-    A[i] = __half2float(a_float_16);
-    B[i] = __half2float(b_float_16);
-    A_float_16[i] = a_float_16;
-    B_float_16[i] = b_float_16;
-  }
-
-  // Create float matrix C
-  auto *C = new float[256 * 256];
-  auto *C_cublas = new float[256 * 256];
-
-  // Compute C = A * B
-  gemm_naive(A_float_16, B_float_16, C, 256, 256, 256);
-  gemm_cuBLAS_reference(A, B, C_cublas, 256, 256, 256);
-
-  // Check if C is correct
-  for (int i = 0; i < 256 * 256; i++) {
-    ASSERT_NEAR(C[i], C_cublas[i], 1.0f);
-  }
-}
-
-TEST(gemm, test_gemm_naive_rectangular) {
-  // Create float matrices A, B
-  auto *A = new float[256 * 64];
-  auto *B = new float[64 * 256];
-  auto *A_float_16 = new float_16[256 * 64];
-  auto *B_float_16 = new float_16[64 * 256];
-
-  // Randomly initialize A, B
-  default_random_engine generator(RANDOM_SEED);
-  uniform_real_distribution<float> matrix_dist(-1.0e2, 1.0e2);
-
-  for (int i = 0; i < 64 * 256; i++) {
-    // Make sure the matrix have the same float
-    float_16 a_float_16 = __float2half(matrix_dist(generator));
-    float_16 b_float_16 = __float2half(matrix_dist(generator));
-
-    A[i] = __half2float(a_float_16);
-    B[i] = __half2float(b_float_16);
-
-    A_float_16[i] = a_float_16;
-    B_float_16[i] = b_float_16;
-  }
-
-  // Create float matrix C
-  auto *C = new float[256 * 256];
-  auto *C_cublas = new float[256 * 256];
-
-  // Compute C = A * B
-  gemm_naive(A_float_16, B_float_16, C, 256, 256, 64);
-  gemm_cuBLAS_reference(A, B, C_cublas, 256, 256, 64);
-
-  // Check if C is correct
-  for (int i = 0; i < 256 * 256; i++) {
-    ASSERT_NEAR(C[i], C_cublas[i], 1.0f);
+  for (int i = 0; i < M * N; i++) {
+    if (fabs(C[i] - C_ref[i]) > eps) {
+      throw runtime_error("Incorrect result");
+    }
   }
 
   delete[] A;
   delete[] B;
-  delete[] A_float_16;
-  delete[] B_float_16;
   delete[] C;
-  delete[] C_cublas;
-
+  delete[] C_ref;
 }
 
-TEST(gemm, test_gemm_naive_irregular) {
-  const int M = 7;
-  const int N = 5;
-  const int K = 3;
+static void func_test_16(size_t M, size_t N, size_t K, gemm16_func gemm16, gemm32_func gemm32, float eps = 5.0) {
   // Create float matrices A, B
   auto *A = new float[M * K];
   auto *B = new float[K * N];
@@ -223,22 +161,59 @@ TEST(gemm, test_gemm_naive_irregular) {
 
   // Create float matrix C
   auto *C = new float[M * N];
-  auto *C_cublas = new float[M * N];
+  auto *C_ref = new float[M * N];
 
   // Compute C = A * B
-  gemm_naive(A_float_16, B_float_16, C, M, N, K);
-  gemm_cuBLAS_reference(A, B, C_cublas, M, N, K);
+  gemm16(A_float_16, B_float_16, C, M, N, K);
+  gemm32(A, B, C_ref, M, N, K);
 
   // Check if C is correct
   for (int i = 0; i < M * N; i++) {
-    ASSERT_NEAR(C[i], C_cublas[i], 1.0f);
+    if (fabs(C[i] - C_ref[i]) > eps) {
+      float excess = fabs(C[i] - C_ref[i]);
+      char buffer[100];
+      sprintf(buffer, "Incorrect result: %f vs %f at %d, excess: %f", C[i], C_ref[i], i, excess);
+
+      throw runtime_error(buffer);
+    }
   }
   delete[] A;
   delete[] B;
   delete[] A_float_16;
   delete[] B_float_16;
   delete[] C;
-  delete[] C_cublas;
+  delete[] C_ref;
+}
 
+TEST(gemm_col_major, cuBLAS_param_correctness) {
+  ASSERT_NO_THROW(func_test_32(12, 34, 56, gemm_cuBLAS_reference_col_major, gemm_CPU_reference_col_major));
+}
+
+TEST(gemm_col_major, gemm_col_major_square) {
+  ASSERT_NO_THROW(func_test_16(256, 256, 256, gemm_col_major, gemm_cuBLAS_reference_col_major));
+}
+
+TEST(gemm_col_major, gemm_col_major_rectangular) {
+  ASSERT_NO_THROW(func_test_16(256, 512, 1024, gemm_col_major, gemm_cuBLAS_reference_col_major));
+}
+
+TEST(gemm_col_major, gemm_col_major_irregular) {
+  ASSERT_NO_THROW(func_test_16(17, 513, 1029, gemm_col_major, gemm_cuBLAS_reference_col_major));
+}
+
+TEST(gemm_row_major, cuBLAS_param_correctness) {
+  ASSERT_NO_THROW(func_test_32(12, 34, 56, gemm_cuBLAS_reference_row_major, gemm_CPU_reference_row_major));
+}
+
+TEST(gemm_row_major, gemm_row_major_square) {
+  ASSERT_NO_THROW(func_test_16(256, 256, 256, gemm_row_major, gemm_cuBLAS_reference_row_major));
+}
+
+TEST(gemm_row_major, gemm_row_major_rectangular) {
+  ASSERT_NO_THROW(func_test_16(256, 512, 1024, gemm_row_major, gemm_cuBLAS_reference_row_major));
+}
+
+TEST(gemm_row_major, gemm_row_major_irregular) {
+  ASSERT_NO_THROW(func_test_16(17, 513, 1029, gemm_row_major, gemm_cuBLAS_reference_row_major));
 }
 
