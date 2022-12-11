@@ -6,6 +6,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/modules)
 
 # Common source files **without** main function
 set(SOURCE_FILES
-        src/functional/conv2d.cpp
         src/functional/gemm.cu
+        src/functional/conv2d.cu
 )
