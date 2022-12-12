@@ -212,4 +212,6 @@ public:
         std::cout << deviceType(x.device) << ")" << std::endl;
         return out;
     }
+
+    friend struct TensorOps;
 };
