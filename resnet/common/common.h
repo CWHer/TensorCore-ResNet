@@ -16,7 +16,8 @@
 enum DeviceType
 {
     CPU,
-    CUDA
+    CUDA,
+    UNKNOWN
 };
 
 template <typename T>

@@ -10,16 +10,13 @@ private:
     std::vector<int32_t> shape;
     std::vector<int32_t> strides;
     float *data;
-    // TODO: data_type conversion
+    DeviceType device;
 
 public:
-    // TODO
-    Tensor()
-    {
-        // TODO
-    }
+    Tensor() : data(nullptr), device(DeviceType::UNKNOWN) {}
 
-    Tensor(const std::vector<int> &shape)
+    Tensor(const std::vector<int> &shape,
+           DeviceType device = DeviceType::CPU)
     {
         this->shape = shape;
         n_dim = shape.size();
@@ -28,11 +25,38 @@ public:
         for (int i = n_dim - 1; i > 0; i--)
             strides[i - 1] = strides[i] * shape[i];
         total_size = strides[0] * shape[0];
-        this->data = new float[total_size];
+
+        switch (device)
+        {
+        case DeviceType::CPU:
+            data = new float[total_size];
+            break;
+        case DeviceType::CUDA:
+            checkCudaErrors(cudaMalloc(&data, total_size * sizeof(float)));
+            break;
+        default:
+            checkCppErrorsMsg(true, "Unknown device type");
+        }
+        this->device = device;
     }
 
-    // HACK: FIXME:
-    ~Tensor() { delete[] data; }
+    ~Tensor()
+    {
+        if (data != nullptr)
+        {
+            switch (device)
+            {
+            case DeviceType::CPU:
+                delete[] data;
+                break;
+            case DeviceType::CUDA:
+                checkCudaErrors(cudaFree(data));
+                break;
+            default:
+                checkCppErrorsMsg(true, "Unknown device type");
+            }
+        }
+    }
 
     void load(const std::string &file_path)
     {
@@ -62,6 +86,7 @@ public:
             strides[i - 1] = strides[i] * shape[i];
         total_size = strides[0] * shape[0];
         this->data = new float[total_size];
+        this->device = DeviceType::CPU;
 
         fin.seekg(DATA_OFFSET, std::ios::beg);
         fin.read(reinterpret_cast<char *>(data), total_size * sizeof(float));
@@ -69,12 +94,29 @@ public:
         fin.close();
     }
 
+public:
     // HACK: DO NOT support save
     // void save(const std::string &path) {}
 
+    bool empty() { return data == nullptr; }
+
     Tensor clone()
     {
-        // TODO
+        Tensor cloned_tensor(shape, device);
+        switch (device)
+        {
+        case DeviceType::CPU:
+            std::copy(data, data + total_size, cloned_tensor.data);
+            break;
+        case DeviceType::CUDA:
+            checkCudaErrors(cudaMemcpy(cloned_tensor.data, data,
+                                       total_size * sizeof(float),
+                                       cudaMemcpyDeviceToDevice));
+            break;
+        default:
+            checkCppErrorsMsg(true, "Unknown device type");
+        }
+        return cloned_tensor;
     }
 
     float *data_ptr() { return data; }
@@ -86,7 +128,22 @@ public:
         int offset = 0;
         for (int i = 0; i < indices.size(); i++)
             offset += indices[i] * strides[i];
-        return data[offset];
+
+        switch (device)
+        {
+        case DeviceType::CPU:
+            return data[offset];
+        case DeviceType::CUDA:
+        {
+            // HACK: FIXME: this is extremely inefficient
+            auto h_data = std::make_shared<float>();
+            checkCudaErrors(cudaMemcpy(h_data.get(), data + offset, sizeof(float),
+                                       cudaMemcpyDeviceToHost));
+            return *h_data;
+        }
+        default:
+            checkCppErrorsMsg(true, "Unknown device type");
+        }
     }
 
     std::vector<int> sizes() { return shape; }
@@ -105,15 +162,54 @@ public:
 
     void to(DeviceType device)
     {
-        // TODO
+        if (this->device == device)
+            return;
+
+        float *data;
+        this->device = device;
+        switch (device)
+        {
+        case DeviceType::CPU:
+            data = new float[total_size];
+            checkCudaErrors(cudaMemcpy(data, this->data, total_size * sizeof(float),
+                                       cudaMemcpyDeviceToHost));
+            checkCudaErrors(cudaFree(this->data));
+            break;
+
+        case DeviceType::CUDA:
+            checkCudaErrors(cudaMalloc(&data, total_size * sizeof(float)));
+            checkCudaErrors(cudaMemcpy(data, this->data, total_size * sizeof(float),
+                                       cudaMemcpyHostToDevice));
+            delete[] this->data;
+            break;
+
+        default:
+            checkCppErrorsMsg(true, "Unknown device type");
+        }
+        this->data = data;
     }
+
+    DeviceType getDevice() { return device; }
 
 public:
     friend std::ostream &operator<<(std::ostream &out, const Tensor &x)
     {
         std::cout << "Tensor(";
         for (int i = 0; i < x.n_dim; i++)
-            std::cout << x.shape[i] << (i == x.n_dim - 1 ? "" : ", ");
-        std::cout << ")" << std::endl;
+            std::cout << x.shape[i] << ", ";
+        static auto deviceType = [](DeviceType device)
+        {
+            switch (device)
+            {
+            case DeviceType::CPU:
+                return "CPU";
+            case DeviceType::CUDA:
+                return "CUDA";
+            default:
+                return "Unknown";
+            }
+        };
+        std::cout << deviceType(x.device) << ")" << std::endl;
+        return out;
     }
 };
