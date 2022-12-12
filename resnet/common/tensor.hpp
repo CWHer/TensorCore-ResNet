@@ -160,6 +160,18 @@ public:
         checkCppErrorsMsg(strides[0] * shape[0] != total_size, "Invalid shape");
     }
 
+    void fromData(float *data)
+    {
+        switch (device)
+        {
+        case DeviceType::CPU:
+            std::copy(data, data + total_size, this->data);
+            break;
+        default:
+            checkCppErrorsMsg(true, "Unknown device type");
+        }
+    }
+
     void to(DeviceType device)
     {
         if (this->device == device)
