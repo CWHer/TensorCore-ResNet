@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <fstream>
 #include <cassert>
 #include <chrono>
 #include <algorithm>

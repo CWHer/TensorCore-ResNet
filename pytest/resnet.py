@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 import torch
 import tqdm
 from PIL import Image
@@ -54,6 +55,31 @@ class DataPrefetcher():
         return images, labels
 
 
+def writeTensor(tensor: torch.Tensor, filename: str):
+    # NOTE: content,
+    #   1KB header (int_32 shape)
+    #   indefinite data (float_32)
+    DATA_OFFSET = 1024
+
+    shape = np.array(tensor.shape, dtype=np.int32)
+    assert shape.size * shape.itemsize < DATA_OFFSET
+
+    tensor = tensor.to(torch.float32).contiguous()
+    assert tensor.is_contiguous()
+
+    with open(filename, "wb") as f:
+        f.write(shape.tobytes())
+        f.seek(DATA_OFFSET)
+        f.write(tensor.numpy().tobytes())
+
+
+def writeNetwork(network: torch.nn.Module, directory: str):
+    state_dict = network.state_dict()
+    for name, tensor in state_dict.items():
+        filename = os.path.join(directory, name.replace('.', '_') + ".bin")
+        writeTensor(tensor, filename)
+
+
 if __name__ == "__main__":
     batch_size = 4
     num_workers = 1
@@ -63,6 +89,7 @@ if __name__ == "__main__":
 
     weights = models.ResNet18_Weights.IMAGENET1K_V1
     model = models.resnet18(weights=weights)
+    # writeNetwork(model, "resnet18")
 
     # model summary
     # import torchstat
