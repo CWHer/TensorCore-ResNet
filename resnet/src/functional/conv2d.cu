@@ -101,8 +101,6 @@ void conv2d(float *input,
 
   gemm_row_major(weight, im2col_result.get(), output, out_channels, conv_result_size, expanded_kernel_width);
 
-  // shape back
-  //col2im_naive(output, gemm_result.get(), out_channels, output_height, output_width);
   // Expanding bias from (out_channels) to (out_channels, output_height, output_width)
   auto bias_expanded = std::make_unique<float[]>(out_channels * conv_result_size);
 
@@ -116,4 +114,14 @@ void conv2d(float *input,
   _add(output, bias_expanded.get(), out_channels * output_height * output_width);
 
   check_cuda_error();
+}
+
+/**
+ * @copydoc conv2d
+ * @brief Convolutional layer result shape
+ */
+std::vector<int> conv2d_result_shape(int C, int H, int W, int out_channels, int kernel_size, int stride, int padding) {
+  int output_height = (H + 2 * padding - kernel_size) / stride + 1;
+  int output_width = (W + 2 * padding - kernel_size) / stride + 1;
+  return {out_channels, output_height, output_width};
 }

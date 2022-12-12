@@ -62,4 +62,6 @@ void conv2d(float *input,
             int kernel_size,
             int stride,
             int padding);
+
+std::vector<int> conv2d_result_shape(int C, int H, int W, int out_channels, int kernel_size, int stride, int padding);
 #endif //TENSORCORE_RESNET_COMMON_FUNCTIONAL_CONV2D_HPP

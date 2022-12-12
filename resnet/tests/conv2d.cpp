@@ -18,8 +18,14 @@
 
 using namespace std;
 
+/**
+ * @brief Using Python to run a given script and return the output.
+ *
+ * @param script Python script string, should be same as just reading a Python file (i.e. lines separated by LF)
+ *
+ * @return Result of a python script
+ */
 static string python_command_invoke(const string &script) {
-  // Run the Python script, and get the result stored in a string.
   int in_fd[2];
   int out_fd[2];
   pid_t pid;
@@ -43,26 +49,52 @@ static string python_command_invoke(const string &script) {
   if (pid == 0) {
     // Child process.
     // redirect stdin and stdout to the pipe.
-    dup2(in_fd[0], STDIN_FILENO);
-    dup2(out_fd[1], STDOUT_FILENO);
+    if (dup2(in_fd[0], STDIN_FILENO)) {
+      perror("dup2");
+      exit(EXIT_FAILURE);
+    }
+
+    if (dup2(out_fd[1], STDOUT_FILENO)) {
+      perror("dup2");
+      exit(EXIT_FAILURE);
+    }
     // close unused pipe ends.
-    close(in_fd[1]);
-    close(out_fd[0]);
+    if (close(in_fd[1])) {
+      perror("close");
+      exit(EXIT_FAILURE);
+    }
+    if (close(out_fd[0])) {
+      perror("close");
+      exit(EXIT_FAILURE);
+    }
 
     // swap to python
     execlp("python", "python", NULL);
-    // Error if failed
+    // Error if failed (exec never returns)
     perror("execlp");
     exit(EXIT_FAILURE);
   }
 
   // close unused end in parent end
-  close(in_fd[0]);
-  close(out_fd[1]);
+  if (close(in_fd[0])) {
+    perror("close");
+    exit(EXIT_FAILURE);
+  }
+  if (close(out_fd[1])) {
+    perror("close");
+    exit(EXIT_FAILURE);
+  }
 
   // write the script to the child process
-  write(in_fd[1], script.c_str(), script.size());
-  close(in_fd[1]);
+  int written = write(in_fd[1], script.c_str(), script.size());
+  if (written != script.size() || written == -1) {
+    perror("write");
+    exit(EXIT_FAILURE);
+  }
+  if (close(in_fd[1])) {
+    perror("close");
+    exit(EXIT_FAILURE);
+  }
 
   // read the result from the child process
   stringstream ss;
@@ -79,7 +111,10 @@ static string python_command_invoke(const string &script) {
 
     ss.write(buf, n);
   }
-  close(out_fd[0]);
+  if (close(out_fd[0])) {
+    perror("close");
+    exit(EXIT_FAILURE);
+  }
 
   // wait for the child process to exit
   int status;
@@ -296,81 +331,6 @@ TEST(conv2d, libtorch_correctness_conv1) {
 
 }
 
-TEST(conv2d, libtorch_correctness_3_64) {
-  auto channel = 3;
-  auto input_height = 64;
-  auto input_width = 64;
-  auto stride = 1;
-  auto padding = 0;
-  auto filter_chanel = 3;
-  auto filter_size = 3;
-
-  auto input = std::make_unique<float[]>(channel * input_height * input_width);
-  auto weight = std::make_unique<float_16[]>(filter_chanel * channel * filter_size * filter_size);
-  auto bias = std::make_unique<float[]>(filter_chanel);
-
-  // Randomly initialize
-  default_random_engine generator(RANDOM_SEED);
-  uniform_real_distribution<float> matrix_dist(-1.0e2, 1.0e2);
-
-  // Fill them with random values
-  for (int i = 0; i < channel * input_height * input_width; i++) {
-    input[i] = matrix_dist(generator);
-  }
-  for (int i = 0; i < filter_chanel * channel * filter_size * filter_size; i++) {
-    weight[i] = matrix_dist(generator);
-  }
-  for (int i = 0; i < filter_chanel; i++) {
-    bias[i] = matrix_dist(generator);
-  }
-
-  auto output_ref = std::make_unique<float[]>(conv2d_output_size(channel,
-                                                                 input_height,
-                                                                 input_width,
-                                                                 filter_chanel,
-                                                                 filter_size,
-                                                                 stride,
-                                                                 padding));
-
-  auto output = std::make_unique<float[]>(conv2d_output_size(channel,
-                                                             input_height,
-                                                             input_width,
-                                                             filter_chanel,
-                                                             filter_size,
-                                                             stride,
-                                                             padding));
-
-  conv2d_torch(input.get(),
-               output.get(),
-               weight.get(),
-               bias.get(),
-               channel,
-               input_height,
-               input_width,
-               filter_chanel,
-               filter_size,
-               stride,
-               padding);
-
-  conv2d_torch_python_script(input.get(),
-                             output_ref.get(),
-                             weight.get(),
-                             bias.get(),
-                             channel,
-                             input_height,
-                             input_width,
-                             filter_chanel,
-                             filter_size,
-                             stride,
-                             padding);
-
-  // Compare the results
-  for (int i = 0;
-       i < conv2d_output_size(channel, input_height, input_width, filter_chanel, filter_size, stride, padding); i++) {
-    ASSERT_NEAR(output_ref[i], output[i], 1e0);
-  }
-
-}
 #endif
 
 #if WITH_TORCH
@@ -437,10 +397,6 @@ TEST(conv2d, basic_conv2d) {
   double avg_diff_ratio = 0;
   for (int i = 0; i < output_size; i++) {
     double diff_ratio = output_ref[i] != 0 ? abs(output_ref[i] - output[i]) / abs(output_ref[i]) : 0;
-    if (diff_ratio > 10) {
-      std::cout << "output_ref[" << i << "] = " << output_ref[i] << " while output[" << i << "] = " << output[i]
-                << std::endl;
-    }
     max_diff_ratio = max(max_diff_ratio, diff_ratio);
     avg_diff_ratio += diff_ratio / output_size;
   }
@@ -449,7 +405,176 @@ TEST(conv2d, basic_conv2d) {
 
   std::cout << "Avg difference ratio due to precision loss: " << avg_diff_ratio << std::endl;
   EXPECT_LT(avg_diff_ratio, 1e-2);
+}
 
+TEST(conv2d, basic_conv2d_conv1) {
+  // 224x224x3 -> 112x112x64
+  // 7x7 conv with stride 2
+  auto channel = 3;
+  auto input_height = 224;
+  auto input_width = 224;
+  auto stride = 2;
+  auto padding = 3;
+  auto filter_channel = 64;
+  auto filter_size = 3;
+
+  auto output_layers = 64;
+  auto output_height = 112;
+  auto output_width = 112;
+
+  // Check if shapes are correct
+  auto shape = conv2d_result_shape(channel, input_height, input_width, filter_channel, filter_size, stride, padding);
+  ASSERT_EQ(shape[0], output_layers);
+  ASSERT_EQ(shape[1], output_height);
+  ASSERT_EQ(shape[2], output_width);
+
+  auto input = std::make_unique<float[]>(channel * input_height * input_width);
+  auto weight = std::make_unique<float_16[]>(filter_channel * channel * filter_size * filter_size);
+  auto bias = std::make_unique<float[]>(filter_channel);
+
+  // Randomly initialize
+  default_random_engine generator(RANDOM_SEED);
+  uniform_real_distribution<float> matrix_dist(-1.0e2, 1.0e2);
+
+  // Fill them with random values
+  for (int i = 0; i < channel * input_height * input_width; i++) {
+    input[i] = matrix_dist(generator);
+  }
+  for (int i = 0; i < filter_channel * channel * filter_size * filter_size; i++) {
+    weight[i] = matrix_dist(generator);
+  }
+  for (int i = 0; i < filter_channel; i++) {
+    bias[i] = matrix_dist(generator);
+  }
+
+  auto output_size =
+      conv2d_output_size(channel, input_height, input_width, filter_channel, filter_size, stride, padding);
+
+  auto output_ref = std::make_unique<float[]>(output_size);
+  auto output = std::make_unique<float[]>(output_size);
+
+  conv2d_torch(input.get(),
+               output_ref.get(),
+               weight.get(),
+               bias.get(),
+               channel,
+               input_height,
+               input_width,
+               filter_channel,
+               filter_size,
+               stride,
+               padding);
+
+  conv2d(input.get(),
+         output.get(),
+         weight.get(),
+         bias.get(),
+         channel,
+         input_height,
+         input_width,
+         filter_channel,
+         filter_size,
+         stride,
+         padding);
+
+  // Compare the results
+  double max_diff_ratio = 0;
+  double avg_diff_ratio = 0;
+  for (int i = 0; i < output_size; i++) {
+    double diff_ratio = output_ref[i] != 0 ? abs(output_ref[i] - output[i]) / abs(output_ref[i]) : 0;
+    max_diff_ratio = max(max_diff_ratio, diff_ratio);
+    avg_diff_ratio += diff_ratio / output_size;
+  }
+
+  std::cout << "Max difference ratio due to precision loss: " << max_diff_ratio << std::endl;
+
+  std::cout << "Avg difference ratio due to precision loss: " << avg_diff_ratio << std::endl;
+  EXPECT_LT(avg_diff_ratio, 1e-2);
+}
+
+TEST(conv2d, basic_conv2d_conv2x) {
+  // 56x56x64 -> 56x56x64
+  // 3x3 conv with stride 1
+  auto channel = 64;
+  auto input_height = 56;
+  auto input_width = 56;
+  auto stride = 1;
+  auto padding = 1;
+  auto filter_channel = 64;
+  auto filter_size = 3;
+
+  auto output_layers = 64;
+  auto output_height = 56;
+  auto output_width = 56;
+
+  // Check if shapes are correct
+  auto shape = conv2d_result_shape(channel, input_height, input_width, filter_channel, filter_size, stride, padding);
+  ASSERT_EQ(shape[0], output_layers);
+  ASSERT_EQ(shape[1], output_height);
+  ASSERT_EQ(shape[2], output_width);
+
+  auto input = std::make_unique<float[]>(channel * input_height * input_width);
+  auto weight = std::make_unique<float_16[]>(filter_channel * channel * filter_size * filter_size);
+  auto bias = std::make_unique<float[]>(filter_channel);
+
+  // Randomly initialize
+  default_random_engine generator(RANDOM_SEED);
+  uniform_real_distribution<float> matrix_dist(-1.0e2, 1.0e2);
+
+  // Fill them with random values
+  for (int i = 0; i < channel * input_height * input_width; i++) {
+    input[i] = matrix_dist(generator);
+  }
+  for (int i = 0; i < filter_channel * channel * filter_size * filter_size; i++) {
+    weight[i] = matrix_dist(generator);
+  }
+  for (int i = 0; i < filter_channel; i++) {
+    bias[i] = matrix_dist(generator);
+  }
+
+  auto output_size =
+      conv2d_output_size(channel, input_height, input_width, filter_channel, filter_size, stride, padding);
+
+  auto output_ref = std::make_unique<float[]>(output_size);
+  auto output = std::make_unique<float[]>(output_size);
+
+  conv2d_torch(input.get(),
+               output_ref.get(),
+               weight.get(),
+               bias.get(),
+               channel,
+               input_height,
+               input_width,
+               filter_channel,
+               filter_size,
+               stride,
+               padding);
+
+  conv2d(input.get(),
+         output.get(),
+         weight.get(),
+         bias.get(),
+         channel,
+         input_height,
+         input_width,
+         filter_channel,
+         filter_size,
+         stride,
+         padding);
+
+  // Compare the results
+  double max_diff_ratio = 0;
+  double avg_diff_ratio = 0;
+  for (int i = 0; i < output_size; i++) {
+    double diff_ratio = output_ref[i] != 0 ? abs(output_ref[i] - output[i]) / abs(output_ref[i]) : 0;
+    max_diff_ratio = max(max_diff_ratio, diff_ratio);
+    avg_diff_ratio += diff_ratio / output_size;
+  }
+
+  std::cout << "Max difference ratio due to precision loss: " << max_diff_ratio << std::endl;
+
+  std::cout << "Avg difference ratio due to precision loss: " << avg_diff_ratio << std::endl;
+  EXPECT_LT(avg_diff_ratio, 1e-2);
 }
 
 #endif
