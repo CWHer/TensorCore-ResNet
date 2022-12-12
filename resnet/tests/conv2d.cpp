@@ -393,22 +393,13 @@ TEST(conv2d, basic_conv2d) {
 
   // Fill them with random values
   for (int i = 0; i < channel * input_height * input_width; i++) {
-    //input[i] = matrix_dist(generator);
-    input[i] = 1;
+    input[i] = matrix_dist(generator);
   }
-//  for (int i = 0; i < filter_channel * channel * filter_size * filter_size; i++) {
-//    //weight[i] = matrix_dist(generator);
-//    weight[i] = i;
-//  }
-  for (int i = 0; i < filter_channel; i += 1) {
-    for (int j = 0; j < channel * filter_size * filter_size; j++) {
-      weight[i * channel * filter_size * filter_size + j] = i == 0 ? float(i + 1) : 0.0f;
-    }
+  for (int i = 0; i < filter_channel * channel * filter_size * filter_size; i++) {
+    weight[i] = matrix_dist(generator);
   }
-
   for (int i = 0; i < filter_channel; i++) {
-    //bias[i] = matrix_dist(generator);
-    bias[i] = 0;
+    bias[i] = matrix_dist(generator);
   }
 
   auto output_size =
@@ -458,13 +449,6 @@ TEST(conv2d, basic_conv2d) {
 
   std::cout << "Avg difference ratio due to precision loss: " << avg_diff_ratio << std::endl;
   EXPECT_LT(avg_diff_ratio, 1e-2);
-  // Print a tensor
-  auto output_height = (input_height - filter_size + 2 * padding) / stride + 1;
-  auto output_width = (input_width - filter_size + 2 * padding) / stride + 1;
-  at::Tensor tensor = torch::from_blob(output.get(), {filter_channel, output_height, output_width});
-  std::cout << tensor << std::endl;
-  tensor = torch::from_blob(output_ref.get(), {filter_channel, output_height, output_width});
-  std::cout << tensor << std::endl;
 
 }
 

@@ -33,7 +33,7 @@ public:
             named_tensor.tensor.load(path + "_" + named_tensor.name);
     }
 
-    virtual void to(DeviceType device)
+    virtual void to(Impl::DeviceType device)
     {
         for (auto &named_tensor : tensor_list)
             named_tensor.tensor.to(device);
@@ -73,7 +73,7 @@ public:
         return x;
     }
 
-    void to(DeviceType device) override
+    void to(Impl::DeviceType device) override
     {
         for (auto &named_module : module_list)
             named_module.module->to(device);

@@ -19,11 +19,14 @@ typedef __half float_16;
 typedef float float_32;
 
 // utility functions
-enum DeviceType
-{
+namespace Impl {
+  enum DeviceType
+  {
     CPU,
     CUDA
-};
+  };
+}
+
 
 template <typename T>
 void printCudaError(T result, char const *const msg,

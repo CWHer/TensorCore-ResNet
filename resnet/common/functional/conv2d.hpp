@@ -34,6 +34,9 @@ void im2col_cuda(float *input,
                  int stride,
                  int padding);
 
+/**
+ * @copydoc im2col_naive
+ */
 inline void im2col(float *input,
                    float_16 *output,
                    int C,
@@ -43,7 +46,7 @@ inline void im2col(float *input,
                    int filter_width,
                    int stride,
                    int padding) {
-  return im2col_naive(input, output, C, H, W, filter_height, filter_width, stride, padding);
+  return im2col_cuda(input, output, C, H, W, filter_height, filter_width, stride, padding);
 }
 
 size_t im2col_result_size(int C, int H, int W, int filter_height, int filter_width, int stride, int padding);

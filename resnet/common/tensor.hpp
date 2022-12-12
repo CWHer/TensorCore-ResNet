@@ -73,7 +73,7 @@ public:
         checkCppErrorsMsg(strides[0] * shape[0] != total_size, "Invalid shape");
     }
 
-    void to(DeviceType device)
+    void to(Impl::DeviceType device)
     {
         // TODO
     }

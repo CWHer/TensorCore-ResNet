@@ -8,4 +8,5 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/modules)
 set(SOURCE_FILES
         src/functional/gemm.cu
         src/functional/conv2d.cu
+        src/functional/im2col.cu
 )
