@@ -34,9 +34,15 @@
 # Other files
 dataset*/
 .vscode/
+.history/
 
 # CMake files
 build*/
 
 # Tensor
 *.bin
+
+# Zip files
+*.zip
+*.tar
+*.gz
