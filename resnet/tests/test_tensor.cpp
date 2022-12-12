@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "tensor.hpp"
 
-TEST(tenosr, basic)
+TEST(tensor, basic)
 {
     Tensor x({2, 3, 4});
 
