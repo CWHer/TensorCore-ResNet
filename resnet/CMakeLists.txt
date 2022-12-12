@@ -38,6 +38,7 @@ link_directories(${CUDAToolkit_LIBRARY_DIR})
 set(CUDA_EXTRA_LIB
     cublas
     curand
+    cudart
 )
 
 # ################################ Executables ##################################
