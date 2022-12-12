@@ -2,13 +2,15 @@
 */
 
 #include <gtest/gtest.h>
-#include <torch/torch.h>
 #include <c++/12.2.0/fstream>
 #include <sstream>
-#include <a.out.h>
 #include <random>
 #include "functional/conv2d.hpp"
 #include "common.h"
+
+#if WITH_TORCH
+#include <torch/torch.h>
+#endif
 
 #ifndef RANDOM_SEED
 #define RANDOM_SEED std::random_device{}()
@@ -65,7 +67,7 @@ static string python_command_invoke(const string &script) {
   // read the result from the child process
   stringstream ss;
   char buf[1024];
-  int n;
+  ssize_t n;
   while (true) {
     n = read(out_fd[0], buf, sizeof(buf));
     if (n < 0) {
@@ -92,7 +94,24 @@ static string python_command_invoke(const string &script) {
 
 }
 
-static int conv2d_output_size(int C, int H, int W, int out_channels, int kernel_size, int stride, int padding) {
+/**
+ * @brief Get the output size of a convolution layer.
+ * @param C
+ * @param H
+ * @param W
+ * @param out_channels
+ * @param kernel_size
+ * @param stride
+ * @param padding
+ * @return
+ */
+static int conv2d_output_size(int C [[gnu::unused]],
+                              int H,
+                              int W,
+                              int out_channels,
+                              int kernel_size,
+                              int stride,
+                              int padding) {
   int out_height = (H + 2 * padding - kernel_size) / stride + 1;
   int out_width = (W + 2 * padding - kernel_size) / stride + 1;
   return out_channels * out_height * out_width;
@@ -130,40 +149,32 @@ static void conv2d_torch(float *input,
   options = options.stride(stride);
   options = options.padding(padding);
   auto conv_ref_l = torch::nn::Conv2d(options);
-  conv_ref_l->weight = torch::zeros({out_channels, C, kernel_size, kernel_size});
-
-  // as torch cannot handle the float_16 blob correctly, we need to fill it manually
-  for (int i = 0; i < out_channels; i++) {
-    for (int j = 0; j < C; j++) {
-      for (int k = 0; k < kernel_size; k++) {
-        for (int l = 0; l < kernel_size; l++) {
-          conv_ref_l->weight[i][j][k][l] =
-              __half2float(weight[i * C * kernel_size * kernel_size + j * kernel_size * kernel_size + k * kernel_size
-                  + l]);
-        }
-      }
-    }
-  }
-
-  conv_ref_l->weight.to(torch::kFloat16);
-
+  // as torch cannot handle the float_16  correctly
+  // sic. Input type (CPUFloatType) and weight type (CPUHalfType) should be the same
+  conv_ref_l->weight =
+      torch::from_blob(weight, {out_channels, C, kernel_size, kernel_size}, torch::kFloat16).to(torch::kFloat32);
   conv_ref_l->bias = torch::from_blob(bias, {out_channels});
   auto output_tensor = conv_ref_l->forward(input_tensor);
   memcpy(output, output_tensor.data_ptr(), output_tensor.numel() * sizeof(float));
 }
 #endif
 
-static void conv2d_torch_pythonscript(float *input,
-                                      float *output,
-                                      float_16 *weight,
-                                      float *bias,
-                                      int C,
-                                      int H,
-                                      int W,
-                                      int out_channels,
-                                      int kernel_size,
-                                      int stride,
-                                      int padding) {
+/**
+ * @copydoc conv2d_torch
+
+ * @brief Convolutional layer forward propagation performed by invoke Python commands directly
+ */
+static void conv2d_torch_python_script(float *input,
+                                       float *output,
+                                       float_16 *weight,
+                                       float *bias,
+                                       int C,
+                                       int H,
+                                       int W,
+                                       int out_channels,
+                                       int kernel_size,
+                                       int stride,
+                                       int padding) {
   std::stringstream ss;
 
   ss << "import torch" << std::endl;
@@ -265,17 +276,17 @@ TEST(conv2d, libtorch_correctness_conv1) {
                stride,
                padding);
 
-  conv2d_torch_pythonscript(input.get(),
-                            output_ref.get(),
-                            weight.get(),
-                            bias.get(),
-                            channel,
-                            input_height,
-                            input_width,
-                            filter_chanel,
-                            filter_size,
-                            stride,
-                            padding);
+  conv2d_torch_python_script(input.get(),
+                             output_ref.get(),
+                             weight.get(),
+                             bias.get(),
+                             channel,
+                             input_height,
+                             input_width,
+                             filter_chanel,
+                             filter_size,
+                             stride,
+                             padding);
 
   // Compare the results
   for (int i = 0;
@@ -341,17 +352,17 @@ TEST(conv2d, libtorch_correctness_3_64) {
                stride,
                padding);
 
-  conv2d_torch_pythonscript(input.get(),
-                            output_ref.get(),
-                            weight.get(),
-                            bias.get(),
-                            channel,
-                            input_height,
-                            input_width,
-                            filter_chanel,
-                            filter_size,
-                            stride,
-                            padding);
+  conv2d_torch_python_script(input.get(),
+                             output_ref.get(),
+                             weight.get(),
+                             bias.get(),
+                             channel,
+                             input_height,
+                             input_width,
+                             filter_chanel,
+                             filter_size,
+                             stride,
+                             padding);
 
   // Compare the results
   for (int i = 0;
