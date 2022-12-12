@@ -4,7 +4,7 @@
 
 class Tensor
 {
-    friend struct TensorOps;
+    friend class TensorOps;
 
 private:
     // NOTE: HACK: Tensor_ was created to make it
@@ -68,25 +68,6 @@ private:
             }
         }
 
-        std::shared_ptr<Tensor_> clone()
-        {
-            auto cloned_tensor = std::make_shared<Tensor_>(shape, device);
-            switch (device)
-            {
-            case DeviceType::CPU:
-                std::copy(data, data + total_size, cloned_tensor->data);
-                break;
-            case DeviceType::CUDA:
-                checkCudaErrors(cudaMemcpy(cloned_tensor->data, data,
-                                           total_size * sizeof(float),
-                                           cudaMemcpyDeviceToDevice));
-                break;
-            default:
-                checkCppErrorsMsg(true, "Unknown device type");
-            }
-            return cloned_tensor;
-        }
-
         void load(const std::string &file_path)
         {
             // NOTE: content,
@@ -123,6 +104,38 @@ private:
             fin.close();
         }
 
+        void fromData(float *data)
+        {
+            switch (device)
+            {
+            case DeviceType::CPU:
+                std::copy(data, data + total_size, this->data);
+                break;
+            default:
+                checkCppErrorsMsg(true, "Unknown device type");
+            }
+        }
+
+    public:
+        std::shared_ptr<Tensor_> clone()
+        {
+            auto cloned_tensor = std::make_shared<Tensor_>(shape, device);
+            switch (device)
+            {
+            case DeviceType::CPU:
+                std::copy(data, data + total_size, cloned_tensor->data);
+                break;
+            case DeviceType::CUDA:
+                checkCudaErrors(cudaMemcpy(cloned_tensor->data, data,
+                                           total_size * sizeof(float),
+                                           cudaMemcpyDeviceToDevice));
+                break;
+            default:
+                checkCppErrorsMsg(true, "Unknown device type");
+            }
+            return cloned_tensor;
+        }
+
         float index(const std::vector<int> &indices)
         {
             int offset = 0;
@@ -156,18 +169,6 @@ private:
             for (int i = n_dim - 1; i > 0; i--)
                 strides[i - 1] = strides[i] * shape[i];
             checkCppErrorsMsg(strides[0] * shape[0] != total_size, "Invalid shape");
-        }
-
-        void fromData(float *data)
-        {
-            switch (device)
-            {
-            case DeviceType::CPU:
-                std::copy(data, data + total_size, this->data);
-                break;
-            default:
-                checkCppErrorsMsg(true, "Unknown device type");
-            }
         }
 
         void to(DeviceType device)
@@ -243,6 +244,11 @@ public:
         tensor_->load(file_path);
     }
 
+    void fromData(float *data)
+    {
+        tensor_->fromData(data);
+    }
+
 public:
     // HACK: DO NOT support save
     // void save(const std::string &path) {}
@@ -265,11 +271,6 @@ public:
     void view(const std::vector<int> &shape)
     {
         tensor_->view(shape);
-    }
-
-    void fromData(float *data)
-    {
-        tensor_->fromData(data);
     }
 
     void to(DeviceType device)
