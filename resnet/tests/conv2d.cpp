@@ -49,12 +49,12 @@ static string python_command_invoke(const string &script) {
   if (pid == 0) {
     // Child process.
     // redirect stdin and stdout to the pipe.
-    if (dup2(in_fd[0], STDIN_FILENO)) {
+    if (dup2(in_fd[0], STDIN_FILENO) == -1) {
       perror("dup2");
       exit(EXIT_FAILURE);
     }
 
-    if (dup2(out_fd[1], STDOUT_FILENO)) {
+    if (dup2(out_fd[1], STDOUT_FILENO) == -1) {
       perror("dup2");
       exit(EXIT_FAILURE);
     }
@@ -86,7 +86,7 @@ static string python_command_invoke(const string &script) {
   }
 
   // write the script to the child process
-  int written = write(in_fd[1], script.c_str(), script.size());
+  ssize_t written = write(in_fd[1], script.c_str(), script.size());
   if (written != script.size() || written == -1) {
     perror("write");
     exit(EXIT_FAILURE);
@@ -190,6 +190,12 @@ static void conv2d_torch(float *input,
       torch::from_blob(weight, {out_channels, C, kernel_size, kernel_size}, torch::kFloat16).to(torch::kFloat32);
   conv_ref_l->bias = torch::from_blob(bias, {out_channels});
   auto output_tensor = conv_ref_l->forward(input_tensor);
+  // Assert the output size is correct.
+  auto shape = output_tensor.sizes();
+  auto ref_shape = conv2d_result_shape(C, H, W, out_channels, kernel_size, stride, padding);
+  assert(shape[1] == ref_shape[0]);
+  assert(shape[2] == ref_shape[1]);
+  assert(shape[3] == ref_shape[2]);
   memcpy(output, output_tensor.data_ptr(), output_tensor.numel() * sizeof(float));
 }
 #endif
@@ -416,7 +422,7 @@ TEST(conv2d, basic_conv2d_conv1) {
   auto stride = 2;
   auto padding = 3;
   auto filter_channel = 64;
-  auto filter_size = 3;
+  auto filter_size = 7;
 
   auto output_layers = 64;
   auto output_height = 112;
