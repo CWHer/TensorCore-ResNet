@@ -3,13 +3,13 @@
 #include "common.h"
 #include "module.hpp"
 
-class BatchNorm2d : public Module
+class BatchNorm2dImpl : public Module
 {
     // TODO
 private:
 public:
-    BatchNorm2d(int num_features, double eps = 1e-5, double momentum = 0.1,
-                bool affine = true, bool track_running_stats = true)
+    BatchNorm2dImpl(int num_features, double eps = 1e-5, double momentum = 0.1,
+                    bool affine = true, bool track_running_stats = true)
     {
         // TODO
     }
@@ -25,3 +25,5 @@ public:
         std::cout << prefix << ":BatchNorm2d" << std::endl;
     }
 };
+
+NETWORK_MODULE(BatchNorm2d);

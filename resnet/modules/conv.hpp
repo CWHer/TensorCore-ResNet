@@ -3,7 +3,7 @@
 #include "common.h"
 #include "module.hpp"
 
-class Conv2d : public Module
+class Conv2dImpl : public Module
 {
     // TODO
 private:
@@ -11,8 +11,8 @@ private:
     int in_channels, out_channels, kernel_size, stride, padding, dilation, groups;
 
 public:
-    Conv2d(int in_channels, int out_channels, int kernel_size, int stride = 1,
-           int padding = 0, int dilation = 1, int groups = 1, bool bias = true)
+    Conv2dImpl(int in_channels, int out_channels, int kernel_size, int stride = 1,
+               int padding = 0, int dilation = 1, int groups = 1, bool bias = true)
         : in_channels(in_channels), out_channels(out_channels), kernel_size(kernel_size),
           stride(stride), padding(padding), dilation(dilation), groups(groups)
     {
@@ -32,3 +32,5 @@ public:
         std::cout << prefix << ":Conv2d" << std::endl;
     }
 };
+
+NETWORK_MODULE(Conv2d);

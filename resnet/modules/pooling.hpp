@@ -3,7 +3,7 @@
 #include "common.h"
 #include "module.hpp"
 
-class MaxPool2d : public Module
+class MaxPool2dImpl : public Module
 {
     // TODO
 private:
@@ -11,8 +11,8 @@ private:
     int kernel_size, stride, padding, dilation, ceil_mode;
 
 public:
-    MaxPool2d(int kernel_size, int stride = 1, int padding = 0,
-              int dilation = 1, bool ceil_mode = false)
+    MaxPool2dImpl(int kernel_size, int stride = 1, int padding = 0,
+                  int dilation = 1, bool ceil_mode = false)
         : kernel_size(kernel_size), stride(stride), padding(padding),
           dilation(dilation), ceil_mode(ceil_mode)
     {
@@ -33,7 +33,9 @@ public:
     }
 };
 
-class AdaptiveAvgPool2d : public Module
+NETWORK_MODULE(MaxPool2d);
+
+class AdaptiveAvgPool2dImpl : public Module
 {
     // TODO
 private:
@@ -41,7 +43,7 @@ private:
     int output_size;
 
 public:
-    AdaptiveAvgPool2d(int output_size) : output_size(output_size)
+    AdaptiveAvgPool2dImpl(int output_size) : output_size(output_size)
     {
         // TODO
     }
@@ -57,3 +59,5 @@ public:
         std::cout << prefix << ":AdaptiveAvgPool2d" << std::endl;
     }
 };
+
+NETWORK_MODULE(AdaptiveAvgPool2d);

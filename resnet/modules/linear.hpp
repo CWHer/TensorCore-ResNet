@@ -3,14 +3,14 @@
 #include "common.h"
 #include "module.hpp"
 
-class Linear : public Module
+class LinearImpl : public Module
 {
     // TODO
 private:
     Tensor weight, bias;
 
 public:
-    Linear(int in_features, int out_features)
+    LinearImpl(int in_features, int out_features)
         : weight({out_features, in_features}), bias({out_features})
     {
         // TODO
@@ -29,3 +29,5 @@ public:
         std::cout << prefix << ":Linear" << std::endl;
     }
 };
+
+NETWORK_MODULE(Linear);
