@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../common/common.h"
-#include "../common/tensor.hpp"
+#include "common.h"
+#include "tensor.hpp"
 
 class Module
 {

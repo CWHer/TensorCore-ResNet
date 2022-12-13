@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../common/common.h"
+#include "common.h"
 #include "module.hpp"
 #include <float.h>
 
