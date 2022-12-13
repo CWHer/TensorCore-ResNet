@@ -14,95 +14,134 @@
 
 using namespace std;
 
-static void gemm_CPU_reference_row_major(const float *A, const float *B, float *Result, size_t M, size_t N, size_t K) {
+static void check_cuda_error() {
+  cudaError_t err = cudaPeekAtLastError();
+  if (err != cudaSuccess) {
+    throw std::runtime_error(cudaGetErrorString(err));
+  }
+}
+
+static void gemm_CPU_reference(const float *A,
+                               const float *B,
+                               float *Result,
+                               size_t M,
+                               size_t N,
+                               size_t K,
+                               GEMM::Major major,
+                               const Impl::DeviceType device_type = Impl::DeviceType::CPU) {
+  if (device_type != Impl::DeviceType::CPU) {
+    throw std::runtime_error("CPU reference only.");
+  }
+
+  switch (major) {
+  case GEMM::Major::col_major: {
+// This is column-major
+    for (size_t I = 0; I < M; I++) {
+      for (size_t J = 0; J < N; J++) {
+        float Sum = 0;
+        for (size_t K2 = 0; K2 < K; K2++) {
+          Sum += A[K2 * M + I] * B[J * K + K2];
+        }
+        Result[J * M + I] = Sum;
+      }
+    }
+  }
+    break;
+  case GEMM::Major::row_major: {
 // This is row-major
-  for (size_t i = 0; i < M; i++) {
-    for (size_t j = 0; j < N; j++) {
-      float sum = 0;
-      for (size_t k = 0; k < K; k++) {
-        sum += A[i * K + k] * B[k * N + j];
+    for (size_t I = 0; I < M; I++) {
+      for (size_t J = 0; J < N; J++) {
+        float Sum = 0;
+        for (size_t K2 = 0; K2 < K; K2++) {
+          Sum += A[I * K + K2] * B[K2 * N + J];
+        }
+        Result[I * N + J] = Sum;
       }
-      Result[i * N + j] = sum;
     }
   }
-}
-
-static void gemm_CPU_reference_col_major(const float *A, const float *B, float *Result, size_t M, size_t N, size_t K) {
-  // This is column-major
-  for (size_t i = 0; i < M; i++) {
-    for (size_t j = 0; j < N; j++) {
-      float sum = 0;
-      for (size_t k = 0; k < K; k++) {
-        sum += A[k * M + i] * B[j * K + k];
-      }
-      Result[j * M + i] = sum;
-    }
+    break;
   }
-}
-
-static void gemm_cuBLAS_reference_col_major(const float *A,
-                                            const float *B,
-                                            float *Result,
-                                            size_t M,
-                                            size_t N,
-                                            size_t K) {
-  float *d_A, *d_B, *d_Result;
-  auto start = std::chrono::high_resolution_clock::now();
-  cudaMalloc(&d_A, M * K * sizeof(float));
-  cudaMalloc(&d_B, K * N * sizeof(float));
-  cudaMalloc(&d_Result, M * N * sizeof(float));
-
-  cudaMemcpy(d_A, A, M * K * sizeof(float), cudaMemcpyHostToDevice);
-  cudaMemcpy(d_B, B, K * N * sizeof(float), cudaMemcpyHostToDevice);
-
-  cublasHandle_t handle;
-  cublasCreate(&handle);
-  float alpha = 1.0f;
-  float beta = 0.0f;
-
-  cublasSgemm(handle,
-              CUBLAS_OP_N,
-              CUBLAS_OP_N,
-              (int) M,
-              (int) N,
-              (int) K,
-              &alpha,
-              d_A,
-              (int) M,
-              d_B,
-              (int) K,
-              &beta,
-              d_Result,
-              (int) M);
-
-  cublasDestroy(handle);
-  cudaMemcpy(Result, d_Result, M * N * sizeof(float), cudaMemcpyDeviceToHost);
-
-  cudaFree(d_A);
-  cudaFree(d_B);
-  cudaFree(d_Result);
 
 }
 
 #pragma clang diagnostic push
-#pragma ide diagnostic ignored "ArgumentSelectionDefects"
-static void gemm_cuBLAS_reference_row_major(const float *A,
-                                            const float *B,
-                                            float *Result,
-                                            size_t M,
-                                            size_t N,
-                                            size_t K) {
-  return gemm_cuBLAS_reference_col_major(B, A, Result, N, M, K);
+#pragma ide diagnostic ignored "misc-no-recursion"
+static void gemm_cuBLAS_reference(const float *A,
+                                  const float *B,
+                                  float *Result,
+                                  size_t M,
+                                  size_t N,
+                                  size_t K,
+                                  GEMM::Major major,
+                                  const Impl::DeviceType device_type = Impl::DeviceType::CPU) {
+  switch (device_type) {
+  case Impl::DeviceType::CPU: {
+    float *DA, *DB, *DResult;
+    cudaMalloc(&DA, M * K * sizeof(float));
+    cudaMalloc(&DB, K * N * sizeof(float));
+    cudaMalloc(&DResult, M * N * sizeof(float));
+    cudaMemcpy(DA, A, M * K * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(DB, B, K * N * sizeof(float), cudaMemcpyHostToDevice);
+
+    gemm_cuBLAS_reference(DA, DB, DResult, M, N, K, major, Impl::DeviceType::CUDA);
+
+    cudaMemcpy(Result, DResult, M * N * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaFree(DA);
+    cudaFree(DB);
+    cudaFree(DResult);
+    return;
+  }
+    break;
+  case Impl::DeviceType::CUDA: break;
+  }
+
+  switch (major) {
+  case GEMM::Major::col_major: {
+    cublasHandle_t Handle;
+    cublasCreate(&Handle);
+    float Alpha = 1.0f;
+    float Beta = 0.0f;
+
+    cublasSgemm(Handle,
+                CUBLAS_OP_N,
+                CUBLAS_OP_N,
+                (int) M,
+                (int) N,
+                (int) K,
+                &Alpha,
+                A,
+                (int) M,
+                B,
+                (int) K,
+                &Beta,
+                Result,
+                (int) M);
+
+    cublasDestroy(Handle);
+  }
+    break;
+  case GEMM::Major::row_major: {
+    return gemm_cuBLAS_reference(B, A, Result, N, M, K, GEMM::Major::col_major, device_type);
+  }
+    break;
+  }
 }
 #pragma clang diagnostic pop
 
-typedef void (*gemm32_func)(const float *A, const float *B, float *Result, size_t M, size_t N, size_t K);
-typedef void (*gemm16_func)(const float_16 *A, const float_16 *B, float_32 *Result, size_t M, size_t N, size_t K);
+typedef decltype(gemm_CPU_reference) gemm32_new_func;
+typedef decltype(gemm) gemm16_new_func;
 
-static void func_test_32(size_t M, size_t N, size_t K, gemm32_func func1, gemm32_func func2, float eps = 5.0) {
+static void func_test(size_t M,
+                      size_t N,
+                      size_t K,
+                      gemm32_new_func func1,
+                      gemm32_new_func func2,
+                      GEMM::Major major = GEMM::Major::row_major,
+                      Impl::DeviceType device_type = Impl::DeviceType::CPU,
+                      float eps = 5.0) {
   // Test if we entered the correct cuBLAS parameters
-  auto *A = new float[M * K];
-  auto *B = new float[K * N];
+  auto A = make_unique<float[]>(M * K);
+  auto B = make_unique<float[]>(K * N);
 
   // Randomly initialize A, B
   default_random_engine generator(RANDOM_SEED);
@@ -116,12 +155,32 @@ static void func_test_32(size_t M, size_t N, size_t K, gemm32_func func1, gemm32
   }
 
   // Create float matrix C
-  auto *C = new float[M * N];
-  auto *C_ref = new float[M * N];
+  auto C = make_unique<float[]>(M * N);
+  auto C_ref = make_unique<float[]>(M * N);
 
-  // Compute C = A * B
-  func1(A, B, C, M, N, K);
-  func2(A, B, C_ref, M, N, K);
+  switch (device_type) {
+  case Impl::DeviceType::CPU: {
+    func1(A.get(), B.get(), C_ref.get(), M, N, K, major, device_type);
+    func2(A.get(), B.get(), C.get(), M, N, K, major, device_type);
+  }
+    break;
+  case Impl::DeviceType::CUDA: {
+    float *DA, *DB, *DC;
+    cudaMalloc(&DA, M * K * sizeof(float));
+    cudaMalloc(&DB, K * N * sizeof(float));
+    cudaMalloc(&DC, M * N * sizeof(float));
+    cudaMemcpy(DA, A.get(), M * K * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(DB, B.get(), K * N * sizeof(float), cudaMemcpyHostToDevice);
+    func1(DA, DB, DC, M, N, K, major, device_type);
+    cudaMemcpy(C_ref.get(), DC, M * N * sizeof(float), cudaMemcpyDeviceToHost);
+    func2(DA, DB, DC, M, N, K, major, device_type);
+    cudaMemcpy(C.get(), DC, M * N * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaFree(DA);
+    cudaFree(DB);
+    cudaFree(DC);
+  }
+    break;
+  }
 
   // Check if C is correct
   for (int i = 0; i < M * N; i++) {
@@ -129,19 +188,22 @@ static void func_test_32(size_t M, size_t N, size_t K, gemm32_func func1, gemm32
       throw runtime_error("Incorrect result");
     }
   }
-
-  delete[] A;
-  delete[] B;
-  delete[] C;
-  delete[] C_ref;
 }
 
-static void func_test_16(size_t M, size_t N, size_t K, gemm16_func gemm16, gemm32_func gemm32, float eps = 5.0) {
+static void func_test(size_t M,
+                      size_t N,
+                      size_t K,
+                      gemm16_new_func gemm16,
+                      gemm32_new_func gemm32,
+                      GEMM::Major major,
+                      Impl::DeviceType device_type = Impl::DeviceType::CPU,
+                      float eps = 5.0) {
   // Create float matrices A, B
-  auto *A = new float[M * K];
-  auto *B = new float[K * N];
-  auto *A_float_16 = new float_16[M * K];
-  auto *B_float_16 = new float_16[K * N];
+  auto A = make_unique<float[]>(M * K);
+  auto B = make_unique<float[]>(K * N);
+  auto A_float_16 = make_unique<float_16[]>(M * K);
+  auto B_float_16 = make_unique<float_16[]>(K * N);
+
 
   // Randomly initialize A, B
   default_random_engine generator(RANDOM_SEED);
@@ -159,61 +221,155 @@ static void func_test_16(size_t M, size_t N, size_t K, gemm16_func gemm16, gemm3
     B_float_16[i] = b_float_16;
   }
 
-  // Create float matrix C
-  auto *C = new float[M * N];
-  auto *C_ref = new float[M * N];
+  auto C = make_unique<float[]>(M * N);
+  auto C_ref = make_unique<float[]>(M * N);
 
-  // Compute C = A * B
-  gemm16(A_float_16, B_float_16, C, M, N, K);
-  gemm32(A, B, C_ref, M, N, K);
+  switch (device_type) {
+  case Impl::DeviceType::CPU:gemm32(A.get(), B.get(), C_ref.get(), M, N, K, major, device_type);
+    gemm16(A_float_16.get(), B_float_16.get(), C.get(), M, N, K, major, device_type);
+    break;
+  case Impl::DeviceType::CUDA: {
+    float *DA, *DB, *DC, *DC_ref;
+    float_16 *DA_fp16, *DB_fp16;
+    cudaMalloc(&DA, M * K * sizeof(float));
+    cudaMalloc(&DB, K * N * sizeof(float));
+    cudaMalloc(&DA_fp16, M * K * sizeof(float_16));
+    cudaMalloc(&DB_fp16, K * N * sizeof(float_16));
+
+    cudaMalloc(&DC, M * N * sizeof(float));
+    cudaMalloc(&DC_ref, M * N * sizeof(float));
+
+    check_cuda_error();
+
+    cudaMemcpy(DA, A.get(), M * K * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(DB, B.get(), K * N * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(DA_fp16, A_float_16.get(), M * K * sizeof(float_16), cudaMemcpyHostToDevice);
+    cudaMemcpy(DB_fp16, B_float_16.get(), K * N * sizeof(float_16), cudaMemcpyHostToDevice);
+
+    check_cuda_error();
+
+    gemm32(DA, DB, DC_ref, M, N, K, major, device_type);
+
+    cudaMemcpy(C_ref.get(), DC_ref, M * N * sizeof(float), cudaMemcpyDeviceToHost);
+    check_cuda_error();
+    cudaFree(DA);
+    cudaFree(DB);
+    cudaFree(DC_ref);
+
+    check_cuda_error();
+
+    gemm16(DA_fp16, DB_fp16, DC, M, N, K, major, device_type);
+    cudaMemcpy(C.get(), DC, M * N * sizeof(float), cudaMemcpyDeviceToHost);
+    check_cuda_error();
+    cudaFree(DA_fp16);
+    cudaFree(DB_fp16);
+    cudaFree(DC);
+
+    check_cuda_error();
+  }
+    break;
+  }
 
   // Check if C is correct
   for (int i = 0; i < M * N; i++) {
     if (fabs(C[i] - C_ref[i]) > eps) {
-      float excess = fabs(C[i] - C_ref[i]);
-      char buffer[100];
-      sprintf(buffer, "Incorrect result: %f vs %f at %d, excess: %f", C[i], C_ref[i], i, excess);
-
-      throw runtime_error(buffer);
+      throw runtime_error("Incorrect result");
     }
   }
-  delete[] A;
-  delete[] B;
-  delete[] A_float_16;
-  delete[] B_float_16;
-  delete[] C;
-  delete[] C_ref;
+
 }
 
-TEST(gemm_col_major, cuBLAS_param_correctness) {
-  ASSERT_NO_THROW(func_test_32(12, 34, 56, gemm_cuBLAS_reference_col_major, gemm_CPU_reference_col_major));
+#if WITH_CUBLAS
+TEST(gemm, cuBLAS_param_correctness) {
+  ASSERT_NO_THROW(func_test(12,
+                            34,
+                            56,
+                            gemm_cuBLAS_reference,
+                            gemm_CPU_reference,
+                            GEMM::Major::col_major,
+                            Impl::DeviceType::CPU));
+  ASSERT_NO_THROW(func_test(12,
+                            34,
+                            56,
+                            gemm_cuBLAS_reference,
+                            gemm_CPU_reference,
+                            GEMM::Major::row_major,
+                            Impl::DeviceType::CPU));
+}
+#endif
+
+TEST(gemm, small_matrix_CPU) {
+  ASSERT_NO_THROW(func_test(16, 16, 16, gemm, gemm_CPU_reference, GEMM::Major::row_major, Impl::DeviceType::CPU));
+  ASSERT_NO_THROW(func_test(16, 16, 16, gemm, gemm_CPU_reference, GEMM::Major::col_major, Impl::DeviceType::CPU));
 }
 
-TEST(gemm_col_major, gemm_col_major_square) {
-  ASSERT_NO_THROW(func_test_16(256, 256, 256, gemm_col_major, gemm_cuBLAS_reference_col_major));
+#if WITH_CUBLAS
+TEST(gemm, square_matrix) {
+  ASSERT_NO_THROW(func_test(256, 256, 256, gemm, gemm_cuBLAS_reference, GEMM::Major::col_major, Impl::DeviceType::CPU));
+  ASSERT_NO_THROW(func_test(256, 256, 256, gemm, gemm_cuBLAS_reference, GEMM::Major::row_major, Impl::DeviceType::CPU));
+  ASSERT_NO_THROW(func_test(256,
+                            256,
+                            256,
+                            gemm,
+                            gemm_cuBLAS_reference,
+                            GEMM::Major::col_major,
+                            Impl::DeviceType::CUDA));
+  ASSERT_NO_THROW(func_test(256,
+                            256,
+                            256,
+                            gemm,
+                            gemm_cuBLAS_reference,
+                            GEMM::Major::row_major,
+                            Impl::DeviceType::CUDA));
 }
 
-TEST(gemm_col_major, gemm_col_major_rectangular) {
-  ASSERT_NO_THROW(func_test_16(256, 512, 1024, gemm_col_major, gemm_cuBLAS_reference_col_major));
+TEST(gemm, rectangular_matrix) {
+  ASSERT_NO_THROW(func_test(256,
+                            512,
+                            1024,
+                            gemm,
+                            gemm_cuBLAS_reference,
+                            GEMM::Major::col_major,
+                            Impl::DeviceType::CPU));
+  ASSERT_NO_THROW(func_test(256,
+                            512,
+                            1024,
+                            gemm,
+                            gemm_cuBLAS_reference,
+                            GEMM::Major::row_major,
+                            Impl::DeviceType::CPU));
+  ASSERT_NO_THROW(func_test(256,
+                            512,
+                            1024,
+                            gemm,
+                            gemm_cuBLAS_reference,
+                            GEMM::Major::col_major,
+                            Impl::DeviceType::CUDA));
+  ASSERT_NO_THROW(func_test(256,
+                            512,
+                            1024,
+                            gemm,
+                            gemm_cuBLAS_reference,
+                            GEMM::Major::row_major,
+                            Impl::DeviceType::CUDA));
 }
 
-TEST(gemm_col_major, gemm_col_major_irregular) {
-  ASSERT_NO_THROW(func_test_16(17, 513, 1029, gemm_col_major, gemm_cuBLAS_reference_col_major));
+TEST(gemm, irregular_matrix) {
+  ASSERT_NO_THROW(func_test(17, 513, 1029, gemm, gemm_cuBLAS_reference, GEMM::Major::col_major, Impl::DeviceType::CPU));
+  ASSERT_NO_THROW(func_test(17, 513, 1029, gemm, gemm_cuBLAS_reference, GEMM::Major::row_major, Impl::DeviceType::CPU));
+  ASSERT_NO_THROW(func_test(17,
+                            513,
+                            1029,
+                            gemm,
+                            gemm_cuBLAS_reference,
+                            GEMM::Major::col_major,
+                            Impl::DeviceType::CUDA));
+  ASSERT_NO_THROW(func_test(17,
+                            513,
+                            1029,
+                            gemm,
+                            gemm_cuBLAS_reference,
+                            GEMM::Major::row_major,
+                            Impl::DeviceType::CUDA));
 }
-
-TEST(gemm_row_major, cuBLAS_param_correctness) {
-  ASSERT_NO_THROW(func_test_32(12, 34, 56, gemm_cuBLAS_reference_row_major, gemm_CPU_reference_row_major));
-}
-
-TEST(gemm_row_major, gemm_row_major_square) {
-  ASSERT_NO_THROW(func_test_16(256, 256, 256, gemm_row_major, gemm_cuBLAS_reference_row_major));
-}
-
-TEST(gemm_row_major, gemm_row_major_rectangular) {
-  ASSERT_NO_THROW(func_test_16(256, 512, 1024, gemm_row_major, gemm_cuBLAS_reference_row_major));
-}
-
-TEST(gemm_row_major, gemm_row_major_irregular) {
-  ASSERT_NO_THROW(func_test_16(17, 513, 1029, gemm_row_major, gemm_cuBLAS_reference_row_major));
-}
-
+#endif

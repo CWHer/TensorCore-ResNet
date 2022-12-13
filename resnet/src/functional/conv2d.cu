@@ -99,7 +99,14 @@ void conv2d(float *input,
   // Multiply with weight, shaped as (out_channels, C * kernel_size * kernel_size)
   auto gemm_result = std::make_unique<float[]>(conv_result_size * out_channels);
 
-  gemm_row_major(weight, im2col_result.get(), output, out_channels, conv_result_size, expanded_kernel_width);
+  gemm(weight,
+       im2col_result.get(),
+       output,
+       out_channels,
+       conv_result_size,
+       expanded_kernel_width,
+       GEMM::Major::row_major,
+       Impl::DeviceType::CPU);
 
   // Expanding bias from (out_channels) to (out_channels, output_height, output_width)
   auto bias_expanded = std::make_unique<float[]>(out_channels * conv_result_size);

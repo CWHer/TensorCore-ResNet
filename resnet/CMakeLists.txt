@@ -22,18 +22,27 @@ add_compile_options(
 
 # Find CUDA
 find_package(CUDA REQUIRED)
+include_directories(${CUDA_INCLUDE_DIRS})
+link_directories(${CUDA_LIBRARY_DIRS})
 
+include_directories(${CUDA_INCLUDE_DIRS})
 
-# Use cuBLAS library requires this
-find_package(CUDAToolkit REQUIRED)
-include_directories(${CUDAToolkit_INCLUDE_DIRS})
-link_directories(${CUDAToolkit_LIBRARY_DIR})
+set(CUDA_EXTRA_LIB cudart)
 
-# Specify extra CUDA libraries
-set(CUDA_EXTRA_LIB
-    cublas
-    curand
-)
+find_package(CUDAToolkit)
+
+if (CUDAToolkit_FOUND)
+    include_directories(${CUDAToolkit_INCLUDE_DIRS})
+    link_directories(${CUDAToolkit_LIBRARY_DIR})
+
+    # Specify extra CUDA libraries
+    set(CUDA_EXTRA_LIB "${CUDA_EXTRA_LIB};cublas;curand")
+
+    # Run CUBLAS tests
+    set(TEST_ADDITIONAL_DEFINITIONS "${TEST_ADDITIONAL_DEFINITIONS};WITH_CUBLAS")
+else ()
+    message(STATUS "CUDA Toolkit not found, CUDA Toolkit related tests will not be available")
+endif ()
 
 # HACK testing: Torch library might have CUDA library conflict.
 find_package(Torch)

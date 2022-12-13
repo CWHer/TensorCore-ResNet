@@ -3,6 +3,7 @@
 #include <mma.h>
 #include <cublas_v2.h>
 #include "common.h"
+#include "functional/gemm.hpp"
 
 using namespace nvcuda;
 
@@ -99,14 +100,62 @@ void gemm_naive_caller(const float_16 *A, const float_16 *B, float_32 *Result, s
   dim3 grid((M + (tile_m - 1)) / tile_m, (N + (tile_n - 1)) / tile_n);
   dim3 block(block_row_warps * warp_size, block_col_warps);
 
-  check_cuda_error();
-
   gemm_naive_kernel<block_col_warps, block_row_warps><<<grid, block>>>(A, B, Result, M, N, K);
 
   check_cuda_error();
 }
 
-void gemm_naive(const float_16 *A, const float_16 *B, float_32 *Result, size_t M, size_t N, size_t K) {
+void gemm_device_memory(const float_16 *A, const float_16 *B, float_32 *Result, size_t M, size_t N, size_t K) {
+  float_16 *padded_A;
+  float_32 *padded_C;
+
+  // If M and N are not by 16, we need to pad them.
+  auto padded_M = (M + (volta_m_factor - 1)) / volta_m_factor * volta_m_factor;
+  auto padded_N = (N + (volta_n_factor - 1)) / volta_n_factor * volta_n_factor;
+
+  // Copy A and B by padding to device
+  // A needs padding
+  if (padded_M != M) {
+    cudaMalloc(&padded_A, padded_M * K * sizeof(float_16));
+    // Can be optimized with a special padding kernel
+    cudaMemset(padded_A, 0, padded_M * K * sizeof(float_16));
+    for (int i = 0; i < K; i++) {
+      cudaMemcpy(padded_A + i * padded_M, A + i * M, M * sizeof(float_16), cudaMemcpyDeviceToDevice);
+    }
+  }
+  const float_16 *A_ptr = padded_M == M ? A : padded_A;
+
+  if (!(padded_M == M && padded_N == N)) {
+    // Result needs padding
+    cudaMalloc(&padded_C, padded_M * padded_N * sizeof(float_32));
+  }
+  float_32 *C_ptr = (padded_M == M && padded_N == N) ? Result : padded_C;
+
+  check_cuda_error();
+
+  // B have same leading dimension
+
+  // Fixme: this template parameter is adjustable
+  gemm_naive_caller<4, 4>(A_ptr, B, C_ptr, padded_M, padded_N, K);
+
+  check_cuda_error();
+
+  if (padded_M != M) {
+    cudaFree(padded_A);
+  }
+
+  if (!(padded_N == N && padded_M == M)) {
+    // Can be optimized with a special unpadding kernel
+    for (int i = 0; i < N; i++) {
+      cudaMemcpy(Result + i * M, padded_C + i * padded_M, M * sizeof(float_32), cudaMemcpyDeviceToDevice);
+    }
+    cudaFree(padded_C);
+  }
+
+  check_cuda_error();
+}
+
+void gemm_host_memory(const float_16 *A, const float_16 *B, float_32 *Result, size_t M, size_t N, size_t K) {
   float_16 *d_A, *d_B;
   float_32 *d_C;
 
@@ -131,9 +180,11 @@ void gemm_naive(const float_16 *A, const float_16 *B, float_32 *Result, size_t M
   // B have same leading dimension
   cudaMemcpy(d_B, B, K * N * sizeof(float_16), cudaMemcpyHostToDevice);
 
+  check_cuda_error();
 
-  // Fixme: this template parameter is adjustable
-  gemm_naive_caller<4, 4>(d_A, d_B, d_C, padded_M, padded_N, K);
+  // TODO: check whether device-to-device padding is faster than host-to-device padding
+  // Current invoking will never require additional device-side padding.
+  gemm_device_memory(d_A, d_B, d_C, padded_M, padded_N, K);
 
   if (padded_N == N && padded_M == M) {
     cudaMemcpy(Result, d_C, M * N * sizeof(float_32), cudaMemcpyDeviceToHost);
@@ -148,4 +199,32 @@ void gemm_naive(const float_16 *A, const float_16 *B, float_32 *Result, size_t M
   cudaFree(d_B);
   cudaFree(d_C);
   check_cuda_error();
+}
+
+void gemm(const float_16 *A,
+          const float_16 *B,
+          float_32 *C,
+          size_t M,
+          size_t N,
+          size_t K,
+          const GEMM::Major major,
+          const Impl::DeviceType device_type) {
+  switch (device_type) {
+  case Impl::DeviceType::CPU:
+    switch (major) {
+    case GEMM::Major::col_major:gemm_host_memory(A, B, C, M, N, K);
+      break;
+    case GEMM::Major::row_major:gemm_host_memory(B, A, C, N, M, K);
+      break;
+    }
+    break;
+  case Impl::DeviceType::CUDA:
+    switch (major) {
+    case GEMM::Major::col_major:gemm_device_memory(A, B, C, M, N, K);
+      break;
+    case GEMM::Major::row_major:gemm_device_memory(B, A, C, N, M, K);
+      break;
+    }
+    break;
+  }
 }
