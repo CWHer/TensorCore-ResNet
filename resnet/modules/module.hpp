@@ -5,14 +5,11 @@
 
 class Module
 {
-    // NOTE: HACK: implicit copy is a shallow copy
-
-    // TODO
 private:
     struct NamedTensor
     {
         std::string name;
-        Tensor &tensor;
+        Tensor tensor;
     };
 
     std::vector<NamedTensor> tensor_list;
@@ -22,7 +19,7 @@ public:
 
     virtual void printModule(const std::string &prefix) = 0;
 
-    void addTensor(const std::string &name, Tensor &tensor)
+    void addTensor(const std::string &name, Tensor tensor)
     {
         tensor_list.emplace_back(NamedTensor{name, tensor});
     }
@@ -42,7 +39,6 @@ public:
 
 class ModuleList : public Module
 {
-    // TODO
 private:
     struct NamedModule
     {

@@ -4,13 +4,15 @@
 
 class Tensor
 {
+    // NOTE: This is the logical layer of Tensor
     friend class TensorOps;
 
 private:
-    // NOTE: HACK: Tensor_ was created to make it
+    // NOTE: HACK: TensorStorage was created to make it
     //  safe and behave correctly when copying Tensor
-    class Tensor_
+    class TensorStorage
     {
+        // NOTE: This is the data layer of Tensor
         friend class Tensor;
         friend class TensorOps;
 
@@ -23,10 +25,10 @@ private:
         float *data;
 
     public:
-        Tensor_() : data(nullptr), device(DeviceType::UNKNOWN) {}
+        TensorStorage() : data(nullptr), device(DeviceType::UNKNOWN) {}
 
-        Tensor_(const std::vector<int> &shape,
-                DeviceType device = DeviceType::CPU)
+        TensorStorage(const std::vector<int> &shape,
+                      DeviceType device = DeviceType::CPU)
         {
             this->shape = shape;
             n_dim = shape.size();
@@ -50,7 +52,7 @@ private:
             this->device = device;
         }
 
-        ~Tensor_()
+        ~TensorStorage()
         {
             if (data != nullptr)
             {
@@ -117,9 +119,9 @@ private:
         }
 
     public:
-        std::shared_ptr<Tensor_> clone()
+        std::shared_ptr<TensorStorage> clone()
         {
-            auto cloned_tensor = std::make_shared<Tensor_>(shape, device);
+            auto cloned_tensor = std::make_shared<TensorStorage>(shape, device);
             switch (device)
             {
             case DeviceType::CPU:
@@ -202,7 +204,7 @@ private:
 
     public:
         friend std::ostream &operator<<(std::ostream &out,
-                                        const std::shared_ptr<Tensor_> &x)
+                                        const std::shared_ptr<TensorStorage> &x)
         {
             std::cout << "Tensor(";
             for (int i = 0; i < x->n_dim; i++)
@@ -225,64 +227,64 @@ private:
     };
 
 private:
-    std::shared_ptr<Tensor_> tensor_;
+    std::shared_ptr<TensorStorage> storage;
 
 public:
-    Tensor() : tensor_(nullptr) {}
+    Tensor() : storage(nullptr) {}
 
-    explicit Tensor(std::shared_ptr<Tensor_> tensor_) : tensor_(tensor_) {}
+    explicit Tensor(std::shared_ptr<TensorStorage> storage) : storage(storage) {}
 
     Tensor(const std::vector<int> &shape,
            DeviceType device = DeviceType::CPU)
     {
-        tensor_ = std::make_shared<Tensor_>(shape, device);
+        storage = std::make_shared<TensorStorage>(shape, device);
     }
 
     void load(const std::string &file_path)
     {
-        tensor_ = std::make_shared<Tensor_>();
-        tensor_->load(file_path);
+        storage = std::make_shared<TensorStorage>();
+        storage->load(file_path);
     }
 
     void fromData(float *data)
     {
-        tensor_->fromData(data);
+        storage->fromData(data);
     }
 
 public:
     // HACK: DO NOT support save
     // void save(const std::string &path) {}
 
-    bool empty() { return tensor_ == nullptr; }
+    bool empty() { return storage == nullptr; }
 
-    Tensor clone() { return Tensor(tensor_->clone()); }
+    Tensor clone() { return Tensor(storage->clone()); }
 
-    float *data_ptr() { return tensor_->data; }
+    float *data_ptr() { return storage->data; }
 
-    int64_t totalSize() { return tensor_->total_size; }
+    int64_t totalSize() { return storage->total_size; }
 
     float index(const std::vector<int> &indices)
     {
-        return tensor_->index(indices);
+        return storage->index(indices);
     }
 
-    std::vector<int> sizes() const { return tensor_->shape; }
+    std::vector<int> sizes() const { return storage->shape; }
 
     void view(const std::vector<int> &shape)
     {
-        tensor_->view(shape);
+        storage->view(shape);
     }
 
     void to(DeviceType device)
     {
-        tensor_->to(device);
+        storage->to(device);
     }
 
-    DeviceType getDevice() { return tensor_->device; }
+    DeviceType getDevice() { return storage->device; }
 
 public:
     friend std::ostream &operator<<(std::ostream &out, const Tensor &x)
     {
-        return out << x.tensor_;
+        return out << x.storage;
     }
 };
