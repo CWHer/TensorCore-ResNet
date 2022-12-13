@@ -3,11 +3,12 @@
 
 TEST(tensor, basic)
 {
-    Tensor x({2, 3, 4});
-    float data[24] = {1, 2, 3, 4, 5, 6, 7, 8,
-                      9, 10, 11, 12, 13, 14, 15, 16,
-                      17, 18, 19, 20, 21, 22, 23, 24};
-    x.fromData(data);
+    float data_[24] = {1, 2, 3, 4, 5, 6, 7, 8,
+                       9, 10, 11, 12, 13, 14, 15, 16,
+                       17, 18, 19, 20, 21, 22, 23, 24};
+    float *data = new float[24];
+    std::copy(data_, data_ + 24, data);
+    Tensor x({2, 3, 4}, DeviceType::CPU, data);
 
     EXPECT_EQ(x.sizes()[0], 2);
     EXPECT_EQ(x.sizes()[1], 3);

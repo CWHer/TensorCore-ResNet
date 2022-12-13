@@ -28,7 +28,8 @@ private:
         TensorStorage() : data(nullptr), device(DeviceType::UNKNOWN) {}
 
         TensorStorage(const std::vector<int> &shape,
-                      DeviceType device = DeviceType::CPU)
+                      DeviceType device = DeviceType::CPU,
+                      float *data = nullptr)
         {
             this->shape = shape;
             n_dim = shape.size();
@@ -38,17 +39,22 @@ private:
                 strides[i - 1] = strides[i] * shape[i];
             total_size = strides[0] * shape[0];
 
-            switch (device)
+            if (data == nullptr)
             {
-            case DeviceType::CPU:
-                data = new float[total_size];
-                break;
-            case DeviceType::CUDA:
-                checkCudaErrors(cudaMalloc(&data, total_size * sizeof(float)));
-                break;
-            default:
-                checkCppErrorsMsg(true, "Unknown device type");
+                switch (device)
+                {
+                case DeviceType::CPU:
+                    data = new float[total_size];
+                    break;
+                case DeviceType::CUDA:
+                    checkCudaErrors(cudaMalloc(&data, total_size * sizeof(float)));
+                    break;
+                default:
+                    checkCppErrorsMsg(true, "Unknown device type");
+                }
             }
+
+            this->data = data;
             this->device = device;
         }
 
@@ -104,18 +110,6 @@ private:
             fin.read(reinterpret_cast<char *>(data), total_size * sizeof(float));
 
             fin.close();
-        }
-
-        void fromData(float *data)
-        {
-            switch (device)
-            {
-            case DeviceType::CPU:
-                std::copy(data, data + total_size, this->data);
-                break;
-            default:
-                checkCppErrorsMsg(true, "Unknown device type");
-            }
         }
 
     public:
@@ -235,20 +229,16 @@ public:
     explicit Tensor(std::shared_ptr<TensorStorage> storage) : storage(storage) {}
 
     Tensor(const std::vector<int> &shape,
-           DeviceType device = DeviceType::CPU)
+           DeviceType device = DeviceType::CPU,
+           float *data = nullptr)
     {
-        storage = std::make_shared<TensorStorage>(shape, device);
+        storage = std::make_shared<TensorStorage>(shape, device, data);
     }
 
     void load(const std::string &file_path)
     {
         storage = std::make_shared<TensorStorage>();
         storage->load(file_path);
-    }
-
-    void fromData(float *data)
-    {
-        storage->fromData(data);
     }
 
 public:

@@ -3,10 +3,12 @@
 
 TEST(tensor_ops, cpu_ops)
 {
-    Tensor x({2, 3, 4});
-    float data[24] = {1, 2, 3, 4, 4, 3, 2, 1, 5, 5, 5, 5,
-                      1, 2, 3, 4, 4, 3, 2, 1, 0, 0, 0, 0};
-    x.fromData(data);
+
+    float data_[24] = {1, 2, 3, 4, 4, 3, 2, 1, 5, 5, 5, 5,
+                       1, 2, 3, 4, 4, 3, 2, 1, 0, 0, 0, 0};
+    float *data = new float[24];
+    std::copy(data_, data_ + 24, data);
+    Tensor x({2, 3, 4}, DeviceType::CPU, data);
 
     const float eps = 1e-3;
     Tensor y = TensorOps::argmax(x, 1);
@@ -23,9 +25,10 @@ TEST(tensor_ops, cpu_ops)
     EXPECT_NEAR(z.index({0, 1}), 0, eps);
     EXPECT_NEAR(z.index({0, 2}), 0, eps);
 
-    Tensor label = Tensor({2, 3});
-    float label_data[6] = {3, 0, 0, 3, 0, 0};
-    label.fromData(label_data);
+    float label_data_[6] = {3, 0, 0, 3, 0, 0};
+    float *label_data = new float[6];
+    std::copy(label_data_, label_data_ + 6, label_data);
+    Tensor label = Tensor({2, 3}, DeviceType::CPU, label_data);
 
     EXPECT_NEAR(TensorOps::sum_equal(z, label), 6, eps);
 }
