@@ -50,7 +50,7 @@ TEST(tensor, load) {
 TEST(tensor, device) {
   // NOTE: pretrained resnet18 model
   std::string filename = RESNET18_ROOT;
-  filename += "conv1_weight.bin";
+  filename += "/conv1_weight.bin";
   Tensor x;
   x.load(filename);
   EXPECT_EQ(x.getDevice(), Impl::DeviceType::CPU);
@@ -60,12 +60,17 @@ TEST(tensor, device) {
 
   Tensor y = x.clone();
   EXPECT_EQ(y.getDevice(), Impl::DeviceType::CUDA);
-  const float value1 = -1.0419e-02;
-    const float value2 = -6.1356e-03;
-    const float value3 = -1.8098e-03;
-    const float eps = 1e-3;
-    EXPECT_NEAR(x.index({0, 0, 0, 0}), value1, eps);
-    EXPECT_NEAR(y.index({0, 0, 0, 1}), value2, eps);
-    EXPECT_NEAR(y.index({0, 0, 0, 2}), value3, eps);
+
+  // flatten x and y
+  x.view({(int) x.totalSize()});
+  y.view({(int) y.totalSize()});
+
+  // total sizes should be the same
+  EXPECT_EQ(x.totalSize(), y.totalSize());
+
+  const float eps = 1e-3;
+  for (auto idx = 0; idx < x.totalSize(); ++idx) {
+    EXPECT_NEAR(x.index({0, 0, 0, idx}), y.index({0, 0, 0, idx}), eps);
+  }
 }
 #endif
