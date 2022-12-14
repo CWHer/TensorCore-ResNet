@@ -6,10 +6,13 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <fstream>
 #include <cassert>
 #include <chrono>
 #include <algorithm>
 #include <memory>
+#include <cmath>
+#include <numeric>
 //Volta structure only allows FP16 to be multiplied.
 #include <cuda_fp16.h>
 
@@ -23,8 +26,9 @@ namespace Impl {
   enum DeviceType
   {
     CPU,
-    CUDA
-  };
+    CUDA,
+    UNKNOWN
+};
 }
 
 
