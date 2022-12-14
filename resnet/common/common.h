@@ -13,6 +13,7 @@
 #include <memory>
 #include <cmath>
 #include <numeric>
+#include <sstream>
 //Volta structure only allows FP16 to be multiplied.
 #include <cuda_fp16.h>
 
@@ -36,25 +37,24 @@ template <typename T>
 void printCudaError(T result, char const *const msg,
                     const char *const file, int const line)
 {
-    if (result)
-    {
-        std::cerr << "CUDA [Error] at: " << file << ":" << line << " code="
-                  << static_cast<unsigned int>(result) << "(" << cudaGetErrorName(result) << ")"
-                  << " \"" << msg << "\"" << std::endl;
-        exit(EXIT_FAILURE);
+  std::stringstream ss;
+    if (result) {
+      ss << "CUDA [Error] at: " << file << ":" << line << " code=" << static_cast<unsigned int>(result) << "("
+         << cudaGetErrorName(result) << ")" << " \"" << msg << "\"";
+      // Use throw to avoid gtest exiting.
+      throw std::runtime_error(ss.str());
     }
 }
 
 template <typename T>
 void printCppError(T result, char const *const msg,
-                   const char *const file, int const line)
-{
-    if (result)
-    {
-        std::cerr << "CPP [Error] at: " << file << ":" << line
-                  << " \"" << msg << "\"" << std::endl;
-        exit(EXIT_FAILURE);
-    }
+                   const char *const file, int const line) {
+  std::stringstream ss;
+  if (result) {
+    ss << "CPP [Error] at: " << file << ":" << line << " \"" << msg << "\"";
+    // Use throw to avoid gtest exiting.
+    throw std::runtime_error(ss.str());
+  }
 }
 
 template <typename T>

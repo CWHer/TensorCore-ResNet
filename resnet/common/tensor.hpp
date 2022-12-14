@@ -143,6 +143,7 @@ private:
               return *h_data;
             }
             default:checkCppErrorsMsg(true, "Unknown device type");
+            return 0.0f;
             }
         }
 

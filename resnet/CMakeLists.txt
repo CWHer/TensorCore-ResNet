@@ -1,10 +1,10 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.11)
 project(tensorcore-resnet VERSION 0.0.1 LANGUAGES CXX CUDA)
 
 # ############################### C++ Options ###################################
 
 # Set C++ standards
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Optimization options
@@ -69,6 +69,7 @@ endif ()
 
 # ################################ Executables ##################################
 include(sources.cmake)
+include(dataset.cmake)
 
 add_executable(main ${SOURCE_FILES} resnet_inference.cpp)
 target_link_libraries(main ${CUDA_EXTRA_LIB})
