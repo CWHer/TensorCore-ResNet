@@ -9,4 +9,5 @@ set(SOURCE_FILES
         src/functional/gemm.cu
         src/functional/conv2d.cu
         src/functional/im2col.cu
+        src/tensor.cpp
 )

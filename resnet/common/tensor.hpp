@@ -1,278 +1,64 @@
 #pragma once
 
 #include "common.h"
-#include <sys/types.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 
-class Tensor
-{
-    // NOTE: This is the logical layer of Tensor
+class Tensor {
+  // NOTE: This is the logical layer of Tensor
+  friend class TensorOps;
+
+public:
+// NOTE: HACK: TensorStorage was created to make it
+//  safe and behave correctly when copying Tensor
+
+// Expose it to public
+  class TensorStorage {
+    // NOTE: This is the data layer of Tensor
+    friend class Tensor;
     friend class TensorOps;
 
+  private:
+    int64_t total_size;
+    int32_t n_dim;
+    std::vector<int32_t> shape;
+    std::vector<int32_t> strides;
+    Impl::DeviceType device;
+    float *data;
+
+  public:
+    TensorStorage();
+    TensorStorage(const std::vector<int> &shape,
+                  Impl::DeviceType device = Impl::DeviceType::CPU,
+                  float *data = nullptr);
+    ~TensorStorage();
+
+    void load(const std::string &file_path);
+    std::shared_ptr<TensorStorage> clone();
+    float index(const std::vector<int> &indices);
+    void view(const std::vector<int> &shape);
+    void to(Impl::DeviceType device);
+    friend std::ostream &operator<<(std::ostream &out, const std::shared_ptr<Tensor::TensorStorage> &x);
+  };
 private:
-    // NOTE: HACK: TensorStorage was created to make it
-    //  safe and behave correctly when copying Tensor
-    class TensorStorage
-    {
-        // NOTE: This is the data layer of Tensor
-        friend class Tensor;
-        friend class TensorOps;
-
-    private:
-        int64_t total_size;
-        int32_t n_dim;
-        std::vector<int32_t> shape;
-        std::vector<int32_t> strides;
-      Impl::DeviceType device;
-      float *data;
-
-    public:
-      TensorStorage() : data(nullptr), device(Impl::DeviceType::UNKNOWN) {}
-
-        TensorStorage(const std::vector<int> &shape,
-                      Impl::DeviceType device = Impl::DeviceType::CPU,
-                      float *data = nullptr)
-        {
-            this->shape = shape;
-            n_dim = shape.size();
-            strides = std::vector<int>(n_dim);
-            strides.back() = 1;
-            for (int i = n_dim - 1; i > 0; i--)
-                strides[i - 1] = strides[i] * shape[i];
-            total_size = strides[0] * shape[0];
-
-            if (data == nullptr)
-            {
-                switch (device)
-                {
-                case Impl::DeviceType::CPU:data = new float[total_size];
-                    break;
-                case Impl::DeviceType::CUDA:checkCudaErrors(cudaMalloc(&data, total_size * sizeof(float)));
-                    break;
-                default:
-                    checkCppErrorsMsg(true, "Unknown device type");
-                }
-            }
-
-            this->data = data;
-            this->device = device;
-        }
-
-        ~TensorStorage()
-        {
-            if (data != nullptr)
-            {
-                switch (device)
-                {
-                case Impl::DeviceType::CPU:delete[] data;
-                    break;
-                case Impl::DeviceType::CUDA:checkCudaErrors(cudaFree(data));
-                    break;
-                default:
-                    checkCppErrorsMsg(true, "Unknown device type");
-                }
-            }
-        }
-
-        void load(const std::string &file_path)
-        {
-            // NOTE: content,
-            //   1KB header (int_32 shape)
-            //   indefinite data (float_32)
-            static const int DATA_OFFSET = 1024;
-
-      struct stat file_stat;
-      stat(file_path.c_str(), &file_stat);
-      auto file_size = file_stat.st_size;
-
-      int fd = open(file_path.c_str(), O_RDONLY, 0);
-      if (fd == -1) {
-        checkCppErrorsMsg(true, ("Cannot open file: " + file_path).c_str());
-        return;
-      }
-
-      void *mmap_ptr = mmap(nullptr, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
-      if (mmap_ptr == MAP_FAILED) {
-        checkCppErrorsMsg(true, ("Cannot mmap file: " + file_path).c_str());
-        return;
-      }
-
-      int32_t *header_ptr = (int32_t *) mmap_ptr;
-      float *data_ptr = (float *) ((char *) mmap_ptr + DATA_OFFSET);
-
-      auto maximum_shape_length = DATA_OFFSET / sizeof(int32_t);
-      shape = std::vector<int32_t>(header_ptr, header_ptr + maximum_shape_length);
-      for (int i = 0; i < maximum_shape_length; i++) {
-        if (shape[i] == 0) {
-          shape.resize(i);
-          break;
-        }
-      }
-
-      n_dim = shape.size();
-      strides = std::vector<int>(n_dim);
-      strides.back() = 1;
-      for (int i = n_dim - 1; i > 0; i--)
-        strides[i - 1] = strides[i] * shape[i];
-      total_size = strides[0] * shape[0];
-      data = new float[total_size];
-      device = Impl::DeviceType::CPU;
-
-      memcpy(data, data_ptr, total_size * sizeof(float));
-      munmap(mmap_ptr, file_size);
-      close(fd);
-    }
-
-    public:
-        std::shared_ptr<TensorStorage> clone()
-        {
-            auto cloned_tensor = std::make_shared<TensorStorage>(shape, device);
-            switch (device)
-            {
-            case Impl::DeviceType::CPU:std::copy(data, data + total_size, cloned_tensor->data);
-                break;
-            case Impl::DeviceType::CUDA:checkCudaErrors(cudaMemcpy(cloned_tensor->data,
-                                                                   data,
-                                                                   total_size * sizeof(float),
-                                                                   cudaMemcpyDeviceToDevice));
-                break;
-            default:
-                checkCppErrorsMsg(true, "Unknown device type");
-            }
-            return cloned_tensor;
-        }
-
-        float index(const std::vector<int> &indices)
-        {
-            int offset = 0;
-            for (int i = 0; i < indices.size(); i++)
-                offset += indices[i] * strides[i];
-
-            switch (device)
-            {
-            case Impl::DeviceType::CPU:return data[offset];
-            case Impl::DeviceType::CUDA: {
-              // HACK: FIXME: this is extremely inefficient
-              auto h_data = std::make_shared<float>();
-              checkCudaErrors(cudaMemcpy(h_data.get(), data + offset, sizeof(float), cudaMemcpyDeviceToHost));
-              return *h_data;
-            }
-            default:checkCppErrorsMsg(true, "Unknown device type");
-            return 0.0f;
-            }
-        }
-
-        void view(const std::vector<int> &shape)
-        {
-            // HACK: DO NOT support -1
-            this->shape = shape;
-            n_dim = shape.size();
-            strides.resize(n_dim);
-            strides.back() = 1;
-            for (int i = n_dim - 1; i > 0; i--)
-                strides[i - 1] = strides[i] * shape[i];
-            checkCppErrorsMsg(strides[0] * shape[0] != total_size, "Invalid shape");
-        }
-
-      void to(Impl::DeviceType device) {
-        if (this->device == device)
-          return;
-
-        float *data;
-        this->device = device;
-        switch (device) {
-        case Impl::DeviceType::CPU:data = new float[total_size];
-                checkCudaErrors(cudaMemcpy(data, this->data, total_size * sizeof(float),
-                                           cudaMemcpyDeviceToHost));
-                checkCudaErrors(cudaFree(this->data));
-                break;
-
-        case Impl::DeviceType::CUDA:checkCudaErrors(cudaMalloc(&data, total_size * sizeof(float)));
-                checkCudaErrors(cudaMemcpy(data, this->data, total_size * sizeof(float),
-                                           cudaMemcpyHostToDevice));
-                delete[] this->data;
-                break;
-
-            default:
-                checkCppErrorsMsg(true, "Unknown device type");
-            }
-            this->data = data;
-        }
-
-    public:
-        friend std::ostream &operator<<(std::ostream &out,
-                                        const std::shared_ptr<TensorStorage> &x)
-        {
-            std::cout << "Tensor(";
-            for (int i = 0; i < x->n_dim; i++)
-                std::cout << x->shape[i] << ", ";
-          static auto deviceType = [](Impl::DeviceType device) {
-            switch (device) {
-            case Impl::DeviceType::CPU:return "CPU";
-            case Impl::DeviceType::CUDA:return "CUDA";
-            default:return "Unknown";
-            }
-            };
-            std::cout << deviceType(x->device) << ")" << std::endl;
-            return out;
-        }
-    };
-
-private:
-    std::shared_ptr<TensorStorage> storage;
+  std::shared_ptr<TensorStorage> storage;
 
 public:
-    Tensor() : storage(nullptr) {}
+  Tensor();
+  Tensor(std::shared_ptr<TensorStorage> storage);
+  Tensor(const std::vector<int> &shape, Impl::DeviceType device = Impl::DeviceType::CPU, float *data = nullptr);
+  void load(const std::string &file_path);
+  // HACK: DO NOT support save
+  // void save(const std::string &path) {}
 
-    explicit Tensor(std::shared_ptr<TensorStorage> storage) : storage(storage) {}
-
-    Tensor(const std::vector<int> &shape, Impl::DeviceType device = Impl::DeviceType::CPU, float *data = nullptr)
-    {
-        storage = std::make_shared<TensorStorage>(shape, device, data);
-    }
-
-    void load(const std::string &file_path)
-    {
-        storage = std::make_shared<TensorStorage>();
-        storage->load(file_path);
-    }
-
-public:
-    // HACK: DO NOT support save
-    // void save(const std::string &path) {}
-
-    bool empty() { return storage == nullptr; }
-
-    Tensor clone() { return Tensor(storage->clone()); }
-
-    float *data_ptr() { return storage->data; }
-
-    int64_t totalSize() { return storage->total_size; }
-
-    float index(const std::vector<int> &indices)
-    {
-        return storage->index(indices);
-    }
-
-    std::vector<int> sizes() const { return storage->shape; }
-
-    void view(const std::vector<int> &shape)
-    {
-        storage->view(shape);
-    }
-
-    void to(Impl::DeviceType device)
-    {
-        storage->to(device);
-    }
-
-  Impl::DeviceType getDevice() { return storage->device; }
+  bool empty();
+  Tensor clone();
+  float *data_ptr();
+  int64_t totalSize();
+  float index(const std::vector<int> &indices);
+  std::vector<int> sizes() const;
+  void view(const std::vector<int> &shape);
+  void to(Impl::DeviceType device);
+  Impl::DeviceType getDevice();
 
 public:
-    friend std::ostream &operator<<(std::ostream &out, const Tensor &x)
-    {
-        return out << x.storage;
-    }
+  friend std::ostream &operator<<(std::ostream &out, const Tensor &x);
 };
