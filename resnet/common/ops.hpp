@@ -18,12 +18,11 @@ public:
 
     static Tensor argmax(const Tensor &x, int dim)
     {
-        checkCppErrorsMsg(x.storage->device != DeviceType::CPU,
-                          "This operation is not supported on CUDA");
+        checkCppErrorsMsg(x.storage->device != Impl::DeviceType::CPU, "This operation is not supported on CUDA");
 
         auto shape = x.sizes();
         shape.erase(shape.begin() + dim);
-        Tensor result(shape, DeviceType::CPU);
+      Tensor result(shape, Impl::DeviceType::CPU);
 
         // NOTE: outer_size | dim | inner_size
         int64_t dim_size = x.storage->shape[dim];
@@ -52,9 +51,8 @@ public:
     {
         checkCppErrorsMsg(lhs.sizes() != rhs.sizes(),
                           "Tensor sizes are not equal");
-        checkCppErrorsMsg(lhs.storage->device != DeviceType::CPU ||
-                              rhs.storage->device != DeviceType::CPU,
-                          "This operation is not supported on CUDA");
+      checkCppErrorsMsg(lhs.storage->device != Impl::DeviceType::CPU || rhs.storage->device != Impl::DeviceType::CPU,
+                        "This operation is not supported on CUDA");
 
         static const float eps = 1e-3;
         float num_elements = 0;

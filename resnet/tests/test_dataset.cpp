@@ -3,7 +3,7 @@
 
 TEST(dataset, load)
 {
-    ImageDataset dataset(DeviceType::CUDA);
+    ImageDataset dataset(Impl::DeviceType::CUDA);
     dataset.load("./dataset_tensor", 1);
     EXPECT_EQ(dataset.size(), 1);
 

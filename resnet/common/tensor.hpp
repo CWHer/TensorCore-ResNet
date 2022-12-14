@@ -21,14 +21,14 @@ private:
         int32_t n_dim;
         std::vector<int32_t> shape;
         std::vector<int32_t> strides;
-        DeviceType device;
-        float *data;
+      Impl::DeviceType device;
+      float *data;
 
     public:
-        TensorStorage() : data(nullptr), device(DeviceType::UNKNOWN) {}
+      TensorStorage() : data(nullptr), device(Impl::DeviceType::UNKNOWN) {}
 
         TensorStorage(const std::vector<int> &shape,
-                      DeviceType device = DeviceType::CPU,
+                      Impl::DeviceType device = Impl::DeviceType::CPU,
                       float *data = nullptr)
         {
             this->shape = shape;
@@ -43,11 +43,9 @@ private:
             {
                 switch (device)
                 {
-                case DeviceType::CPU:
-                    data = new float[total_size];
+                case Impl::DeviceType::CPU:data = new float[total_size];
                     break;
-                case DeviceType::CUDA:
-                    checkCudaErrors(cudaMalloc(&data, total_size * sizeof(float)));
+                case Impl::DeviceType::CUDA:checkCudaErrors(cudaMalloc(&data, total_size * sizeof(float)));
                     break;
                 default:
                     checkCppErrorsMsg(true, "Unknown device type");
@@ -64,11 +62,9 @@ private:
             {
                 switch (device)
                 {
-                case DeviceType::CPU:
-                    delete[] data;
+                case Impl::DeviceType::CPU:delete[] data;
                     break;
-                case DeviceType::CUDA:
-                    checkCudaErrors(cudaFree(data));
+                case Impl::DeviceType::CUDA:checkCudaErrors(cudaFree(data));
                     break;
                 default:
                     checkCppErrorsMsg(true, "Unknown device type");
@@ -103,8 +99,8 @@ private:
             for (int i = n_dim - 1; i > 0; i--)
                 strides[i - 1] = strides[i] * shape[i];
             total_size = strides[0] * shape[0];
-            data = new float[total_size];
-            device = DeviceType::CPU;
+          data = new float[total_size];
+          device = Impl::DeviceType::CPU;
 
             fin.seekg(DATA_OFFSET, std::ios::beg);
             fin.read(reinterpret_cast<char *>(data), total_size * sizeof(float));
@@ -118,13 +114,12 @@ private:
             auto cloned_tensor = std::make_shared<TensorStorage>(shape, device);
             switch (device)
             {
-            case DeviceType::CPU:
-                std::copy(data, data + total_size, cloned_tensor->data);
+            case Impl::DeviceType::CPU:std::copy(data, data + total_size, cloned_tensor->data);
                 break;
-            case DeviceType::CUDA:
-                checkCudaErrors(cudaMemcpy(cloned_tensor->data, data,
-                                           total_size * sizeof(float),
-                                           cudaMemcpyDeviceToDevice));
+            case Impl::DeviceType::CUDA:checkCudaErrors(cudaMemcpy(cloned_tensor->data,
+                                                                   data,
+                                                                   total_size * sizeof(float),
+                                                                   cudaMemcpyDeviceToDevice));
                 break;
             default:
                 checkCppErrorsMsg(true, "Unknown device type");
@@ -140,18 +135,14 @@ private:
 
             switch (device)
             {
-            case DeviceType::CPU:
-                return data[offset];
-            case DeviceType::CUDA:
-            {
-                // HACK: FIXME: this is extremely inefficient
-                auto h_data = std::make_shared<float>();
-                checkCudaErrors(cudaMemcpy(h_data.get(), data + offset, sizeof(float),
-                                           cudaMemcpyDeviceToHost));
-                return *h_data;
+            case Impl::DeviceType::CPU:return data[offset];
+            case Impl::DeviceType::CUDA: {
+              // HACK: FIXME: this is extremely inefficient
+              auto h_data = std::make_shared<float>();
+              checkCudaErrors(cudaMemcpy(h_data.get(), data + offset, sizeof(float), cudaMemcpyDeviceToHost));
+              return *h_data;
             }
-            default:
-                checkCppErrorsMsg(true, "Unknown device type");
+            default:checkCppErrorsMsg(true, "Unknown device type");
             }
         }
 
@@ -167,24 +158,20 @@ private:
             checkCppErrorsMsg(strides[0] * shape[0] != total_size, "Invalid shape");
         }
 
-        void to(DeviceType device)
-        {
-            if (this->device == device)
-                return;
+      void to(Impl::DeviceType device) {
+        if (this->device == device)
+          return;
 
-            float *data;
-            this->device = device;
-            switch (device)
-            {
-            case DeviceType::CPU:
-                data = new float[total_size];
+        float *data;
+        this->device = device;
+        switch (device) {
+        case Impl::DeviceType::CPU:data = new float[total_size];
                 checkCudaErrors(cudaMemcpy(data, this->data, total_size * sizeof(float),
                                            cudaMemcpyDeviceToHost));
                 checkCudaErrors(cudaFree(this->data));
                 break;
 
-            case DeviceType::CUDA:
-                checkCudaErrors(cudaMalloc(&data, total_size * sizeof(float)));
+        case Impl::DeviceType::CUDA:checkCudaErrors(cudaMalloc(&data, total_size * sizeof(float)));
                 checkCudaErrors(cudaMemcpy(data, this->data, total_size * sizeof(float),
                                            cudaMemcpyHostToDevice));
                 delete[] this->data;
@@ -203,17 +190,12 @@ private:
             std::cout << "Tensor(";
             for (int i = 0; i < x->n_dim; i++)
                 std::cout << x->shape[i] << ", ";
-            static auto deviceType = [](DeviceType device)
-            {
-                switch (device)
-                {
-                case DeviceType::CPU:
-                    return "CPU";
-                case DeviceType::CUDA:
-                    return "CUDA";
-                default:
-                    return "Unknown";
-                }
+          static auto deviceType = [](Impl::DeviceType device) {
+            switch (device) {
+            case Impl::DeviceType::CPU:return "CPU";
+            case Impl::DeviceType::CUDA:return "CUDA";
+            default:return "Unknown";
+            }
             };
             std::cout << deviceType(x->device) << ")" << std::endl;
             return out;
@@ -228,9 +210,7 @@ public:
 
     explicit Tensor(std::shared_ptr<TensorStorage> storage) : storage(storage) {}
 
-    Tensor(const std::vector<int> &shape,
-           DeviceType device = DeviceType::CPU,
-           float *data = nullptr)
+    Tensor(const std::vector<int> &shape, Impl::DeviceType device = Impl::DeviceType::CPU, float *data = nullptr)
     {
         storage = std::make_shared<TensorStorage>(shape, device, data);
     }
@@ -270,7 +250,7 @@ public:
         storage->to(device);
     }
 
-    DeviceType getDevice() { return storage->device; }
+  Impl::DeviceType getDevice() { return storage->device; }
 
 public:
     friend std::ostream &operator<<(std::ostream &out, const Tensor &x)
