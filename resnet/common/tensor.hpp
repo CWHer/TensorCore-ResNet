@@ -1,6 +1,10 @@
 #pragma once
 
 #include "common.h"
+#include <sys/types.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 class Tensor
 {
@@ -79,34 +83,47 @@ private:
             //   indefinite data (float_32)
             static const int DATA_OFFSET = 1024;
 
-            std::ifstream fin;
-            fin.open(file_path, std::ios::binary);
-            checkCppErrorsMsg(!fin.is_open(), ("Cannot open file: " + file_path).c_str());
+      struct stat file_stat;
+      stat(file_path.c_str(), &file_stat);
+      auto file_size = file_stat.st_size;
 
-            // clang-format off
-            shape.reserve(DATA_OFFSET / sizeof(int32_t));
-            for (int i = 0; i < DATA_OFFSET / sizeof(int32_t); i++)
-            {
-                int32_t dim;
-                fin.read(reinterpret_cast<char *>(&dim), sizeof(int32_t));
-                if (dim == 0) break;
-                shape.push_back(dim);
-            }
-            // clang-format on
-            n_dim = shape.size();
-            strides = std::vector<int>(n_dim);
-            strides.back() = 1;
-            for (int i = n_dim - 1; i > 0; i--)
-                strides[i - 1] = strides[i] * shape[i];
-            total_size = strides[0] * shape[0];
-          data = new float[total_size];
-          device = Impl::DeviceType::CPU;
+      int fd = open(file_path.c_str(), O_RDONLY, 0);
+      if (fd == -1) {
+        checkCppErrorsMsg(true, ("Cannot open file: " + file_path).c_str());
+        return;
+      }
 
-            fin.seekg(DATA_OFFSET, std::ios::beg);
-            fin.read(reinterpret_cast<char *>(data), total_size * sizeof(float));
+      void *mmap_ptr = mmap(nullptr, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
+      if (mmap_ptr == MAP_FAILED) {
+        checkCppErrorsMsg(true, ("Cannot mmap file: " + file_path).c_str());
+        return;
+      }
 
-            fin.close();
+      int32_t *header_ptr = (int32_t *) mmap_ptr;
+      float *data_ptr = (float *) ((char *) mmap_ptr + DATA_OFFSET);
+
+      auto maximum_shape_length = DATA_OFFSET / sizeof(int32_t);
+      shape = std::vector<int32_t>(header_ptr, header_ptr + maximum_shape_length);
+      for (int i = 0; i < maximum_shape_length; i++) {
+        if (shape[i] == 0) {
+          shape.resize(i);
+          break;
         }
+      }
+
+      n_dim = shape.size();
+      strides = std::vector<int>(n_dim);
+      strides.back() = 1;
+      for (int i = n_dim - 1; i > 0; i--)
+        strides[i - 1] = strides[i] * shape[i];
+      total_size = strides[0] * shape[0];
+      data = new float[total_size];
+      device = Impl::DeviceType::CPU;
+
+      memcpy(data, data_ptr, total_size * sizeof(float));
+      munmap(mmap_ptr, file_size);
+      close(fd);
+    }
 
     public:
         std::shared_ptr<TensorStorage> clone()
