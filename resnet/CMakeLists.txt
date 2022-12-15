@@ -35,8 +35,8 @@ if (CUDAToolkit_FOUND)
     include_directories(${CUDAToolkit_INCLUDE_DIRS})
     link_directories(${CUDAToolkit_LIBRARY_DIR})
 
-    # Specify extra CUDA libraries
-    set(CUDA_EXTRA_LIB "${CUDA_EXTRA_LIB};cublas;curand")
+    # Not specifying them in original lib to separate the compilation results
+    set(TEST_ADDITIONAL_LIB "${TEST_ADDITIONAL_LIB};cublas;curand")
 
     # Run CUBLAS tests
     set(TEST_ADDITIONAL_DEFINITIONS "${TEST_ADDITIONAL_DEFINITIONS};WITH_CUBLAS")
@@ -44,14 +44,27 @@ else ()
     message(STATUS "CUDA Toolkit not found, CUDA Toolkit related tests will not be available")
 endif ()
 
+set(ORIGINAL_CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS})
+
 # HACK testing: Torch library might have CUDA library conflict.
 find_package(Torch)
 
 if (Torch_FOUND)
-    message(STATUS "Found torch, using torch's cuda configurations")
+    if (NOT "${ORIGINAL_CUDA_NVCC_FLAGS}" EQUAL "${CUDA_NVCC_FLAGS}")
+        message(STATUS "Found libtorch built with CUDA, using torch's CUDA configurations")
+        set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${TORCH_CUDA_FLAGS})
+    else ()
+        message(STATUS "Found libtorch built without CUDA, use our own CUDA configurations")
+        # Set CUDA architecture to Volta (to prevent CUDA printing errors)
+        set(CMAKE_CUDA_ARCHITECTURES 70)
+
+        # Set CUDA architecture flags
+        set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};-arch=${CMAKE_CUDA_ARCHITECTURES}")
+        # Add CUDA_EXTRA_LIB to testing
+        set(TEST_ADDITIONAL_LIB ${TEST_ADDITIONAL_LIB} ${CUDA_EXTRA_LIB})
+    endif ()
     # Use #if WITH_TORCH to enable torch related code in testing.
     set(TEST_ADDITIONAL_DEFINITIONS "${TEST_ADDITIONAL_DEFINITIONS};WITH_TORCH")
-    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${TORCH_CUDA_FLAGS})
     include_directories(${TORCH_INCLUDE_DIRS})
     # If using Torch, cublas should not be additionally linked
     # as libtorch_cuda.so already have them linked.
@@ -71,27 +84,31 @@ endif ()
 include(sources.cmake)
 include(dataset.cmake)
 
-add_executable(main ${SOURCE_FILES} resnet_inference.cpp)
-target_link_libraries(main ${CUDA_EXTRA_LIB})
+# Build source files to a static library to avoid recompiling
+add_library(${PROJECT_NAME}_base STATIC ${SOURCE_FILES})
+
+add_executable(main resnet_inference.cpp)
+target_link_libraries(main ${CUDA_EXTRA_LIB} ${PROJECT_NAME}_base)
 
 # ################################## Tests ######################################
 include(tests.cmake)
 
 find_package(GTest)
 
-if(GTest_FOUND)
+if (GTest_FOUND)
     message(STATUS "GTest Found, you can use ctest to run all tests.")
     enable_testing()
-    add_executable(gtest_exc ${TEST_SOURCE} ${SOURCE_FILES})
+    add_executable(gtest_exc ${TEST_SOURCE})
 
     target_compile_definitions(gtest_exc PRIVATE ${TEST_ADDITIONAL_DEFINITIONS})
 
     target_link_libraries(gtest_exc
+            ${PROJECT_NAME}_base
             GTest::gtest GTest::gtest_main
             ${TEST_ADDITIONAL_LIB}
             )
 
     gtest_discover_tests(gtest_exc)
-else()
+else ()
     message(STATUS "If you installed GTest, you can use ctest to access tests.")
-endif()
+endif ()

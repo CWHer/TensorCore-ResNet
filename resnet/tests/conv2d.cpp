@@ -2,7 +2,6 @@
 */
 
 #include <gtest/gtest.h>
-#include <c++/12.2.0/fstream>
 #include <sstream>
 #include <random>
 #include "functional/conv2d.hpp"

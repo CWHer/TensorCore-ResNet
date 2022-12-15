@@ -46,3 +46,6 @@ build*/
 *.zip
 *.tar
 *.gz
+
+# PyCache
+**/__pycache__/
