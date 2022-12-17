@@ -43,3 +43,16 @@ TEST(half, conversion)
     h.fromFloat(x.f);
     EXPECT_TRUE(std::isnan(h.toFloat()));
 }
+
+TEST(half, operators)
+{
+    Sim::Half h1, h2;
+
+    const float eps = 1e-10f;
+
+    h1.fromFloat(1.0f);
+    h2.fromFloat(20000.0f);
+
+    EXPECT_NEAR(20001.0f, h1 + h2, eps);
+    EXPECT_NEAR(20000.0f, h1 * h2, eps);
+}
