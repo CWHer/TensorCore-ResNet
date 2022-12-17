@@ -15,6 +15,7 @@
 #include <unordered_set>
 #include <thread>
 #include <mutex>
+#include <bitset>
 
 namespace Sim
 {
@@ -37,30 +38,6 @@ namespace Sim
         MemcpyHostToDevice,
         MemcpyDeviceToHost
     };
-
-    struct Half
-    {
-        friend float operator*(const Half &lhs, const Half &rhs)
-        {
-            // TODO
-        }
-
-    private:
-        u16 x;
-
-    public:
-        Half float2half(f32 y)
-        {
-            // TODO
-        }
-
-        f32 half2float(Half y)
-        {
-            // TODO
-        }
-    };
-
-    using f16 = Half;
 
     // clang-format off
     class FatalError : public std::exception {};
