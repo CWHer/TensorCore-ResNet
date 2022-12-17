@@ -19,11 +19,12 @@ namespace Sim
 
         void cudaMalloc(void **ptr, size_t size)
         {
-            *ptr = new u8[size];
+            *ptr = new char[size];
             allocated_addrs.insert(reinterpret_cast<intptr_t>(*ptr));
         }
 
-        void cudaFree(void *ptr)
+        template <typename T>
+        void cudaFree(T *ptr)
         {
             delete[] ptr;
             allocated_addrs.erase(reinterpret_cast<intptr_t>(ptr));

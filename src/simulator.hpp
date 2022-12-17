@@ -66,12 +66,29 @@ namespace Sim
             global_memory.cudaMalloc(ptr, size);
         }
 
-        void cudaMemcpy(void *dst, void *src, size_t count)
+        void cudaMemcpy(void *dst, void *src, size_t count, CUDAMemcpyType type)
         {
+            switch (type)
+            {
+            case CUDAMemcpyType::MemcpyDeviceToHost:
+                printCppError(global_memory.isAllocated(src),
+                              "Wrong address for cudaMemcpy",
+                              __FILE__, __LINE__);
+                break;
+            case CUDAMemcpyType::MemcpyHostToDevice:
+                printCppError(global_memory.isAllocated(dst),
+                              "Wrong address for cudaMemcpy",
+                              __FILE__, __LINE__);
+                break;
+            default:
+                printCppError(true, "Not implemented cudaMemcpy type",
+                              __FILE__, __LINE__);
+            }
             std::copy((char *)src, (char *)src + count, (char *)dst);
         }
 
-        void cudaFree(void *ptr)
+        template <typename T>
+        void cudaFree(T *ptr)
         {
             global_memory.cudaFree(ptr);
         }
