@@ -11,7 +11,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_compile_options(
 
     # Release options for demonstration: Ofast
-    "$<$<CONFIG:RELEASE>:-Ofast>"
+    "$<$<CONFIG:RELEASE>:$<$<COMPILE_LANGUAGE:CXX>:-Ofast>>"
+    "$<$<CONFIG:RELEASE>:$<$<COMPILE_LANGUAGE:CUDA>:-O3>>"
 
     # Debugging options: no optimization, debug symbols
     "$<$<CONFIG:DEBUG>:-O0>"

@@ -1,7 +1,7 @@
 # Add all unit tests here
 set(TEST_SOURCE
     tests/test_init.cu
-    tests/gemm.cu
+    tests/gemm.cpp
     tests/im2col.cpp
     tests/conv2d.cpp
     tests/test_tensor.cpp

@@ -1,5 +1,5 @@
 /**
- * @file test/gemm.cu
+ * @file test/gemm.cpp
  * @brief Test GEMM functionality.
  */
 
