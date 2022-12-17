@@ -138,7 +138,7 @@ static void func_test(size_t M,
                       gemm32_new_func func2,
                       GEMM::Major major = GEMM::Major::row_major,
                       Impl::DeviceType device_type = Impl::DeviceType::CPU,
-                      float eps = 5.0) {
+                      float eps = 1e-2) {
   // Test if we entered the correct cuBLAS parameters
   auto A = make_unique<float[]>(M * K);
   auto B = make_unique<float[]>(K * N);
@@ -183,10 +183,16 @@ static void func_test(size_t M,
   }
 
   // Check if C is correct
+  double average_diff = 0;
   for (int i = 0; i < M * N; i++) {
-    if (fabs(C[i] - C_ref[i]) > eps) {
-      throw runtime_error("Incorrect result");
-    }
+    auto diff_ratio = C_ref[i] != 0 ? fabs(C[i] - C_ref[i]) / fabs(C_ref[i]) : 0;
+    average_diff += diff_ratio / (M * N);
+  }
+
+  if (average_diff > eps) {
+    stringstream ss;
+    ss << "Incorrect result: " << average_diff << " > " << eps << endl;
+    throw runtime_error(ss.str());
   }
 }
 
@@ -197,7 +203,7 @@ static void func_test(size_t M,
                       gemm32_new_func gemm32,
                       GEMM::Major major,
                       Impl::DeviceType device_type = Impl::DeviceType::CPU,
-                      float eps = 5.0) {
+                      float eps = 1e-1) {
   // Create float matrices A, B
   auto A = make_unique<float[]>(M * K);
   auto B = make_unique<float[]>(K * N);
@@ -271,12 +277,66 @@ static void func_test(size_t M,
   }
 
   // Check if C is correct
+  double average_diff = 0;
   for (int i = 0; i < M * N; i++) {
-    if (fabs(C[i] - C_ref[i]) > eps) {
-      throw runtime_error("Incorrect result");
-    }
+    auto diff_ratio = C_ref[i] != 0 ? fabs(C[i] - C_ref[i]) / fabs(C_ref[i]) : 0;
+    average_diff += diff_ratio / (M * N);
   }
 
+  if (average_diff > eps) {
+    stringstream ss;
+    ss << "Incorrect result: " << average_diff << " > " << eps << endl;
+    throw runtime_error(ss.str());
+  }
+}
+
+static void unequal_B(int M, int N, int K, int batch_size) {
+  auto eps = 1e-3;
+
+  // Test if we entered the correct cuBLAS parameters
+  auto A = make_unique<float_16[]>(M * K);
+  auto B = make_unique<float_16[]>(batch_size * K * N);
+
+  // Randomly initialize A, B
+  default_random_engine generator(RANDOM_SEED);
+  uniform_real_distribution<float> matrix_dist(-1.0e2, 1.0e2);
+
+  for (int i = 0; i < M * K; i++) {
+    A[i] = matrix_dist(generator);
+  }
+  for (int i = 0; i < batch_size * K * N; i++) {
+    B[i] = matrix_dist(generator);
+  }
+
+  // Create float matrix C
+  auto C = make_unique<float[]>(batch_size * M * N);
+  auto C_ref = make_unique<float[]>(batch_size * M * N);
+
+  gemm_batched_B(A.get(), B.get(), C.get(), M, N, K, batch_size, GEMM::Major::row_major, Impl::DeviceType::CPU);
+
+  for (int batch = 0; batch < batch_size; batch++) {
+    gemm(A.get(),
+         B.get() + batch * K * N,
+         C_ref.get() + batch * M * N,
+         M,
+         N,
+         K,
+         GEMM::Major::row_major,
+         Impl::DeviceType::CPU);
+  }
+
+  // Check if C is correct
+  double average_diff = 0;
+  for (int i = 0; i < batch_size * M * N; i++) {
+    auto diff_ratio = C_ref[i] != 0 ? fabs(C[i] - C_ref[i]) / fabs(C_ref[i]) : 0;
+    average_diff += diff_ratio / (batch_size * M * N);
+  }
+
+  if (average_diff > eps) {
+    stringstream ss;
+    ss << "Incorrect result: " << average_diff << " > " << eps << endl;
+    throw runtime_error(ss.str());
+  }
 }
 
 #if WITH_CUBLAS
@@ -372,4 +432,76 @@ TEST(gemm, irregular_matrix) {
                             GEMM::Major::row_major,
                             Impl::DeviceType::CUDA));
 }
+
+TEST(gemm, unaligned_pointer) {
+  int M = 17;
+  int N = 513;
+  int K = 1029;
+
+  auto eps = 1e-2;
+
+  auto major = GEMM::Major::row_major;
+  auto device_type = Impl::DeviceType::CPU;
+
+  auto gemm16 = gemm;
+
+  // GEMM should support non-aligned pointers
+  // Create float matrices A_loc, B_loc
+  auto A_loc = make_unique<float_16[]>(M * K);
+  auto B_loc = make_unique<float_16[]>(K * N);
+  auto A_float_16 = make_unique<float_16[]>(M * K + 1);
+  auto B_float_16 = make_unique<float_16[]>(K * N + 3);
+
+
+  // Randomly initialize A_loc, B_loc
+  default_random_engine generator(RANDOM_SEED);
+  uniform_real_distribution<float> matrix_dist(-1.0e2, 1.0e2);
+
+  for (int i = 0; i < M * K; i++) {
+    // Make sure the matrix have the same float
+    float_16 a_float_16 = __float2half(matrix_dist(generator));
+    A_loc[i] = __half2float(a_float_16);
+    A_float_16[i + 1] = a_float_16;
+  }
+  for (int i = 0; i < K * N; i++) {
+    float_16 b_float_16 = __float2half(matrix_dist(generator));
+    B_loc[i] = __half2float(b_float_16);
+    B_float_16[i + 3] = b_float_16;
+  }
+
+  auto C = make_unique<float[]>(M * N + 7);
+  auto C_ref = make_unique<float[]>(M * N);
+
+  gemm16(A_loc.get(), B_loc.get(), C_ref.get(), M, N, K, major, device_type);
+  gemm16(A_float_16.get() + 1, B_float_16.get() + 3, C.get() + 7, M, N, K, major, device_type);
+
+  // Check if C is correct
+  double average_diff = 0;
+  for (int i = 0; i < M * N; i++) {
+    auto diff_ratio = C_ref[i] != 0 ? fabs(C[i + 7] - C_ref[i]) / fabs(C_ref[i]) : 0;
+    average_diff += diff_ratio / (float) (M * N);
+  }
+
+  if (average_diff > eps) {
+    stringstream ss;
+    ss << "Incorrect result: " << average_diff << " > " << eps << endl;
+    throw runtime_error(ss.str());
+  }
+
+}
 #endif
+
+TEST(gemm, batchedB) {
+  EXPECT_NO_THROW(unequal_B(16, 16, 16, 1));
+  EXPECT_NO_THROW(unequal_B(16, 16, 16, 16));
+  EXPECT_NO_THROW(unequal_B(16, 16, 17, 16));
+  EXPECT_NO_THROW(unequal_B(16, 17, 16, 16));
+  EXPECT_NO_THROW(unequal_B(17, 16, 16, 16));
+  EXPECT_NO_THROW(unequal_B(16, 17, 17, 16));
+  EXPECT_NO_THROW(unequal_B(17, 17, 16, 16));
+  EXPECT_NO_THROW(unequal_B(17, 16, 17, 16));
+  EXPECT_NO_THROW(unequal_B(17, 17, 17, 16));
+
+  EXPECT_NO_THROW(unequal_B(17, 513, 1029, 15));
+  EXPECT_NO_THROW(unequal_B(17, 513, 1029, 27));
+}

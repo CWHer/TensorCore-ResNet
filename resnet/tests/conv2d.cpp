@@ -128,29 +128,6 @@ static string python_command_invoke(const string &script) {
 
 }
 
-/**
- * @brief Get the output size of a convolution layer.
- * @param C
- * @param H
- * @param W
- * @param out_channels
- * @param kernel_size
- * @param stride
- * @param padding
- * @return
- */
-static int conv2d_output_size(int C [[gnu::unused]],
-                              int H,
-                              int W,
-                              int out_channels,
-                              int kernel_size,
-                              int stride,
-                              int padding) {
-  int out_height = (H + 2 * padding - kernel_size) / stride + 1;
-  int out_width = (W + 2 * padding - kernel_size) / stride + 1;
-  return out_channels * out_height * out_width;
-}
-
 #if WITH_TORCH
 /** @brief Convolutional layer forward propagation performed with libtorch.
  *
@@ -171,6 +148,7 @@ static void conv2d_torch(float *input,
                          float *output,
                          float_16 *weight,
                          float *bias,
+                         int N,
                          int C,
                          int H,
                          int W,
@@ -178,7 +156,7 @@ static void conv2d_torch(float *input,
                          int kernel_size,
                          int stride,
                          int padding) {
-  auto input_tensor = torch::from_blob(input, {1, C, H, W}).to(torch::kFloat32);
+  auto input_tensor = torch::from_blob(input, {N, C, H, W}).to(torch::kFloat32);
   torch::nn::Conv2dOptions options(C, out_channels, kernel_size);
   options = options.stride(stride);
   options = options.padding(padding);
@@ -191,10 +169,10 @@ static void conv2d_torch(float *input,
   auto output_tensor = conv_ref_l->forward(input_tensor);
   // Assert the output size is correct.
   auto shape = output_tensor.sizes();
-  auto ref_shape = conv2d_result_shape(C, H, W, out_channels, kernel_size, stride, padding);
-  assert(shape[1] == ref_shape[0]);
-  assert(shape[2] == ref_shape[1]);
-  assert(shape[3] == ref_shape[2]);
+  auto ref_shape = conv2d_result_shape(N, C, H, W, out_channels, kernel_size, stride, padding);
+  for (int i = 0; i < shape.size(); i++) {
+    assert(shape[i] == ref_shape[i]);
+  }
   memcpy(output, output_tensor.data_ptr(), output_tensor.numel() * sizeof(float));
 }
 #endif
@@ -262,7 +240,7 @@ static void conv2d_torch_python_script(float *input,
   std::stringstream ss_result(result);
   float result_value;
 
-  for (int i = 0; i < conv2d_output_size(C, H, W, out_channels, kernel_size, stride, padding); i++) {
+  for (int i = 0; i < conv2d_output_sizes(1, C, H, W, out_channels, kernel_size, stride, padding); i++) {
     ss_result >> result_value;
     output[i] = result_value;
   }
@@ -270,76 +248,8 @@ static void conv2d_torch_python_script(float *input,
 }
 
 #if WITH_TORCH
-TEST(conv2d, libtorch_correctness_conv1) {
-  auto channel = 3;
-  auto input_height = 224;
-  auto input_width = 224;
-  auto stride = 2;
-  auto padding = 3;
-  auto filter_chanel = 64;
-  auto filter_size = 3;
-
-  auto input = std::make_unique<float[]>(channel * input_height * input_width);
-  auto weight = std::make_unique<float_16[]>(filter_chanel * channel * filter_size * filter_size);
-  auto bias = std::make_unique<float[]>(filter_chanel);
-
-  // Randomly initialize
-  default_random_engine generator(RANDOM_SEED);
-  uniform_real_distribution<float> matrix_dist(-1.0e2, 1.0e2);
-
-  // Fill them with random values
-  for (int i = 0; i < channel * input_height * input_width; i++) {
-    input[i] = matrix_dist(generator);
-  }
-  for (int i = 0; i < filter_chanel * channel * filter_size * filter_size; i++) {
-    weight[i] = matrix_dist(generator);
-  }
-  for (int i = 0; i < filter_chanel; i++) {
-    bias[i] = matrix_dist(generator);
-  }
-
-  auto size = conv2d_output_size(channel, input_height, input_width, filter_chanel, filter_size, stride, padding);
-
-  auto output_ref = std::make_unique<float[]>(size);
-
-  auto output = std::make_unique<float[]>(size);
-
-  conv2d_torch(input.get(),
-               output.get(),
-               weight.get(),
-               bias.get(),
-               channel,
-               input_height,
-               input_width,
-               filter_chanel,
-               filter_size,
-               stride,
-               padding);
-
-  conv2d_torch_python_script(input.get(),
-                             output_ref.get(),
-                             weight.get(),
-                             bias.get(),
-                             channel,
-                             input_height,
-                             input_width,
-                             filter_chanel,
-                             filter_size,
-                             stride,
-                             padding);
-
-  // Compare the results
-  for (int i = 0;
-       i < conv2d_output_size(channel, input_height, input_width, filter_chanel, filter_size, stride, padding); i++) {
-    ASSERT_NEAR(output_ref[i], output[i], 1e0);
-  }
-
-}
-
-#endif
-
-#if WITH_TORCH
 TEST(conv2d, basic_conv2d) {
+  auto batch = 1;
   auto channel = 3;
   auto input_height = 32;
   auto input_width = 32;
@@ -348,7 +258,7 @@ TEST(conv2d, basic_conv2d) {
   auto filter_channel = 3;
   auto filter_size = 3;
 
-  auto input = std::make_unique<float[]>(channel * input_height * input_width);
+  auto input = std::make_unique<float[]>(batch * channel * input_height * input_width);
   auto weight = std::make_unique<float_16[]>(filter_channel * channel * filter_size * filter_size);
   auto bias = std::make_unique<float[]>(filter_channel);
 
@@ -357,7 +267,7 @@ TEST(conv2d, basic_conv2d) {
   uniform_real_distribution<float> matrix_dist(-1.0e2, 1.0e2);
 
   // Fill them with random values
-  for (int i = 0; i < channel * input_height * input_width; i++) {
+  for (int i = 0; i < batch * channel * input_height * input_width; i++) {
     input[i] = matrix_dist(generator);
   }
   for (int i = 0; i < filter_channel * channel * filter_size * filter_size; i++) {
@@ -368,7 +278,7 @@ TEST(conv2d, basic_conv2d) {
   }
 
   auto output_size =
-      conv2d_output_size(channel, input_height, input_width, filter_channel, filter_size, stride, padding);
+      conv2d_output_sizes(batch, channel, input_height, input_width, filter_channel, filter_size, stride, padding);
 
   auto output_ref = std::make_unique<float[]>(output_size);
   auto output = std::make_unique<float[]>(output_size);
@@ -377,6 +287,7 @@ TEST(conv2d, basic_conv2d) {
                output_ref.get(),
                weight.get(),
                bias.get(),
+               batch,
                channel,
                input_height,
                input_width,
@@ -389,6 +300,7 @@ TEST(conv2d, basic_conv2d) {
          output.get(),
          weight.get(),
          bias.get(),
+         batch,
          channel,
          input_height,
          input_width,
@@ -415,6 +327,7 @@ TEST(conv2d, basic_conv2d) {
 TEST(conv2d, basic_conv2d_conv1) {
   // 224x224x3 -> 112x112x64
   // 7x7 conv with stride 2
+  auto batch = 16;
   auto channel = 3;
   auto input_height = 224;
   auto input_width = 224;
@@ -428,12 +341,10 @@ TEST(conv2d, basic_conv2d_conv1) {
   auto output_width = 112;
 
   // Check if shapes are correct
-  auto shape = conv2d_result_shape(channel, input_height, input_width, filter_channel, filter_size, stride, padding);
-  ASSERT_EQ(shape[0], output_layers);
-  ASSERT_EQ(shape[1], output_height);
-  ASSERT_EQ(shape[2], output_width);
+  auto shape =
+      conv2d_result_shape(batch, channel, input_height, input_width, filter_channel, filter_size, stride, padding);
 
-  auto input = std::make_unique<float[]>(channel * input_height * input_width);
+  auto input = std::make_unique<float[]>(batch * channel * input_height * input_width);
   auto weight = std::make_unique<float_16[]>(filter_channel * channel * filter_size * filter_size);
   auto bias = std::make_unique<float[]>(filter_channel);
 
@@ -442,7 +353,7 @@ TEST(conv2d, basic_conv2d_conv1) {
   uniform_real_distribution<float> matrix_dist(-1.0e2, 1.0e2);
 
   // Fill them with random values
-  for (int i = 0; i < channel * input_height * input_width; i++) {
+  for (int i = 0; i < batch * channel * input_height * input_width; i++) {
     input[i] = matrix_dist(generator);
   }
   for (int i = 0; i < filter_channel * channel * filter_size * filter_size; i++) {
@@ -452,8 +363,9 @@ TEST(conv2d, basic_conv2d_conv1) {
     bias[i] = matrix_dist(generator);
   }
 
+
   auto output_size =
-      conv2d_output_size(channel, input_height, input_width, filter_channel, filter_size, stride, padding);
+      conv2d_output_sizes(batch, channel, input_height, input_width, filter_channel, filter_size, stride, padding);
 
   auto output_ref = std::make_unique<float[]>(output_size);
   auto output = std::make_unique<float[]>(output_size);
@@ -462,6 +374,7 @@ TEST(conv2d, basic_conv2d_conv1) {
                output_ref.get(),
                weight.get(),
                bias.get(),
+               batch,
                channel,
                input_height,
                input_width,
@@ -474,6 +387,7 @@ TEST(conv2d, basic_conv2d_conv1) {
          output.get(),
          weight.get(),
          bias.get(),
+         batch,
          channel,
          input_height,
          input_width,
@@ -500,6 +414,7 @@ TEST(conv2d, basic_conv2d_conv1) {
 TEST(conv2d, basic_conv2d_conv2x) {
   // 56x56x64 -> 56x56x64
   // 3x3 conv with stride 1
+  auto batch = 2;
   auto channel = 64;
   auto input_height = 56;
   auto input_width = 56;
@@ -513,12 +428,14 @@ TEST(conv2d, basic_conv2d_conv2x) {
   auto output_width = 56;
 
   // Check if shapes are correct
-  auto shape = conv2d_result_shape(channel, input_height, input_width, filter_channel, filter_size, stride, padding);
-  ASSERT_EQ(shape[0], output_layers);
-  ASSERT_EQ(shape[1], output_height);
-  ASSERT_EQ(shape[2], output_width);
+  auto shape =
+      conv2d_result_shape(batch, channel, input_height, input_width, filter_channel, filter_size, stride, padding);
+  ASSERT_EQ(shape[0], batch);
+  ASSERT_EQ(shape[1], output_layers);
+  ASSERT_EQ(shape[2], output_height);
+  ASSERT_EQ(shape[3], output_width);
 
-  auto input = std::make_unique<float[]>(channel * input_height * input_width);
+  auto input = std::make_unique<float[]>(batch * channel * input_height * input_width);
   auto weight = std::make_unique<float_16[]>(filter_channel * channel * filter_size * filter_size);
   auto bias = std::make_unique<float[]>(filter_channel);
 
@@ -527,7 +444,7 @@ TEST(conv2d, basic_conv2d_conv2x) {
   uniform_real_distribution<float> matrix_dist(-1.0e2, 1.0e2);
 
   // Fill them with random values
-  for (int i = 0; i < channel * input_height * input_width; i++) {
+  for (int i = 0; i < batch * channel * input_height * input_width; i++) {
     input[i] = matrix_dist(generator);
   }
   for (int i = 0; i < filter_channel * channel * filter_size * filter_size; i++) {
@@ -538,7 +455,7 @@ TEST(conv2d, basic_conv2d_conv2x) {
   }
 
   auto output_size =
-      conv2d_output_size(channel, input_height, input_width, filter_channel, filter_size, stride, padding);
+      conv2d_output_sizes(batch, channel, input_height, input_width, filter_channel, filter_size, stride, padding);
 
   auto output_ref = std::make_unique<float[]>(output_size);
   auto output = std::make_unique<float[]>(output_size);
@@ -547,6 +464,7 @@ TEST(conv2d, basic_conv2d_conv2x) {
                output_ref.get(),
                weight.get(),
                bias.get(),
+               batch,
                channel,
                input_height,
                input_width,
@@ -559,6 +477,7 @@ TEST(conv2d, basic_conv2d_conv2x) {
          output.get(),
          weight.get(),
          bias.get(),
+         batch,
          channel,
          input_height,
          input_width,

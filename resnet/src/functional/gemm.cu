@@ -105,8 +105,40 @@ void gemm_naive_caller(const float_16 *A, const float_16 *B, float_32 *Result, s
   check_cuda_error();
 }
 
+template<typename T, cudaMemcpyKind memcpy_kind, bool require_copy>
+static T *gemm_padding_col_major(const T *source, size_t row, size_t col, size_t pad_row, size_t pad_col) {
+  if ((col == pad_col) && (row == pad_row)
+      && (memcpy_kind == cudaMemcpyHostToHost || memcpy_kind == cudaMemcpyDeviceToDevice))
+    return (T *) source;
+
+  T *padded;
+  cudaMalloc(&padded, sizeof(T) * pad_col * pad_row);
+
+  if (require_copy) {
+    cudaMemset(padded, 0, sizeof(T) * pad_col * pad_row);
+    cudaMemcpy2D(padded, sizeof(T) * pad_col, source, sizeof(T) * col, sizeof(T) * col, row, memcpy_kind);
+  }
+  check_cuda_error();
+  return padded;
+}
+
+template<typename T, cudaMemcpyKind memcpy_kind>
+static void gemm_unpad_col_major(T *source, T *padded, size_t row, size_t col, size_t pad_row, size_t pad_col) {
+  if (source == padded && (memcpy_kind == cudaMemcpyHostToHost || memcpy_kind == cudaMemcpyDeviceToDevice)) {
+    return;
+  }
+
+  if ((col == pad_col) && (row == pad_row)) {
+    cudaMemcpy(source, padded, sizeof(T) * col * row, memcpy_kind);
+  } else {
+    cudaMemcpy2D(source, sizeof(T) * col, padded, sizeof(T) * pad_col, sizeof(T) * col, row, memcpy_kind);
+    check_cuda_error();
+  }
+}
+
 void gemm_device_memory(const float_16 *A, const float_16 *B, float_32 *Result, size_t M, size_t N, size_t K) {
   float_16 *padded_A;
+  float_16 *padded_B;
   float_32 *padded_C;
 
   // If M and N are not by 16, we need to pad them.
@@ -114,90 +146,55 @@ void gemm_device_memory(const float_16 *A, const float_16 *B, float_32 *Result, 
   auto padded_N = (N + (volta_n_factor - 1)) / volta_n_factor * volta_n_factor;
 
   // Copy A and B by padding to device
-  // A needs padding
-  if (padded_M != M) {
-    cudaMalloc(&padded_A, padded_M * K * sizeof(float_16));
-    // Can be optimized with a special padding kernel
-    cudaMemset(padded_A, 0, padded_M * K * sizeof(float_16));
-    for (int i = 0; i < K; i++) {
-      cudaMemcpy(padded_A + i * padded_M, A + i * M, M * sizeof(float_16), cudaMemcpyDeviceToDevice);
-    }
-  }
-  const float_16 *A_ptr = padded_M == M ? A : padded_A;
-
-  if (!(padded_M == M && padded_N == N)) {
-    // Result needs padding
-    cudaMalloc(&padded_C, padded_M * padded_N * sizeof(float_32));
-  }
-  float_32 *C_ptr = (padded_M == M && padded_N == N) ? Result : padded_C;
-
-  check_cuda_error();
-
-  // B have same leading dimension
+  // B needs padding, with a leading dimension of N
+  padded_A = gemm_padding_col_major<float_16, cudaMemcpyDeviceToDevice, true>(A, K, M, K, padded_M);
+  padded_B = gemm_padding_col_major<float_16, cudaMemcpyDeviceToDevice, true>(B, N, K, padded_N, K);
+  padded_C = gemm_padding_col_major<float_32, cudaMemcpyDeviceToDevice, false>(Result, N, M, padded_N, padded_M);
 
   // Fixme: this template parameter is adjustable
-  gemm_naive_caller<4, 4>(A_ptr, B, C_ptr, padded_M, padded_N, K);
+  gemm_naive_caller<4, 4>(padded_A, padded_B, padded_C, padded_M, padded_N, K);
+  check_cuda_error();
+
+  if (padded_A != A)
+    cudaFree(padded_A);
+
+  if (padded_B != B)
+    cudaFree(padded_B);
 
   check_cuda_error();
 
-  if (padded_M != M) {
-    cudaFree(padded_A);
-  }
-
-  if (!(padded_N == N && padded_M == M)) {
-    // Can be optimized with a special unpadding kernel
-    for (int i = 0; i < N; i++) {
-      cudaMemcpy(Result + i * M, padded_C + i * padded_M, M * sizeof(float_32), cudaMemcpyDeviceToDevice);
-    }
+  if (padded_C != Result) {
+    gemm_unpad_col_major<float_32, cudaMemcpyDeviceToDevice>(Result, padded_C, N, M, padded_N, padded_M);
     cudaFree(padded_C);
   }
-
-  check_cuda_error();
 }
 
 void gemm_host_memory(const float_16 *A, const float_16 *B, float_32 *Result, size_t M, size_t N, size_t K) {
-  float_16 *d_A, *d_B;
-  float_32 *d_C;
+  float_16 *padded_A;
+  float_16 *padded_B;
+  float_32 *padded_C;
 
   // If M and N are not by 16, we need to pad them.
   auto padded_M = (M + (volta_m_factor - 1)) / volta_m_factor * volta_m_factor;
   auto padded_N = (N + (volta_n_factor - 1)) / volta_n_factor * volta_n_factor;
 
-  cudaMalloc(&d_A, padded_M * K * sizeof(float_16));
-  cudaMalloc(&d_B, K * padded_N * sizeof(float_16));
-  cudaMalloc(&d_C, padded_M * padded_N * sizeof(float_32));
-
   // Copy A and B by padding to device
-  // A needs padding
-  if (padded_M != M) {
-    cudaMemset(d_A, 0, padded_M * K * sizeof(float_16));
-    for (int i = 0; i < K; i++) {
-      cudaMemcpy(d_A + i * padded_M, A + i * M, M * sizeof(float_16), cudaMemcpyHostToDevice);
-    }
-  } else {
-    cudaMemcpy(d_A, A, M * K * sizeof(float_16), cudaMemcpyHostToDevice);
-  }
-  // B have same leading dimension
-  cudaMemcpy(d_B, B, K * N * sizeof(float_16), cudaMemcpyHostToDevice);
+  // Copy A and B by padding to device
+  // B needs padding, with a leading dimension of N
+  padded_A = gemm_padding_col_major<float_16, cudaMemcpyHostToDevice, true>(A, K, M, K, padded_M);
+  padded_B = gemm_padding_col_major<float_16, cudaMemcpyHostToDevice, true>(B, N, K, padded_N, K);
+  padded_C = gemm_padding_col_major<float_32, cudaMemcpyHostToDevice, false>(Result, N, M, padded_N, padded_M);
 
+  // Fixme: this template parameter is adjustable
+  gemm_device_memory(padded_A, padded_B, padded_C, padded_M, padded_N, K);
   check_cuda_error();
 
-  // TODO: check whether device-to-device padding is faster than host-to-device padding
-  // Current invoking will never require additional device-side padding.
-  gemm_device_memory(d_A, d_B, d_C, padded_M, padded_N, K);
-
-  if (padded_N == N && padded_M == M) {
-    cudaMemcpy(Result, d_C, M * N * sizeof(float_32), cudaMemcpyDeviceToHost);
-  } else {
-    for (int i = 0; i < N; i++) {
-      cudaMemcpy(Result + i * M, d_C + i * padded_M, M * sizeof(float_32), cudaMemcpyDeviceToHost);
-    }
-  }
+  cudaFree(padded_A);
+  cudaFree(padded_B);
   check_cuda_error();
 
-  cudaFree(d_A);
-  cudaFree(d_B);
-  cudaFree(d_C);
+  gemm_unpad_col_major<float_32, cudaMemcpyDeviceToHost>(Result, padded_C, N, M, padded_N, padded_M);
+  cudaFree(padded_C);
   check_cuda_error();
 }
 
