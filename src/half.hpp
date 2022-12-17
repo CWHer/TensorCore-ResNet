@@ -19,9 +19,16 @@ namespace Sim
         //  2. denormalized value:  0.ffff * 2 ^ (1 - B)
         //  3. special values:      infinity, NaN
 
-        friend float operator*(const Half &lhs, const Half &rhs)
+        friend float operator*(const Half &lhs,
+                               const Half &rhs)
         {
-            // TODO
+            return lhs.toFloat() * rhs.toFloat();
+        }
+
+        friend float operator+(const Half &lhs,
+                               const Half &rhs)
+        {
+            return lhs.toFloat() + rhs.toFloat();
         }
 
     public:
@@ -53,9 +60,6 @@ namespace Sim
 
     public:
         Half() = default;
-
-        // for test
-        explicit Half(FP16 x) : x(x) {}
 
         // NOTE: round-to-even
         void fromFloat(f32 z)
@@ -120,7 +124,7 @@ namespace Sim
             }
         }
 
-        f32 toFloat()
+        f32 toFloat() const
         {
             FP32 y = {0};
             y.sign = x.sign;
