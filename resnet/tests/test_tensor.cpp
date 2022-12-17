@@ -60,7 +60,7 @@ TEST(tensor, device)
     const float value1 = -1.0419e-02;
     const float value2 = -6.1356e-03;
     const float value3 = -1.8098e-03;
-    const float eps = 1e-3;
+    const float eps = 1e-6;
     EXPECT_NEAR(x.index({0, 0, 0, 0}), value1, eps);
     EXPECT_NEAR(y.index({0, 0, 0, 1}), value2, eps);
     EXPECT_NEAR(y.index({0, 0, 0, 2}), value3, eps);
