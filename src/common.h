@@ -62,15 +62,19 @@ namespace Sim
 
     using f16 = Half;
 
+    // clang-format off
+    class FatalError : public std::exception {};
+    // clang-format on
+
     template <typename T>
     void printCppError(T result, char const *const msg,
                        const char *const file, int const line)
     {
         if (result)
         {
-            std::cerr << "CPP [Error] at: " << file << ":" << line
+            std::cerr << "[Error] at: " << file << ":" << line
                       << " \"" << msg << "\"" << std::endl;
-            exit(EXIT_FAILURE);
+            throw FatalError();
         }
     }
 
@@ -128,10 +132,3 @@ namespace Sim
     };
 
 }
-
-// TODO: fix this
-#define checkCppErrors(result) Sim::printCppError((result), #result, __FILE__, __LINE__)
-#define checkCppErrorsMsg(result, msg) Sim::printCppError((result), msg, __FILE__, __LINE__)
-
-#define checkWarning(result) Sim::printWarning((result), #result, __FILE__, __LINE__)
-#define checkWarningMsg(result, msg) Sim::printWarning((result), msg, __FILE__, __LINE__)
