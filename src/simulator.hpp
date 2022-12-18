@@ -18,20 +18,23 @@ namespace Sim
         SR_CTAID_Y
     };
 
-    struct Dim3
+    struct dim3
     {
-        unsigned int x, y, z;
-        constexpr Dim3(unsigned int vx = 1,
-                       unsigned int vy = 1,
-                       unsigned int vz = 1)
-            : x(vx), y(vy), z(vz) {}
+        u32 x, y, z;
+        constexpr dim3(u32 x = 1,
+                       u32 y = 1,
+                       u32 z = 1)
+            : x(x), y(y), z(z) {}
     };
+
+    using unit3 = dim3;
 
     class GPUSimulator
     {
-    private:
+    public:
         static const u32 WARP_SIZE = 32;
 
+    private:
         GlobalMemory &global_memory;
         RegisterFile &reg_file;
         PRegisterFile &preg_file;
@@ -43,6 +46,7 @@ namespace Sim
               reg_file(reg_file), preg_file(preg_file) {}
 
         // SASS instructions
+        // NOTE: HACK: DO NOT support BRANCH & SIMT STACK instructions
         void LDG_INSTR();
         void STG_INSTR();
         void HMMA_INSTR_STEP0();
@@ -58,6 +62,32 @@ namespace Sim
         void LEA_INSTR(bool HI, bool X, unsigned Rd, unsigned Ra, unsigned Sb,
                        unsigned imm, unsigned Pd0 = 7, unsigned Ps0 = 7);
         void EXIT_INSTR();
+
+        // Launch kernel
+        // NOTE: to simplify the simulator, we assume one SM is all-mighty
+        //     that is, we fix the grid_dim to (1, 1, 1)
+        template <typename Fn, typename... Args>
+        void launchKernel(const dim3 &block_dim,
+                          Fn &&kernel_func, Args &&...args)
+        {
+            reg_file.reset(), preg_file.reset();
+
+            std::vector<unit3> thread_idx_list;
+            thread_idx_list.reserve(block_dim.x * block_dim.y * block_dim.z);
+            for (u32 i = 0; i < block_dim.x; i++)
+                for (u32 j = 0; j < block_dim.y; j++)
+                    for (u32 k = 0; k < block_dim.z; k++)
+                        thread_idx_list.emplace_back(i, j, k);
+
+            std::array<unit3, WARP_SIZE> warp;
+            for (u32 i = 0; i < thread_idx_list.size(); i += WARP_SIZE)
+            {
+                std::copy(thread_idx_list.begin() + i,
+                          thread_idx_list.begin() + i + WARP_SIZE,
+                          warp.begin());
+                kernel_func(*this, block_dim, warp, std::forward<Args>(args)...);
+            }
+        }
 
         // Memory management
         void cudaMalloc(void **ptr, size_t size)
