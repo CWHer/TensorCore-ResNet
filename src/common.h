@@ -17,6 +17,7 @@
 #include <mutex>
 #include <bitset>
 #include <array>
+#include <tuple>
 
 namespace Sim
 {
