@@ -74,14 +74,15 @@ TEST(gpu_simulator, launch_kernel)
     float *d_matrix = nullptr;
     sim.cudaMalloc((void **)&d_matrix, 16 * 16 * sizeof(float));
     Sim::dim3 block_dim(16, 16);
-    sim.launchKernel(block_dim, dummy_kernel, d_matrix);
+    sim.launchKernel(block_dim, dummy_kernel, (float *)d_matrix);
     sim.cudaMemcpy(h_matrix, d_matrix, 16 * 16 * sizeof(float),
                    Sim::CUDAMemcpyType::MemcpyDeviceToHost);
+    sim.cudaFree(d_matrix);
 
     int error_count = 0;
     try
     {
-        sim.launchKernel(block_dim, dummy_kernel, (float *)h_matrix);
+        sim.launchKernel(block_dim, dummy_kernel, (float *)d_matrix);
     }
     catch (Sim::FatalError &e)
     {
