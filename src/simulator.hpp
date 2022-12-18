@@ -3,7 +3,6 @@
 #include "common.h"
 #include "device_memory.hpp"
 #include "reg_file.hpp"
-#include "preg_file.hpp"
 
 namespace Sim
 {
@@ -71,12 +70,12 @@ namespace Sim
             switch (type)
             {
             case CUDAMemcpyType::MemcpyDeviceToHost:
-                printCppError(global_memory.isAllocated(src),
+                printCppError(!global_memory.isAllocated(src),
                               "Wrong address for cudaMemcpy",
                               __FILE__, __LINE__);
                 break;
             case CUDAMemcpyType::MemcpyHostToDevice:
-                printCppError(global_memory.isAllocated(dst),
+                printCppError(!global_memory.isAllocated(dst),
                               "Wrong address for cudaMemcpy",
                               __FILE__, __LINE__);
                 break;
