@@ -7,7 +7,7 @@
 namespace Sim
 {
 
-    // What is this?
+    // TODO: What is this?
     enum s_reg_t
     {
         SRZ = 0,
@@ -70,6 +70,15 @@ namespace Sim
         void launchKernel(const dim3 &block_dim,
                           Fn &&kernel_func, Args &&...args)
         {
+            // NOTE: memory validation
+            ([&]
+             {
+                 if (std::is_pointer<Args>::value)
+                     printCppError(!global_memory.isAllocated(args),
+                                   "Wrong address for kernel function arguments",
+                                   __FILE__, __LINE__); }(),
+             ...);
+
             reg_file.reset(), preg_file.reset();
 
             std::vector<unit3> thread_idx_list;

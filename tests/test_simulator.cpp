@@ -78,6 +78,17 @@ TEST(gpu_simulator, launch_kernel)
     sim.cudaMemcpy(h_matrix, d_matrix, 16 * 16 * sizeof(float),
                    Sim::CUDAMemcpyType::MemcpyDeviceToHost);
 
+    int error_count = 0;
+    try
+    {
+        sim.launchKernel(block_dim, dummy_kernel, (float *)h_matrix);
+    }
+    catch (Sim::FatalError &e)
+    {
+        error_count++;
+    }
+    EXPECT_EQ(error_count, 1);
+
     const float eps = 1e-6f;
     for (int i = 0; i < 16; i++)
         for (int j = 0; j < 16; j++)
