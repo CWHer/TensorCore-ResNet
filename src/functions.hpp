@@ -21,12 +21,16 @@ namespace Sim
         // TODO:
     };
 
-    void device_gemm(Sim::GPUSimulator &sim, const Sim::dim3 &block_dim,
-                     const std::array<Sim::unit3, Sim::GPUSimulator::WARP_SIZE> &warp,
+    void device_gemm(Sim::GPUSimulator &sim,
+                     const Sim::GPUSimulator::ThreadWarp &warp,
                      const f32 *a, const f32 *b, f32 *c, int m, int n, int k)
     {
-        for (const auto &thread_idx : warp)
+        for (const auto &thread_num : warp)
         {
+            Sim::unit3 thread_idx;
+            Sim::dim3 block_dim;
+            std::tie(thread_idx, block_dim) = sim.readThreadInfo(thread_num);
+
             static const int N_WMMA = 16;
 
             f16 a_frag[N_WMMA][N_WMMA], b_frag[N_WMMA][N_WMMA];
@@ -63,7 +67,6 @@ namespace Sim
         sim.cudaMemcpy(d_a, (void *)a, m * k * sizeof(f32), CUDAMemcpyType::MemcpyDeviceToHost);
         sim.cudaMemcpy(d_b, (void *)b, k * n * sizeof(f32), CUDAMemcpyType::MemcpyDeviceToHost);
 
-        // NOTE: block_dim.z is just a reminder with no use
         static const int N_WMMA = 16;
         // TODO: padding
         dim3 block_dim(16, 16, 32);

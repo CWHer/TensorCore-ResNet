@@ -5,7 +5,7 @@
 namespace Sim
 {
 
-    template <typename T, u32 MAX_REG_NUM_PER>
+    template <typename T, u32 MAX_REG_NUM_PER, bool read_only>
     class RegisterFileBase
     {
     private:
@@ -17,30 +17,78 @@ namespace Sim
 
         void reset() { reg_file.clear(); }
 
-        void write(u32 thread_idx, u32 reg_idx, T value)
+        void write(u32 thread_num, u32 reg_idx, T value, bool force = false)
         {
+            printCppError(read_only && !force,
+                          "Write to read-only register file",
+                          __FILE__, __LINE__);
             if (SPECIAL_REG.count(reg_idx) == 0)
-            {
-                reg_file[thread_idx][reg_idx] = value;
-            }
+                reg_file[thread_num][reg_idx] = value;
         }
 
-        T read(u32 thread_idx, u32 reg_idx)
+        T read(u32 thread_num, u32 reg_idx)
         {
             return SPECIAL_REG.count(reg_idx) == 0
-                       ? reg_file[thread_idx][reg_idx]
+                       ? reg_file[thread_num][reg_idx]
                        : SPECIAL_REG.at(reg_idx);
         }
     };
 
-    // clang-format off
+    // predicated register file
     // NOTE: R7 is PT, which is always true
-    using PRegisterFile = RegisterFileBase<bool, 8>;
+    using PRegisterFile = RegisterFileBase<bool, 8, false>;
+    // clang-format off
     template <> const std::unordered_map<u32, bool> PRegisterFile::SPECIAL_REG = {{7, true}};
+    // clang-format on
 
+    // register file
     // NOTE: R255 is RZ, which is always 0
-    using RegisterFile = RegisterFileBase<u32, 256>;
+    using RegisterFile = RegisterFileBase<u32, 256, false>;
+    // clang-format off
     template <> const std::unordered_map<u32, u32> RegisterFile::SPECIAL_REG = {{255, 0}};
+    // clang-format on
+
+    // special register file
+    enum SRegisterType
+    {
+        // NOTE:
+        //  Cooperative thread arrays (CTAs) implement CUDA thread blocks
+        //  Clusters implement CUDA thread block clusters.
+
+        // A predefined, read-only special register
+        //  that returns the thread's lane within the warp.
+        // The lane identifier ranges from zero to WARP_SZ-1.
+        SR_LANEID,
+
+        // A predefined, read-only special register
+        //  that returns the thread's warp identifier.
+        // The warp identifier provides a unique warp number within a CTA
+        //  but not across CTAs within a grid.
+        // SR_WARPID,
+
+        // A predefined, read-only, per-thread special register
+        //  initialized with the thread identifier within the CTA.
+        SR_TID_X,
+        SR_TID_Y,
+        SR_TID_Z,
+        // A predefined, read-only special register
+        //  initialized with the number of thread ids in each CTA dimension.
+        SR_NTID_X,
+        SR_NTID_Y,
+        SR_NTID_Z,
+
+        // HACK: we fix the grid_dim to (1, 1, 1)
+        // A predefined, read-only special register
+        //  initialized  with the CTA identifier within the CTA grid.
+        // SR_CTAID_X,
+        // SR_CTAID_Y,
+        // SR_CTAID_Z,
+
+        NUM_SREG
+    };
+    using SRegisterFile = RegisterFileBase<u32, SRegisterType::NUM_SREG, true>;
+    // clang-format off
+    template <> const std::unordered_map<u32, u32> SRegisterFile::SPECIAL_REG = {};
     // clang-format on
 
 }
