@@ -11,12 +11,15 @@
 #include <chrono>
 #include <algorithm>
 #include <memory>
+#include <cmath>
+#include <numeric>
 
 // utility functions
 enum DeviceType
 {
     CPU,
-    CUDA
+    CUDA,
+    UNKNOWN
 };
 
 template <typename T>
