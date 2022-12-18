@@ -17,7 +17,7 @@ __global__ void MaxPool2dKernel(const float* in_data, const int in_height, const
 	{
 		for (int y = in_start_y; y < in_start_y + kernel_size && in_height + padding; y++)
 		{
-			int cur = in_data[x * in_width + y];
+			float cur = in_data[x * in_width + y];
 			max_val = cur > max_val ? cur : max_val;
 		}
 	}
