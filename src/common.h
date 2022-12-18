@@ -16,6 +16,7 @@
 #include <thread>
 #include <mutex>
 #include <bitset>
+#include <array>
 
 namespace Sim
 {
