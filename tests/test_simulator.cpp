@@ -6,8 +6,9 @@ TEST(gpu_simulator, memory)
     Sim::GlobalMemory mem;
     Sim::RegisterFile reg_file;
     Sim::PRegisterFile preg_file;
+    Sim::SRegisterFile sreg_file;
 
-    Sim::GPUSimulator sim(mem, reg_file, preg_file);
+    Sim::GPUSimulator sim(mem, reg_file, preg_file, sreg_file);
 
     const float eps = 1e-6f;
     float *h_ptr = nullptr, *d_ptr = nullptr;
@@ -56,15 +57,19 @@ TEST(gpu_simulator, launch_kernel)
     Sim::GlobalMemory mem;
     Sim::RegisterFile reg_file;
     Sim::PRegisterFile preg_file;
+    Sim::SRegisterFile sreg_file;
 
-    Sim::GPUSimulator sim(mem, reg_file, preg_file);
+    Sim::GPUSimulator sim(mem, reg_file, preg_file, sreg_file);
 
-    auto dummy_kernel = [](Sim::GPUSimulator &sim, const Sim::dim3 &block_dim,
-                           const std::array<Sim::unit3, Sim::GPUSimulator::WARP_SIZE> &warp,
+    auto dummy_kernel = [](Sim::GPUSimulator &sim,
+                           const Sim::GPUSimulator::ThreadWarp &warp,
                            float *matrix_ptr)
     {
-        for (const auto &thread_idx : warp)
+        for (const auto &thread_num : warp)
         {
+            Sim::unit3 thread_idx;
+            Sim::dim3 block_dim;
+            std::tie(thread_idx, block_dim) = sim.readThreadInfo(thread_num);
             int idx = thread_idx.x + thread_idx.y * block_dim.x;
             matrix_ptr[idx] = 1.0f;
         }
