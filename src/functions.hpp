@@ -6,7 +6,9 @@
 namespace Sim
 {
 
-    void wmma_kernel(f16 *a, f16 *b, f32 *c){
+    void wmma_kernel(GPUSimulator &sim,
+                     const GPUSimulator::ThreadWarp &warp,
+                     f16 *a, f16 *b, f32 *c){
         // NOTE: wmma functions
         // wmma::fragment<wmma::matrix_a, 16, 16, 16, half, wmma::row_major> a_frag;
         // wmma::fragment<wmma::matrix_b, 16, 16, 16, half, wmma::col_major> b_frag;
@@ -21,43 +23,53 @@ namespace Sim
         // TODO:
     };
 
-    void device_gemm(Sim::GPUSimulator &sim,
-                     const Sim::GPUSimulator::ThreadWarp &warp,
+    void device_gemm(GPUSimulator &sim,
+                     const GPUSimulator::ThreadWarp &warp,
                      const f32 *a, const f32 *b, f32 *c, int m, int n, int k)
     {
+        int thread_num = warp.front();
+        unit3 thread_idx;
+        dim3 block_dim;
+        std::tie(thread_idx, block_dim) = sim.readThreadInfo(thread_num);
+
+        // NOTE: HACK: host_gemm() set block_dim.z = WARP_SIZE
         for (const auto &thread_num : warp)
         {
-            Sim::unit3 thread_idx;
-            Sim::dim3 block_dim;
-            std::tie(thread_idx, block_dim) = sim.readThreadInfo(thread_num);
-
-            static const int N_WMMA = 16;
-
-            f16 a_frag[N_WMMA][N_WMMA], b_frag[N_WMMA][N_WMMA];
-            f32 c_frag[N_WMMA][N_WMMA];
-
-            int row = thread_idx.y * N_WMMA;
-            int col = thread_idx.x * N_WMMA;
-            for (int i = 0; i < N_WMMA; i++)
-                for (int j = 0; j < N_WMMA; j++)
-                    if (row + i < m && col + j < n)
-                    {
-                        // TODO: check this
-                        a_frag[i][j].fromFloat(a[(row + i) * k + col + j]);
-                        b_frag[i][j].fromFloat(b[(row + i) * k + col + j]);
-                        c_frag[i][j] = c[(row + i) * k + col + j];
-                    }
-            wmma_kernel((f16 *)a_frag, (f16 *)b_frag, (f32 *)c_frag);
-
-            for (int i = 0; i < N_WMMA; i++)
-                for (int j = 0; j < N_WMMA; j++)
-                    if (row + i < m && col + j < n)
-                        c[(row + i) * k + col + j] = c_frag[i][j];
+            unit3 __thread_idx;
+            std::tie(__thread_idx, std::ignore) = sim.readThreadInfo(thread_num);
+            printCppError(__thread_idx.x != thread_idx.x ||
+                              __thread_idx.y != thread_idx.y,
+                          "set block_dim.z == WARP_SIZE should ensure all threads in a warp \
+                           have the same thread_idx.x and thread_idx.y",
+                          __FILE__, __LINE__);
         }
+
+        static const int N_WMMA = 16;
+
+        f16 a_frag[N_WMMA][N_WMMA], b_frag[N_WMMA][N_WMMA];
+        f32 c_frag[N_WMMA][N_WMMA];
+
+        int row = thread_idx.y * N_WMMA;
+        int col = thread_idx.x * N_WMMA;
+        for (int i = 0; i < N_WMMA; i++)
+            for (int j = 0; j < N_WMMA; j++)
+                if (row + i < m && col + j < n)
+                {
+                    // TODO: check this
+                    a_frag[i][j].fromFloat(a[(row + i) * k + col + j]);
+                    b_frag[i][j].fromFloat(b[(row + i) * k + col + j]);
+                    c_frag[i][j] = c[(row + i) * k + col + j];
+                }
+        wmma_kernel(sim, warp, (f16 *)a_frag, (f16 *)b_frag, (f32 *)c_frag);
+
+        for (int i = 0; i < N_WMMA; i++)
+            for (int j = 0; j < N_WMMA; j++)
+                if (row + i < m && col + j < n)
+                    c[(row + i) * k + col + j] = c_frag[i][j];
     }
 
     void host_gemm(const f32 *a, const f32 *b, f32 *c,
-                   int m, int n, int k, Sim::GPUSimulator &sim)
+                   int m, int n, int k, GPUSimulator &sim)
     {
         f32 *d_a, *d_b, *d_c;
         sim.cudaMalloc((void **)&d_a, m * k * sizeof(f32));
@@ -69,7 +81,7 @@ namespace Sim
 
         static const int N_WMMA = 16;
         // TODO: padding
-        dim3 block_dim(16, 16, 32);
+        dim3 block_dim(16, 16, GPUSimulator::WARP_SIZE);
         sim.launchKernel(block_dim, device_gemm, d_a, d_b, d_c, m, n, k);
 
         sim.cudaMemcpy((void *)c, d_c, m * n * sizeof(f32), CUDAMemcpyType::MemcpyDeviceToHost);
