@@ -27,6 +27,9 @@ namespace Sim
         void cudaFree(T *ptr)
         {
             delete[] ptr;
+            printCppError(!isAllocated(ptr),
+                          "Wrong address for cudaFree",
+                          __FILE__, __LINE__);
             allocated_addrs.erase(reinterpret_cast<intptr_t>(ptr));
         }
 

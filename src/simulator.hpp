@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.h"
+#include "half.hpp"
 #include "device_memory.hpp"
 #include "reg_file.hpp"
 
@@ -71,13 +72,19 @@ namespace Sim
                           Fn &&kernel_func, Args &&...args)
         {
             // NOTE: memory validation
-            ([&]
-             {
-                 if (std::is_pointer<Args>::value)
-                     printCppError(!global_memory.isAllocated(args),
-                                   "Wrong address for kernel function arguments",
-                                   __FILE__, __LINE__); }(),
-             ...);
+            // clang-format off
+            ([&]{
+                // HACK: to avoid T *&x case
+                printCppError(std::is_reference<Args>::value,
+                              "DO NOT support reference type for kernel function arguments",
+                              __FILE__, __LINE__);
+                if (std::is_pointer<Args>::value)
+                    printCppError(!global_memory.isAllocated((void *)args),
+                                  "Wrong address for kernel function arguments",
+                                  __FILE__, __LINE__);
+                    
+            }(), ...);
+            // clang-format on
 
             reg_file.reset(), preg_file.reset();
 
