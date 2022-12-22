@@ -10,4 +10,8 @@ set(SOURCE_FILES
         src/functional/conv2d.cu
         src/functional/im2col.cu
         src/tensor.cpp
+        src/dataset.cpp
+        src/ops.cpp
+        src/conv.cpp
+        src/functional/linear.cu
 )

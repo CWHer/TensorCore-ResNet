@@ -2,6 +2,8 @@
 #include "dataset.hpp"
 
 using namespace std;
+using namespace Impl;
+
 struct validation_data {
   std::vector<int> sizes;
   std::vector<float_32> flatten_data;

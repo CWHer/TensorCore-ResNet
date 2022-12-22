@@ -10,11 +10,12 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+using namespace Impl;
+
 Tensor::TensorStorage::TensorStorage() : data(nullptr), device(Impl::DeviceType::UNKNOWN) {}
 
-Tensor::TensorStorage::TensorStorage(const std::vector<int> &shape, Impl::DeviceType device, float *data) {
-  this->shape = shape;
-  n_dim = shape.size();
+Tensor::TensorStorage::TensorStorage(const std::vector<int> &shape, Impl::DeviceType device, float *data)
+    : shape(shape), n_dim(shape.size()), device(device) {
   strides = std::vector<int>(n_dim);
   strides.back() = 1;
   for (int i = n_dim - 1; i > 0; i--)
@@ -32,7 +33,26 @@ Tensor::TensorStorage::TensorStorage(const std::vector<int> &shape, Impl::Device
   }
 
   this->data = data;
-  this->device = device;
+}
+
+Tensor::TensorStorage::TensorStorage(const Tensor::TensorStorage &other)
+    : shape(other.shape), n_dim(other.n_dim), strides(other.strides), total_size(other.total_size),
+      device(other.device) {
+  switch (device) {
+  case Impl::DeviceType::CPU:data = new float[total_size];
+    std::copy(other.data, other.data + total_size, data);
+    break;
+  case Impl::DeviceType::CUDA:checkCudaErrors(cudaMalloc(&data, total_size * sizeof(float)));
+    checkCudaErrors(cudaMemcpy(data, other.data, total_size * sizeof(float), cudaMemcpyDeviceToDevice));
+    break;
+  default:checkCppErrorsMsg(true, "Unknown device type");
+  }
+}
+
+Tensor::TensorStorage::TensorStorage(Tensor::TensorStorage &&other) noexcept
+    : shape(std::move(other.shape)), n_dim(other.n_dim), strides(std::move(other.strides)),
+      total_size(other.total_size), data(other.data), device(other.device) {
+  other.data = nullptr;
 }
 
 Tensor::TensorStorage::~TensorStorage() {
@@ -161,6 +181,7 @@ void Tensor::TensorStorage::to(Impl::DeviceType device) {
   this->data = data;
 }
 
+namespace Impl {
 std::ostream &operator<<(std::ostream &out, const std::shared_ptr<Tensor::TensorStorage> &x) {
   std::cout << "Tensor(";
   for (int i = 0; i < x->n_dim; i++)
@@ -175,6 +196,7 @@ std::ostream &operator<<(std::ostream &out, const std::shared_ptr<Tensor::Tensor
   std::cout << deviceType(x->device) << ")" << std::endl;
   return out;
 }
+}
 Tensor::Tensor() : storage(nullptr) {}
 Tensor::Tensor(const std::vector<int> &shape, Impl::DeviceType device, float *data) {
   storage = std::make_shared<TensorStorage>(shape, device, data);
@@ -188,7 +210,10 @@ void Tensor::load(const std::string &file_path) {
 bool Tensor::empty() { return storage == nullptr; }
 Tensor Tensor::clone() { return Tensor(storage->clone()); }
 float *Tensor::data_ptr() { return storage->data; }
-int64_t Tensor::totalSize() { return storage->total_size; }
+const float *Tensor::data_ptr() const {
+  return storage->data;
+}
+int64_t Tensor::totalSize() const { return storage->total_size; }
 float Tensor::index(const std::vector<int> &indices) {
   return storage->index(indices);
 }
@@ -199,9 +224,15 @@ void Tensor::view(const std::vector<int> &shape) {
 void Tensor::to(Impl::DeviceType device) {
   storage->to(device);
 }
-Impl::DeviceType Tensor::getDevice() { return storage->device; }
+Impl::DeviceType Tensor::getDevice() const { return storage->device; }
+namespace Impl {
 std::ostream &operator<<(std::ostream &out, const Tensor &x) {
   return out << x.storage;
 }
+}
 Tensor::Tensor(std::shared_ptr<TensorStorage> storage) : storage(storage) {}
+Tensor::Tensor(const Tensor &other) {
+  Tensor::TensorStorage other_storage = *other.storage;
+  storage = std::make_shared<TensorStorage>(std::move(other_storage));
+}
 

@@ -3,6 +3,8 @@
 #include "common.h"
 #include "module.hpp"
 
+namespace Impl {
+
 class Linear : public Module
 {
     // TODO
@@ -29,3 +31,4 @@ public:
         std::cout << prefix << ":Linear" << std::endl;
     }
 };
+}

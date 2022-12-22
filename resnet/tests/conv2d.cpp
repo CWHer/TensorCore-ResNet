@@ -307,7 +307,8 @@ TEST(conv2d, basic_conv2d) {
          filter_channel,
          filter_size,
          stride,
-         padding);
+         padding,
+         Impl::DeviceType::CPU);
 
   // Compare the results
   double max_diff_ratio = 0;
@@ -363,7 +364,6 @@ TEST(conv2d, basic_conv2d_conv1) {
     bias[i] = matrix_dist(generator);
   }
 
-
   auto output_size =
       conv2d_output_sizes(batch, channel, input_height, input_width, filter_channel, filter_size, stride, padding);
 
@@ -394,7 +394,8 @@ TEST(conv2d, basic_conv2d_conv1) {
          filter_channel,
          filter_size,
          stride,
-         padding);
+         padding,
+         Impl::DeviceType::CPU);
 
   // Compare the results
   double max_diff_ratio = 0;
@@ -484,7 +485,126 @@ TEST(conv2d, basic_conv2d_conv2x) {
          filter_channel,
          filter_size,
          stride,
-         padding);
+         padding,
+         Impl::DeviceType::CPU);
+
+  // Compare the results
+  double max_diff_ratio = 0;
+  double avg_diff_ratio = 0;
+  for (int i = 0; i < output_size; i++) {
+    double diff_ratio = output_ref[i] != 0 ? abs(output_ref[i] - output[i]) / abs(output_ref[i]) : 0;
+    max_diff_ratio = max(max_diff_ratio, diff_ratio);
+    avg_diff_ratio += diff_ratio / output_size;
+  }
+
+  std::cout << "Max difference ratio due to precision loss: " << max_diff_ratio << std::endl;
+
+  std::cout << "Avg difference ratio due to precision loss: " << avg_diff_ratio << std::endl;
+  EXPECT_LT(avg_diff_ratio, 1e-2);
+}
+
+TEST(conv2d, basic_conv2d_conv2x_cuda) {
+  // 56x56x64 -> 56x56x64
+  // 3x3 conv with stride 1
+  auto batch = 2;
+  auto channel = 64;
+  auto input_height = 56;
+  auto input_width = 56;
+  auto stride = 1;
+  auto padding = 1;
+  auto filter_channel = 64;
+  auto filter_size = 3;
+
+  auto output_layers = 64;
+  auto output_height = 56;
+  auto output_width = 56;
+
+  // Check if shapes are correct
+  auto shape =
+      conv2d_result_shape(batch, channel, input_height, input_width, filter_channel, filter_size, stride, padding);
+  ASSERT_EQ(shape[0], batch);
+  ASSERT_EQ(shape[1], output_layers);
+  ASSERT_EQ(shape[2], output_height);
+  ASSERT_EQ(shape[3], output_width);
+
+  auto input = std::make_unique<float[]>(batch * channel * input_height * input_width);
+  auto weight = std::make_unique<float_16[]>(filter_channel * channel * filter_size * filter_size);
+  auto bias = std::make_unique<float[]>(filter_channel);
+
+  // Randomly initialize
+  default_random_engine generator(RANDOM_SEED);
+  uniform_real_distribution<float> matrix_dist(-1.0e2, 1.0e2);
+
+  // Fill them with random values
+  for (int i = 0; i < batch * channel * input_height * input_width; i++) {
+    input[i] = matrix_dist(generator);
+  }
+  for (int i = 0; i < filter_channel * channel * filter_size * filter_size; i++) {
+    weight[i] = matrix_dist(generator);
+  }
+  for (int i = 0; i < filter_channel; i++) {
+    bias[i] = matrix_dist(generator);
+  }
+
+  auto output_size =
+      conv2d_output_sizes(batch, channel, input_height, input_width, filter_channel, filter_size, stride, padding);
+
+  auto output_ref = std::make_unique<float[]>(output_size);
+  auto output = std::make_unique<float[]>(output_size);
+
+  conv2d_torch(input.get(),
+               output_ref.get(),
+               weight.get(),
+               bias.get(),
+               batch,
+               channel,
+               input_height,
+               input_width,
+               filter_channel,
+               filter_size,
+               stride,
+               padding);
+
+  float_16 *weight_d;
+  float *bias_d;
+  float *input_d;
+  float *output_d;
+
+  cudaMalloc(&weight_d, filter_channel * channel * filter_size * filter_size * sizeof(float_16));
+  cudaMalloc(&bias_d, filter_channel * sizeof(float));
+  cudaMalloc(&input_d, batch * channel * input_height * input_width * sizeof(float));
+  cudaMalloc(&output_d, output_size * sizeof(float));
+
+  cudaMemcpy(weight_d,
+             weight.get(),
+             filter_channel * channel * filter_size * filter_size * sizeof(float_16),
+             cudaMemcpyHostToDevice);
+  cudaMemcpy(bias_d, bias.get(), filter_channel * sizeof(float), cudaMemcpyHostToDevice);
+  cudaMemcpy(input_d,
+             input.get(),
+             batch * channel * input_height * input_width * sizeof(float),
+             cudaMemcpyHostToDevice);
+
+  conv2d(input_d,
+         output_d,
+         weight_d,
+         bias_d,
+         batch,
+         channel,
+         input_height,
+         input_width,
+         filter_channel,
+         filter_size,
+         stride,
+         padding,
+         Impl::DeviceType::CUDA);
+
+  cudaMemcpy(output.get(), output_d, output_size * sizeof(float), cudaMemcpyDeviceToHost);
+
+  cudaFree(output_d);
+  cudaFree(input_d);
+  cudaFree(bias_d);
+  cudaFree(weight_d);
 
   // Compare the results
   double max_diff_ratio = 0;

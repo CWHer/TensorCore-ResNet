@@ -2,33 +2,55 @@
 
 #include "common.h"
 #include "module.hpp"
+#include "functional/conv2d.hpp"
 
-class Conv2d : public Module
-{
-    // TODO
+namespace Impl {
+
+class Conv2d : public Module {
+  // TODO
 private:
-    // FIXME: dummy variables
-    int in_channels, out_channels, kernel_size, stride, padding, dilation, groups;
+  Tensor weight, bias;
+  float_16 *weight_f16;
+  int in_channels, out_channels, kernel_size, stride, padding, dilation, groups;
 
 public:
-    Conv2d(int in_channels, int out_channels, int kernel_size, int stride = 1,
-           int padding = 0, int dilation = 1, int groups = 1, bool bias = true)
-        : in_channels(in_channels), out_channels(out_channels), kernel_size(kernel_size),
-          stride(stride), padding(padding), dilation(dilation), groups(groups)
-    {
-        // TODO
-    }
+  Conv2d(int in_channels,
+         int out_channels,
+         int kernel_size,
+         int stride = 1,
+         int padding = 0,
+         int dilation = 1,
+         int groups = 1,
+         bool bias = true);
 
-    Tensor forward(Tensor x) override
-    {
-        // TODO
-        int out_height = (x.sizes()[2] + 2 * padding - dilation * (kernel_size - 1) - 1) / stride + 1;
-        int out_width = (x.sizes()[3] + 2 * padding - dilation * (kernel_size - 1) - 1) / stride + 1;
-        return Tensor({x.sizes()[0], out_channels, out_height, out_width});
-    }
+  void setWeight(const Tensor &new_weight);
+  void setBias(const Tensor &new_bias);
 
-    void printModule(const std::string &prefix) override
-    {
-        std::cout << prefix << ":Conv2d" << std::endl;
-    }
+  Tensor forward(Tensor x) override;
+
+  void printModule(const std::string &prefix) override;
 };
+
+}
+
+namespace functional {
+using namespace Impl;
+
+Tensor conv2d(const Tensor &input,
+              const Tensor &weight,
+              const Tensor &bias = Tensor(),
+              int stride = 1,
+              int padding = 0,
+              int dilation = 1,
+              int groups = 1);
+
+Tensor conv2d(const Tensor &input,
+              const float_16 *weight,
+              const Tensor &bias,
+              int out_channels,
+              int kernel_size,
+              int stride,
+              int padding,
+              int dilation,
+              int groups);
+}

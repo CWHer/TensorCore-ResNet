@@ -438,7 +438,7 @@ TEST(gemm, unaligned_pointer) {
   int N = 513;
   int K = 1029;
 
-  auto eps = 1e-2;
+  auto eps = 1e-1;
 
   auto major = GEMM::Major::row_major;
   auto device_type = Impl::DeviceType::CPU;

@@ -2,6 +2,8 @@
 
 #include "common.h"
 
+namespace Impl {
+
 class Tensor {
   // NOTE: This is the logical layer of Tensor
   friend class TensorOps;
@@ -29,6 +31,8 @@ public:
     TensorStorage(const std::vector<int> &shape,
                   Impl::DeviceType device = Impl::DeviceType::CPU,
                   float *data = nullptr);
+    TensorStorage(const TensorStorage &other);
+    TensorStorage(TensorStorage &&other) noexcept;
     ~TensorStorage();
 
     void load(const std::string &file_path);
@@ -45,6 +49,7 @@ public:
   Tensor();
   Tensor(std::shared_ptr<TensorStorage> storage);
   Tensor(const std::vector<int> &shape, Impl::DeviceType device = Impl::DeviceType::CPU, float *data = nullptr);
+  Tensor(const Tensor &other);
   void load(const std::string &file_path);
   // HACK: DO NOT support save
   // void save(const std::string &path) {}
@@ -52,13 +57,17 @@ public:
   bool empty();
   Tensor clone();
   float *data_ptr();
-  int64_t totalSize();
+  const float *data_ptr() const;
+  int64_t totalSize() const;
   float index(const std::vector<int> &indices);
   std::vector<int> sizes() const;
   void view(const std::vector<int> &shape);
   void to(Impl::DeviceType device);
-  Impl::DeviceType getDevice();
+  Impl::DeviceType getDevice() const;
 
 public:
   friend std::ostream &operator<<(std::ostream &out, const Tensor &x);
 };
+}
+
+

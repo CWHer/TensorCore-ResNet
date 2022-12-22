@@ -110,9 +110,23 @@ TEST(conv2d, im2col_naive_impl_correctness_1) {
 
   // Reference result
   auto ref_result =
-      create_im2col_result_store(input_N, input_C, input_H, input_W, filter_height, filter_width, stride, padding);
+      create_im2col_result_store_host(input_N,
+                                      input_C,
+                                      input_H,
+                                      input_W,
+                                      filter_height,
+                                      filter_width,
+                                      stride,
+                                      padding);
   auto result =
-      create_im2col_result_store(input_N, input_C, input_H, input_W, filter_height, filter_width, stride, padding);
+      create_im2col_result_store_host(input_N,
+                                      input_C,
+                                      input_H,
+                                      input_W,
+                                      filter_height,
+                                      filter_width,
+                                      stride,
+                                      padding);
 
   auto input = std::make_unique<float[]>(input_N * input_C * input_H * input_W);
 
@@ -167,9 +181,23 @@ TEST(conv2d, im2col_naive_impl_correctness_2) {
 
   // Reference result
   auto ref_result =
-      create_im2col_result_store(input_N, input_C, input_H, input_W, filter_height, filter_width, stride, padding);
+      create_im2col_result_store_host(input_N,
+                                      input_C,
+                                      input_H,
+                                      input_W,
+                                      filter_height,
+                                      filter_width,
+                                      stride,
+                                      padding);
   auto result =
-      create_im2col_result_store(input_N, input_C, input_H, input_W, filter_height, filter_width, stride, padding);
+      create_im2col_result_store_host(input_N,
+                                      input_C,
+                                      input_H,
+                                      input_W,
+                                      filter_height,
+                                      filter_width,
+                                      stride,
+                                      padding);
 
   auto input = std::make_unique<float[]>(input_N * input_C * input_H * input_W);
 
@@ -224,9 +252,23 @@ TEST(conv2d, im2col_cuda_impl) {
   int padding = 4;
 // Reference result
   auto ref_result =
-      create_im2col_result_store(input_N, input_C, input_H, input_W, filter_height, filter_width, stride, padding);
+      create_im2col_result_store_host(input_N,
+                                      input_C,
+                                      input_H,
+                                      input_W,
+                                      filter_height,
+                                      filter_width,
+                                      stride,
+                                      padding);
   auto result =
-      create_im2col_result_store(input_N, input_C, input_H, input_W, filter_height, filter_width, stride, padding);
+      create_im2col_result_store_host(input_N,
+                                      input_C,
+                                      input_H,
+                                      input_W,
+                                      filter_height,
+                                      filter_width,
+                                      stride,
+                                      padding);
 
   auto input = std::make_unique<float[]>(input_N * input_C * input_H * input_W);
 
@@ -281,9 +323,23 @@ TEST(conv2d, im2col_cuda_impl_multi_batch) {
   int padding = 4;
 // Reference result
   auto ref_result =
-      create_im2col_result_store(input_N, input_C, input_H, input_W, filter_height, filter_width, stride, padding);
+      create_im2col_result_store_host(input_N,
+                                      input_C,
+                                      input_H,
+                                      input_W,
+                                      filter_height,
+                                      filter_width,
+                                      stride,
+                                      padding);
   auto result =
-      create_im2col_result_store(input_N, input_C, input_H, input_W, filter_height, filter_width, stride, padding);
+      create_im2col_result_store_host(input_N,
+                                      input_C,
+                                      input_H,
+                                      input_W,
+                                      filter_height,
+                                      filter_width,
+                                      stride,
+                                      padding);
 
   auto input = std::make_unique<float[]>(input_N * input_C * input_H * input_W);
 

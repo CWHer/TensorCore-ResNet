@@ -15,20 +15,31 @@ size_t im2col_result_size(int N, int C, int H, int W, int filter_height, int fil
   return N * C * filter_height * filter_width * output_size;
 }
 
-/**
- * Create a buffer to store im2col result
- */
-std::unique_ptr<float_16[]> create_im2col_result_store(int N,
-                                                       int C,
-                                                       int H,
-                                                       int W,
-                                                       int filter_height,
-                                                       int filter_width,
-                                                       int stride,
-                                                       int padding) {
+std::unique_ptr<float_16[]> create_im2col_result_store_host(int N,
+                                                            int C,
+                                                            int H,
+                                                            int W,
+                                                            int filter_height,
+                                                            int filter_width,
+                                                            int stride,
+                                                            int padding) {
   // Allocate memory for im2col result.
   auto im2col_size = im2col_result_size(N, C, H, W, filter_height, filter_width, stride, padding);
   return std::make_unique<float_16[]>(im2col_size);
+}
+
+std::unique_ptr<float_16[], decltype(&cudaFree)> create_im2col_result_store_device(int N,
+                                                                                   int C,
+                                                                                   int H,
+                                                                                   int W,
+                                                                                   int filter_height,
+                                                                                   int filter_width,
+                                                                                   int stride,
+                                                                                   int padding) {
+  auto im2col_size = im2col_result_size(N, C, H, W, filter_height, filter_width, stride, padding);
+  float_16 *ptr;
+  cudaMalloc(&ptr, im2col_size * sizeof(float_16));
+  return std::unique_ptr<float_16[], decltype(&cudaFree)>(ptr, &cudaFree);
 }
 
 __global__ static void im2col_cuda_kernel(const float *input,

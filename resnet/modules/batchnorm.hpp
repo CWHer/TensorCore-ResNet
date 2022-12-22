@@ -3,6 +3,7 @@
 #include "common.h"
 #include "module.hpp"
 
+namespace Impl {
 class BatchNorm2d : public Module
 {
     // TODO
@@ -25,3 +26,4 @@ public:
         std::cout << prefix << ":BatchNorm2d" << std::endl;
     }
 };
+}

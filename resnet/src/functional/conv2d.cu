@@ -13,9 +13,70 @@ static void check_cuda_error() {
   }
 }
 
-void _add(float *Result, const float *adder, int length) {
-  for (int i = 0; i < length; ++i) {
-    Result[i] += adder[i];
+__global__ static void cuda_add_(float *Result, const float *adder, int length) {
+  CUDA_KERNEL_LOOP(i, length) {
+    if (i < length) {
+      Result[i] += adder[i];
+    }
+  }
+}
+
+__global__ static void cuda_bias_extend(float *extended,
+                                        const float *bias,
+                                        int N,
+                                        int out_channels,
+                                        int conv_result_size) {
+  CUDA_KERNEL_LOOP(i, N * out_channels * conv_result_size) {
+    auto curr = i;
+    auto conv_result_idx = curr % conv_result_size;
+    curr /= conv_result_size;
+    auto out_channel_idx = curr % out_channels;
+    curr /= out_channels;
+    auto batch_idx = curr % N;
+
+    extended[batch_idx * out_channels * conv_result_size + out_channel_idx * conv_result_size + conv_result_idx] =
+        bias[out_channel_idx];
+  }
+}
+
+static void add_(float *Result, const float *adder, int length, Impl::DeviceType device_type) {
+  switch (device_type) {
+  case Impl::DeviceType::CPU: {
+    for (int i = 0; i < length; ++i) {
+      Result[i] += adder[i];
+    }
+  }
+    break;
+  case Impl::DeviceType::CUDA:cuda_add_<<<KERNEL_LOOP_BLOCKS(length), KERNEL_LOOP_THREADS>>>(Result, adder, length);
+    break;
+  }
+}
+
+static void bias_extend(float *Result,
+                        const float *bias,
+                        int N,
+                        int out_channels,
+                        int conv_result_size,
+                        Impl::DeviceType device_type) {
+  switch (device_type) {
+  case Impl::DeviceType::CPU: {
+    for (int i = 0; i < N; ++i) {
+      for (int j = 0; j < out_channels; ++j) {
+        for (int k = 0; k < conv_result_size; ++k) {
+          Result[i * out_channels * conv_result_size + j * conv_result_size + k] = bias[j];
+        }
+      }
+    }
+
+  }
+    break;
+  case Impl::DeviceType::CUDA:
+    cuda_bias_extend<<<KERNEL_LOOP_BLOCKS(N * out_channels * conv_result_size), KERNEL_LOOP_THREADS>>>(Result,
+                                                                                                       bias,
+                                                                                                       N,
+                                                                                                       out_channels,
+                                                                                                       conv_result_size);
+    break;
   }
 }
 
@@ -55,28 +116,6 @@ std::vector<int> conv2d_result_shape(int N,
   return {N, out_channels, output_height, output_width};
 }
 
-void gemm_batched_B(const float_16 *A,
-                    const float_16 *B,
-                    float_32 *C,
-                    size_t M,
-                    size_t N,
-                    size_t K,
-                    size_t batch_size,
-                    GEMM::Major major,
-                    Impl::DeviceType device_type) {
-  if (major != GEMM::Major::row_major) {
-    // Batches does not support col-major
-    throw std::runtime_error("Batches does not support col-major");
-  }
-
-  for (int i = 0; i < batch_size; i++) {
-    auto B_ptr = B + i * K * N;
-    auto C_ptr = C + i * M * N;
-    gemm(A, B_ptr, C_ptr, M, N, K, major, device_type);
-  }
-
-}
-
 /** @brief Convolutional layer forward propagation.
  *
  * @param input Input float, row major (organizes at last element), of shape (N, C, H, W).
@@ -104,45 +143,105 @@ void conv2d(const float *input,
             int out_channels,
             int kernel_size,
             int stride,
-            int padding) {
+            int padding,
+            Impl::DeviceType device_type) {
   int output_height = (H + 2 * padding - kernel_size) / stride + 1;
   int output_width = (W + 2 * padding - kernel_size) / stride + 1;
   int conv_result_size = output_height * output_width;
   int expanded_kernel_width = C * kernel_size * kernel_size;
 
-  auto im2col_result = create_im2col_result_store(N, C, H, W, kernel_size, kernel_size, stride, padding);
-  // After im2col, im2col_result is of shape (N, C * kernel_size * kernel_size, H_out * W_out)
-  im2col(input, im2col_result.get(), N, C, H, W, kernel_size, kernel_size, stride, padding, Impl::DeviceType::CPU);
+  float *bias_expanded;
 
-  /**
-   * FIXME: Current im2col implementation, according to pytorch, moves N to the top level, which is not efficient.
-   * the N should be moved to make sure the number of column be C * kernel_size * kernel_size, then we can utilize
-   * a large GEMM and then swap the dimensions to the right shape.
-   */
-  gemm_batched_B(weight,
-                 im2col_result.get(),
-                 output,
-                 out_channels,
-                 conv_result_size,
-                 expanded_kernel_width,
-                 N,
-                 GEMM::Major::row_major,
-                 Impl::DeviceType::CPU);
+  if (device_type == Impl::DeviceType::CUDA) {
+    auto im2col_result = create_im2col_result_store_device(N, C, H, W, kernel_size, kernel_size, stride, padding);
+    im2col(input, im2col_result.get(), N, C, H, W, kernel_size, kernel_size, stride, padding, device_type);
+    gemm_batched_B(weight,
+                   im2col_result.get(),
+                   output,
+                   out_channels,
+                   conv_result_size,
+                   expanded_kernel_width,
+                   N,
+                   GEMM::Major::row_major,
+                   device_type);
 
-  // Expanding bias from (out_channels) to (N, out_channels, output_height, output_width)
-  auto bias_expanded = std::make_unique<float[]>(N * out_channels * conv_result_size);
+    cudaMalloc(&bias_expanded, N * out_channels * conv_result_size * sizeof(float));
+  } else {
+    auto im2col_result = create_im2col_result_store_host(N, C, H, W, kernel_size, kernel_size, stride, padding);
+    // After im2col, im2col_result is of shape (N, C * kernel_size * kernel_size, H_out * W_out)
+    im2col(input, im2col_result.get(), N, C, H, W, kernel_size, kernel_size, stride, padding, device_type);
 
-  for (int n = 0; n < N; ++n) {
-    for (int i = 0; i < out_channels; ++i) {
-      for (int j = 0; j < conv_result_size; ++j) {
-        bias_expanded[n * out_channels * conv_result_size + i * conv_result_size + j] = bias[i];
-      }
-    }
+    /**
+     * FIXME: Current im2col implementation, according to pytorch, moves N to the top level, which is not efficient.
+     * the N should be moved to make sure the number of column be C * kernel_size * kernel_size, then we can utilize
+     * a large GEMM and then swap the dimensions to the right shape.
+     */
+    gemm_batched_B(weight,
+                   im2col_result.get(),
+                   output,
+                   out_channels,
+                   conv_result_size,
+                   expanded_kernel_width,
+                   N,
+                   GEMM::Major::row_major,
+                   device_type);
+
+    bias_expanded = new float[N * out_channels * conv_result_size];
   }
 
-  // Add bias
-  _add(output, bias_expanded.get(), N * out_channels * conv_result_size);
+  bias_extend(bias_expanded, bias, N, out_channels, conv_result_size, device_type);
+
+  add_(output, bias_expanded, N * out_channels * conv_result_size, device_type);
+
+  if (device_type == Impl::DeviceType::CUDA) {
+    cudaFree(bias_expanded);
+  } else {
+    delete[] bias_expanded;
+  }
 
   check_cuda_error();
+}
+
+void conv2d(const float *input,
+            float *output,
+            const float *weight,
+            const float *bias,
+            int N,
+            int C,
+            int H,
+            int W,
+            int out_channels,
+            int kernel_size,
+            int stride,
+            int padding,
+            Impl::DeviceType device_type) {
+  int output_height = (H + 2 * padding - kernel_size) / stride + 1;
+  int output_width = (W + 2 * padding - kernel_size) / stride + 1;
+  int conv_result_size = output_height * output_width;
+  auto weight_shape = out_channels * conv_result_size;
+  // copy weight to float_16
+  switch (device_type) {
+  case Impl::DeviceType::CPU: {
+    auto weight_16 = new float_16[weight_shape];
+    for (int i = 0; i < weight_shape; i++) {
+      weight_16[i] = weight[i];
+    }
+    conv2d(input, output, weight_16, bias, N, C, H, W, out_channels, kernel_size, stride, padding, device_type);
+    delete[] weight_16;
+    break;
+  }
+  case Impl::DeviceType::CUDA: {
+    float_16 *weight_16;
+    cudaMalloc(&weight_16, weight_shape * sizeof(float_16));
+    float_16 *weight_16_ptr = weight_16;
+    for (int i = 0; i < weight_shape; i++) {
+      *weight_16_ptr = weight[i];
+      weight_16_ptr++;
+    }
+    conv2d(input, output, weight_16, bias, N, C, H, W, out_channels, kernel_size, stride, padding, device_type);
+    cudaFree(weight_16);
+    break;
+  }
+  }
 }
 

@@ -3,6 +3,7 @@
 #include "common.h"
 #include "module.hpp"
 
+namespace Impl {
 class MaxPool2d : public Module
 {
     // TODO
@@ -57,3 +58,4 @@ public:
         std::cout << prefix << ":AdaptiveAvgPool2d" << std::endl;
     }
 };
+}

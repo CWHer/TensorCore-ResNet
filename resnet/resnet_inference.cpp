@@ -8,6 +8,8 @@
 #include "linear.hpp"
 #include "pooling.hpp"
 
+using namespace Impl;
+
 class BasicBlock : public ModuleList
 {
 private:

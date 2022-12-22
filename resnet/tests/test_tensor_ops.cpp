@@ -1,6 +1,8 @@
 #include "gtest/gtest.h"
 #include "ops.hpp"
 
+using namespace Impl;
+
 TEST(tensor_ops, cpu_ops)
 {
 
