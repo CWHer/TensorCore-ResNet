@@ -196,6 +196,8 @@ private:
             this->data = data;
         }
 
+        bool empty() const { return data == nullptr; }
+
     public:
         friend std::ostream &operator<<(std::ostream &out,
                                         const std::shared_ptr<TensorStorage> &x)
@@ -224,10 +226,13 @@ private:
     std::shared_ptr<TensorStorage> storage;
 
 public:
-    Tensor() : storage(nullptr) {}
+    // NOTE: storage is empty inside
+    Tensor() : storage(std::make_shared<TensorStorage>()) {}
 
+    // NOTE: create a pointer to the same storage
     explicit Tensor(std::shared_ptr<TensorStorage> storage) : storage(storage) {}
 
+    // NOTE: construct storage from float *data
     Tensor(const std::vector<int> &shape,
            DeviceType device = DeviceType::CPU,
            float *data = nullptr)
@@ -235,6 +240,7 @@ public:
         storage = std::make_shared<TensorStorage>(shape, device, data);
     }
 
+    // NOTE: reinitialize the storage
     void load(const std::string &file_path)
     {
         storage = std::make_shared<TensorStorage>();
@@ -245,7 +251,7 @@ public:
     // HACK: DO NOT support save
     // void save(const std::string &path) {}
 
-    bool empty() { return storage == nullptr; }
+    bool empty() { return storage->empty(); }
 
     Tensor clone() { return Tensor(storage->clone()); }
 
