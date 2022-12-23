@@ -95,7 +95,6 @@ public:
     }
 };
 
-/*
 int randomInt(int min, int max)
 {
     static std::random_device rd;
@@ -111,4 +110,3 @@ float randomFloat(float min, float max)
     std::uniform_real_distribution<float> dist(min, max);
     return dist(gen);
 }
-*/

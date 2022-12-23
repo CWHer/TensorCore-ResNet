@@ -4,12 +4,13 @@
  */
 
 #include <gtest/gtest.h>
-#include "batchnorm.cu"
+#include "batchnorm.hpp"
 
 TEST(batchnorm, bn)
 {
     const float eps = 1e-5;
 
+    float num = randomFloat(1.0, -1.0);
     // load data
     std::string weight_fn = "test_batchnorm_bn_weight.bin";
     std::string bias_fn = "test_batchnorm_bn_bias.bin";
