@@ -10,37 +10,25 @@ TEST(batchnorm, bn)
 {
     const float eps = 1e-5;
 
-    float num = randomFloat(1.0, -1.0);
-    // load data
-    std::string weight_fn = "test_batchnorm_bn_weight.bin";
-    std::string bias_fn = "test_batchnorm_bn_bias.bin";
-    std::string mean_fn = "test_batchnorm_bn_running_mean.bin";
-    std::string var_fn = "test_batchnorm_bn_running_var.bin";
-    Tensor weight;
-    weight.load(weight_fn);
-    Tensor bias;
-    bias.load(bias_fn);
-    Tensor running_mean;
-    running_mean.load(mean_fn);
-    Tensor running_var;
-    running_var.load(var_fn);
+    // load module
+    BatchNorm2d bn(3);
+    bn.loadWeights("test_batchnorm_bn");
+    bn.to(DeviceType::CUDA);
 
-    // execution on gpu
-    std::string input_fn = "test_batchnorm_x.bin";
+    // load input
     Tensor x;
-    x.load(input_fn);
-    BatchNorm2d bn2d(weight, bias, running_mean, running_var, eps);
-    bn2d.forward(x);
+    x.load("test_batchnorm_x.bin");
+    x.to(DeviceType::CUDA);
 
-    // check correctness
-    std::string output_fn = "test_batchnorm_y.bin";
+    bn.forward(x);
+
+    // load output & check correctness
     Tensor y;
-    y.load(output_fn);
-    float *res = x.data_ptr();
-    const unsigned int feature_sizes = x.sizes()[1];
-    float *ref = y.data_ptr();
-    for (int i = 0; i < feature_sizes; i++)
-    {
-        EXPECT_NEAR(res[i], ref[i], 1e-3);
-    }
+    y.load("test_batchnorm_y.bin");
+
+    float *naive_res = x.data_ptr();
+    float *std_res = y.data_ptr();
+    const int N_TEST = 5000;
+    for (int i = 0; i < N_TEST; i++)
+        EXPECT_NEAR(naive_res[i], std_res[i], 1e-5);
 }
