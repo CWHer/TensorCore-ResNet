@@ -8,8 +8,6 @@
 
 TEST(batchnorm, bn)
 {
-    const float eps = 1e-5;
-
     // load module
     BatchNorm2d bn(3);
     bn.loadWeights("test_batchnorm_bn");

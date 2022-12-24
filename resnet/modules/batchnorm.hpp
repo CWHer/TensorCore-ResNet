@@ -49,6 +49,7 @@ public:
         hostBatchNorm2d(input_data, mean_data, var_data, weight_data, bias_data,
                         eps, batch_size, num_channels, height, width);
 
+        // HACK: FIXME: this module is currently inplace
         return x;
     }
 
