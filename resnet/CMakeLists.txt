@@ -51,7 +51,7 @@ set(ORIGINAL_CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS})
 find_package(Torch)
 
 if (Torch_FOUND)
-    if (NOT "${ORIGINAL_CUDA_NVCC_FLAGS}" EQUAL "${CUDA_NVCC_FLAGS}")
+    if (NOT "${ORIGINAL_CUDA_NVCC_FLAGS}" STREQUAL "${CUDA_NVCC_FLAGS}")
         message(STATUS "Found libtorch built with CUDA, using torch's CUDA configurations")
         set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${TORCH_CUDA_FLAGS})
     else ()

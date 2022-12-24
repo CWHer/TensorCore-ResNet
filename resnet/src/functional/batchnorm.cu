@@ -56,7 +56,7 @@ void hostBatchNorm2d(float *input_data, const float *mean_data, const float *var
 
     // TODO: FIXME: this maybe extremely inefficient as input shape varies from
     //  something like (64, ~100, ~100) to (512, ~7, ~7)
-    unsigned int n_elements = batch_size * num_channels * height * width;
+    // unsigned int n_elements = batch_size * num_channels * height * width;
     dim3 grid_dim(batch_size);
     dim3 block_dim(num_channels);
     dimBatchNorm2dKernel<<<grid_dim, block_dim>>>(
