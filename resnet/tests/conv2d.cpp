@@ -409,7 +409,7 @@ TEST(conv2d, basic_conv2d_conv1) {
   std::cout << "Max difference ratio due to precision loss: " << max_diff_ratio << std::endl;
 
   std::cout << "Avg difference ratio due to precision loss: " << avg_diff_ratio << std::endl;
-  EXPECT_LT(avg_diff_ratio, 1e-2);
+  EXPECT_LT(avg_diff_ratio, 1e-1);
 }
 
 TEST(conv2d, basic_conv2d_conv2x) {

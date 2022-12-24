@@ -147,17 +147,6 @@ float Tensor::TensorStorage::index(const std::vector<int> &indices) {
     return 0.0f;
   }
 }
-[[deprecated("Use reshape")]]
-void Tensor::TensorStorage::view(const std::vector<int> &shape) {
-  // HACK: DO NOT support -1
-  this->shape = shape;
-  n_dim = shape.size();
-  strides.resize(n_dim);
-  strides.back() = 1;
-  for (int i = n_dim - 1; i > 0; i--)
-    strides[i - 1] = strides[i] * shape[i];
-  checkCppErrorsMsg(strides[0] * shape[0] != total_size, "Invalid shape");
-}
 
 void Tensor::TensorStorage::to(Impl::DeviceType device) {
   if (this->device == device)
@@ -236,10 +225,6 @@ float Tensor::index(const std::vector<int> &indices) {
   return storage->index(indices);
 }
 std::vector<int> Tensor::sizes() const { return storage->shape; }
-[[deprecated("Use reshape")]]
-void Tensor::view(const std::vector<int> &shape) {
-  storage->view(shape);
-}
 void Tensor::to(Impl::DeviceType device) {
   storage->to(device);
 }

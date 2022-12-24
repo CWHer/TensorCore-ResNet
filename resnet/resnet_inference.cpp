@@ -84,7 +84,7 @@ public:
           layer2(std::make_shared<ModuleList>(makeLayer(128, layers[1], 2))),
           layer3(std::make_shared<ModuleList>(makeLayer(256, layers[2], 2))),
           layer4(std::make_shared<ModuleList>(makeLayer(512, layers[3], 2))),
-          avgpool(std::make_shared<AvgPool2d>(1)),
+          avgpool(std::make_shared<AvgPool2d>(7)),
           fc(std::make_shared<Linear>(512 * BasicBlock::expansion, num_classes))
     {
         addModule("conv1", conv1);

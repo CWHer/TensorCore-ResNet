@@ -66,8 +66,8 @@ TEST(tensor, device) {
   EXPECT_EQ(y.getDevice(), Impl::DeviceType::CUDA);
 
   // flatten x and y
-  x.view({(int) x.totalSize()});
-  y.view({(int) y.totalSize()});
+  x.reshape({(int) x.totalSize()});
+  y.reshape({(int) y.totalSize()});
 
   // total sizes should be the same
   EXPECT_EQ(x.totalSize(), y.totalSize());

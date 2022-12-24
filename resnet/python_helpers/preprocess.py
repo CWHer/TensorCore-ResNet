@@ -111,7 +111,7 @@ def write_test_pooling_files(file_root):
     # Hack: not using torch CUDA part
 
     # MaxPool2d
-    batch_size = 2
+    batch_size = 50
     num_features = 64
     height = 112
     width = 112

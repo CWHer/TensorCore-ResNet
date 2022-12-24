@@ -19,5 +19,6 @@ set(SOURCE_FILES
         src/conv.cpp
         src/linear.cpp
         src/batchnorm.cpp
+        src/pooling.cpp
         src/functional/linear.cu
 )

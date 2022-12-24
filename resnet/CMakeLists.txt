@@ -17,6 +17,7 @@ add_compile_options(
     # Debugging options: no optimization, debug symbols
     "$<$<CONFIG:DEBUG>:-O0>"
     "$<$<CONFIG:DEBUG>:-g>"
+    "$<$<CONFIG:DEBUG>:$<$<COMPILE_LANGUAGE:CUDA>:-G>>"
 )
 
 # ######################### CUDA Related Thingy #################################
