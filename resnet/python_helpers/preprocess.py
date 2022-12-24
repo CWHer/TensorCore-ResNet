@@ -102,6 +102,48 @@ def write_test_batchnorm_files(file_root):
         y = net(x_tensor)
     writeTensor(y, os.path.join(file_root, "test_batchnorm_y.bin"))
 
+def write_test_pooling_files(file_root):
+    seed = 0
+    generator = randomInt(5, 25, seed=seed)
+
+    # fix torch random seed
+    torch.manual_seed(seed)
+    # Hack: not using torch CUDA part
+
+    # MaxPool2d
+    batch_size = 2
+    num_features = 64
+    height = 112
+    width = 112
+
+    x_tensor = randomTensor(
+        (batch_size, num_features, height, width), generator)
+    writeTensor(x_tensor,os.path.join(file_root, "test_maxpool_x.bin"))
+
+    net = torch.nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+
+    net.eval()
+    with torch.no_grad():
+        y = net(x_tensor)
+    writeTensor(y, os.path.join(file_root, "test_maxpool_y.bin"))
+
+    # AvgPool2d
+    batch_size = 2
+    num_features = 256
+    height = 10
+    width = 10
+
+    x_tensor = randomTensor(
+        (batch_size, num_features, height, width), generator)
+    writeTensor(x_tensor, os.path.join(file_root, "test_avgpool_x.bin"))
+
+    net = torch.nn.AvgPool2d(kernel_size=5, stride=2, padding=2)
+
+    net.eval()
+    with torch.no_grad():
+        y = net(x_tensor)
+    writeTensor(y, os.path.join(file_root, "test_avgpool_y.bin"))
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -144,6 +186,7 @@ if __name__ == "__main__":
         os.mkdir(output_dir)
 
     write_test_batchnorm_files(args.test_data_dir)
+    write_test_pooling_files(args.test_data_dir)
 
     with torch.no_grad() and tqdm.tqdm(total=len(dataset)) as pbar:
         for i, (images, labels) in enumerate(data_loader):

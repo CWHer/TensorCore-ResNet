@@ -9,5 +9,6 @@ set(TEST_SOURCE
     tests/test_dataset.cpp
     tests/test_batchnorm.cpp
     tests/tensor_conv2d.cpp
+    tests/test_pooling.cpp
     tests/linear.cpp
 )

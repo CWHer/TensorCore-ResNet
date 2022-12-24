@@ -17,9 +17,9 @@ TEST(tensor, basic) {
   EXPECT_EQ(x.totalSize(), 24);
 
   auto value = x.index({1, 2, 3});
-  x.view({2, 12});
+  x.reshape({2, 12});
   EXPECT_EQ(x.index({1, 11}), value);
-  x.view({24});
+  x.reshape({24});
   EXPECT_EQ(x.index({23}), value);
 
   Tensor y;

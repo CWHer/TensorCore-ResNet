@@ -70,7 +70,7 @@ private:
     std::shared_ptr<ModuleList> layer2;
     std::shared_ptr<ModuleList> layer3;
     std::shared_ptr<ModuleList> layer4;
-    std::shared_ptr<AdaptiveAvgPool2d> avgpool;
+    std::shared_ptr<AvgPool2d> avgpool;
     std::shared_ptr<Linear> fc;
 
 public:
@@ -84,7 +84,7 @@ public:
           layer2(std::make_shared<ModuleList>(makeLayer(128, layers[1], 2))),
           layer3(std::make_shared<ModuleList>(makeLayer(256, layers[2], 2))),
           layer4(std::make_shared<ModuleList>(makeLayer(512, layers[3], 2))),
-          avgpool(std::make_shared<AdaptiveAvgPool2d>(1)),
+          avgpool(std::make_shared<AvgPool2d>(1)),
           fc(std::make_shared<Linear>(512 * BasicBlock::expansion, num_classes))
     {
         addModule("conv1", conv1);
@@ -114,7 +114,7 @@ public:
 
     result = avgpool->forward(result);
     auto x_shape = result.sizes();
-    result.view({x_shape[0], static_cast<int>(result.totalSize() / x_shape[0])});
+    result.reshape({x_shape[0], static_cast<int>(result.totalSize() / x_shape[0])});
     result = fc->forward(x);
 
     return result;
