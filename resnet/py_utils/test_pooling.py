@@ -14,6 +14,7 @@ if __name__ == "__main__":
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
+    # MaxPool2d
     batch_size = 2
     num_features = 64
     height = 112
@@ -30,3 +31,21 @@ if __name__ == "__main__":
         y = net(x_tensor)
     print(y)
     writeTensor(y.detach(), "test_maxpool_y.bin")
+
+    # AvgPool2d
+    batch_size = 2
+    num_features = 256
+    height = 10
+    width = 10
+
+    x_tensor = randomTensor(
+        (batch_size, num_features, height, width), generator)
+    writeTensor(x_tensor, "test_avgpool_x.bin")
+
+    net = nn.AvgPool2d(kernel_size=5, stride=2, padding=2)
+
+    net.eval()
+    with torch.no_grad():
+        y = net(x_tensor)
+    print(y)
+    writeTensor(y.detach(), "test_avgpool_y.bin")
