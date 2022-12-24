@@ -243,7 +243,6 @@ public:
     // NOTE: reinitialize the storage
     void load(const std::string &file_path)
     {
-        storage = std::make_shared<TensorStorage>();
         storage->load(file_path);
     }
 

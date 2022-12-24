@@ -26,6 +26,7 @@ TEST(batchnorm, bn)
     Tensor y;
     y.load("test_batchnorm_y.bin");
 
+    x.to(DeviceType::CPU);
     float *naive_res = x.data_ptr();
     float *std_res = y.data_ptr();
     const int N_TEST = 5000;
