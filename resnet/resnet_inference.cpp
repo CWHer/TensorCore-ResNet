@@ -25,9 +25,9 @@ public:
 public:
     BasicBlock(int64_t inplanes, int64_t planes, int64_t stride = 1,
                ModuleList downsample = ModuleList())
-        : conv1(std::make_shared<Conv2d>(inplanes, planes, 3, stride)),
+        : conv1(std::make_shared<Conv2d>(inplanes, planes, 3, stride, 1, 1)),
           bn1(std::make_shared<BatchNorm2d>(planes)),
-          conv2(std::make_shared<Conv2d>(planes, planes, 3)),
+          conv2(std::make_shared<Conv2d>(planes, planes, 3, 1, 1, 1)),
           bn2(std::make_shared<BatchNorm2d>(planes)),
           downsample(std::make_shared<ModuleList>(downsample))
     {
@@ -41,7 +41,7 @@ public:
 
     Tensor forward(Tensor x) override
     {
-        Tensor identity(x.clone());
+        Tensor identity = x;
 
         x = conv1->forward(x);
         x = bn1->forward(x);
