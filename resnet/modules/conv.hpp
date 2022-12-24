@@ -23,6 +23,8 @@ public:
          int groups = 1,
          bool bias = true);
 
+  ~Conv2d();
+
   void setWeight(const Tensor &new_weight);
   void setBias(const Tensor &new_bias);
 

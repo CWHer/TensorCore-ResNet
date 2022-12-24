@@ -5,6 +5,7 @@
 #include "functional/gemm.hpp"
 #include "functional/conv2d.hpp"
 #include "functional/macros.h"
+#include "functional/add.hpp"
 
 static void check_cuda_error() {
   cudaError_t err = cudaPeekAtLastError();
@@ -13,13 +14,6 @@ static void check_cuda_error() {
   }
 }
 
-__global__ static void cuda_add_(float *Result, const float *adder, int length) {
-  CUDA_KERNEL_LOOP(i, length) {
-    if (i < length) {
-      Result[i] += adder[i];
-    }
-  }
-}
 
 __global__ static void cuda_bias_extend(float *extended,
                                         const float *bias,
@@ -39,20 +33,7 @@ __global__ static void cuda_bias_extend(float *extended,
   }
 }
 
-static void add_(float *Result, const float *adder, int length, Impl::DeviceType device_type) {
-  switch (device_type) {
-  case Impl::DeviceType::CPU: {
-    for (int i = 0; i < length; ++i) {
-      Result[i] += adder[i];
-    }
-  }
-    break;
-  case Impl::DeviceType::CUDA:cuda_add_<<<KERNEL_LOOP_BLOCKS(length), KERNEL_LOOP_THREADS>>>(Result, adder, length);
-    break;
-  }
-}
-
-static void bias_extend(float *Result,
+void bias_extend(float *Result,
                         const float *bias,
                         int N,
                         int out_channels,
@@ -77,16 +58,6 @@ static void bias_extend(float *Result,
                                                                                                        out_channels,
                                                                                                        conv_result_size);
     break;
-  }
-}
-
-[[maybe_unused]] void col2im_naive(float *dst, const float *source, int C, int H, int W) {
-  for (int c = 0; c < C; ++c) {
-    for (int h = 0; h < H; ++h) {
-      for (int w = 0; w < W; ++w) {
-        dst[c * (H * W) + h * W + w] = source[c + (h * W + w) * C];
-      }
-    }
   }
 }
 

@@ -2,6 +2,8 @@
 */#ifndef TENSORCORE_RESNET_COMMON_FUNCTIONAL_MACROS_H
 #define TENSORCORE_RESNET_COMMON_FUNCTIONAL_MACROS_H
 
+#include <stdexcept>
+
 #define CUDA_KERNEL_LOOP(i, n) \
   for (int i = blockIdx.x * blockDim.x + threadIdx.x; \
        i < (n); \

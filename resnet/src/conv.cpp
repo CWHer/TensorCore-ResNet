@@ -22,8 +22,17 @@ Conv2d::Conv2d(int in_channels,
 
   weight = Tensor({out_channels, in_channels, kernel_size, kernel_size});
   // TODO: store the weight in float16 to increase the performance
+  addTensor("weight", weight);
 
   this->bias = Tensor({out_channels});
+  if (bias) {
+    addTensor("bias", this->bias);
+  } else {
+    // Set bias to zeroes
+    for (int i = 0; i < this->bias.totalSize(); i++) {
+      this->bias.data_ptr()[i] = 0.0f;
+    }
+  }
 }
 
 Tensor Conv2d::forward(Tensor x) {
@@ -54,6 +63,17 @@ void Conv2d::setWeight(const Tensor &new_weight) {
 }
 void Conv2d::setBias(const Tensor &new_bias) {
   this->bias = new_bias;
+}
+
+Conv2d::~Conv2d() {
+  if (weight_f16 != nullptr) {
+    switch (this->weight.getDevice()) {
+    case CPU:delete[] weight_f16;
+      break;
+    case CUDA:cudaFree(weight_f16);
+      break;
+    }
+  }
 }
 
 // Perform the convert on-size, this could be inefficient
@@ -95,7 +115,16 @@ Tensor functional::conv2d(const Tensor &input,
 
   auto weight_16 = fp32_array_to_fp16_array(weight.data_ptr(), weight.totalSize(), weight.getDevice());
 
-  return functional::conv2d(input, weight_16, bias, out_channels, kernel_height, stride, padding, dilation, groups);
+  auto result =
+      functional::conv2d(input, weight_16, bias, out_channels, kernel_height, stride, padding, dilation, groups);
+
+  switch (weight.getDevice()) {
+  case Impl::DeviceType::CPU:delete[] weight_16;
+    break;
+  case Impl::DeviceType::CUDA:cudaFree(weight_16);
+  }
+
+  return result;
 }
 
 Tensor functional::conv2d(const Tensor &input,

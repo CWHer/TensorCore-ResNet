@@ -41,6 +41,8 @@ public:
     void view(const std::vector<int> &shape);
     void to(Impl::DeviceType device);
     friend std::ostream &operator<<(std::ostream &out, const std::shared_ptr<Tensor::TensorStorage> &x);
+
+    TensorStorage &operator=(const TensorStorage &other);
   };
 private:
   std::shared_ptr<TensorStorage> storage;
@@ -64,6 +66,8 @@ public:
   void view(const std::vector<int> &shape);
   void to(Impl::DeviceType device);
   Impl::DeviceType getDevice() const;
+
+  Tensor &operator=(const Tensor &other);
 
 public:
   friend std::ostream &operator<<(std::ostream &out, const Tensor &x);

@@ -8,4 +8,5 @@ set(TEST_SOURCE
     tests/test_tensor_ops.cpp
     tests/test_dataset.cpp
     tests/tensor_conv2d.cpp
+    tests/linear.cpp
 )

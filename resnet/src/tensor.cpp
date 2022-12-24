@@ -181,6 +181,14 @@ void Tensor::TensorStorage::to(Impl::DeviceType device) {
   this->data = data;
 }
 
+Tensor::TensorStorage &Tensor::TensorStorage::operator=(const Tensor::TensorStorage &other) {
+  if (this == &other)
+    return *this;
+  this->~TensorStorage();
+  new(this) Tensor::TensorStorage(other);
+  return *this;
+}
+
 namespace Impl {
 std::ostream &operator<<(std::ostream &out, const std::shared_ptr<Tensor::TensorStorage> &x) {
   std::cout << "Tensor(";
@@ -235,4 +243,10 @@ Tensor::Tensor(const Tensor &other) {
   Tensor::TensorStorage other_storage = *other.storage;
   storage = std::make_shared<TensorStorage>(std::move(other_storage));
 }
-
+Tensor &Tensor::operator=(const Tensor &other) {
+  if (this == &other)
+    return *this;
+  this->~Tensor();
+  new(this) Tensor(other);
+  return *this;
+}

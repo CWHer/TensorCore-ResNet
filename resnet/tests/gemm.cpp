@@ -6,7 +6,10 @@
 #include <gtest/gtest.h>
 #include "functional/gemm.hpp"
 #include <random>
+
+#if WITH_CUBLAS
 #include <cublas_v2.h>
+#endif
 
 #ifndef RANDOM_SEED
 #define RANDOM_SEED std::random_device{}()
@@ -64,6 +67,7 @@ static void gemm_CPU_reference(const float *A,
 
 }
 
+#if WITH_CUBLAS
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "misc-no-recursion"
 static void gemm_cuBLAS_reference(const float *A,
@@ -127,6 +131,7 @@ static void gemm_cuBLAS_reference(const float *A,
   }
 }
 #pragma clang diagnostic pop
+#endif
 
 typedef decltype(gemm_CPU_reference) gemm32_new_func;
 typedef decltype(gemm) gemm16_new_func;
@@ -186,7 +191,7 @@ static void func_test(size_t M,
   double average_diff = 0;
   for (int i = 0; i < M * N; i++) {
     auto diff_ratio = C_ref[i] != 0 ? fabs(C[i] - C_ref[i]) / fabs(C_ref[i]) : 0;
-    average_diff += diff_ratio / (M * N);
+    average_diff += diff_ratio / (float) (M * N);
   }
 
   if (average_diff > eps) {
@@ -280,7 +285,7 @@ static void func_test(size_t M,
   double average_diff = 0;
   for (int i = 0; i < M * N; i++) {
     auto diff_ratio = C_ref[i] != 0 ? fabs(C[i] - C_ref[i]) / fabs(C_ref[i]) : 0;
-    average_diff += diff_ratio / (M * N);
+    average_diff += diff_ratio / (float) (M * N);
   }
 
   if (average_diff > eps) {
@@ -291,7 +296,7 @@ static void func_test(size_t M,
 }
 
 static void unequal_B(int M, int N, int K, int batch_size) {
-  auto eps = 1e-3;
+  auto eps = 1e-1;
 
   // Test if we entered the correct cuBLAS parameters
   auto A = make_unique<float_16[]>(M * K);
@@ -329,7 +334,7 @@ static void unequal_B(int M, int N, int K, int batch_size) {
   double average_diff = 0;
   for (int i = 0; i < batch_size * M * N; i++) {
     auto diff_ratio = C_ref[i] != 0 ? fabs(C[i] - C_ref[i]) / fabs(C_ref[i]) : 0;
-    average_diff += diff_ratio / (batch_size * M * N);
+    average_diff += diff_ratio / (float) (batch_size * M * N);
   }
 
   if (average_diff > eps) {
@@ -438,7 +443,7 @@ TEST(gemm, unaligned_pointer) {
   int N = 513;
   int K = 1029;
 
-  auto eps = 1e-1;
+  auto eps = 1e-2;
 
   auto major = GEMM::Major::row_major;
   auto device_type = Impl::DeviceType::CPU;

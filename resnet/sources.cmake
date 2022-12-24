@@ -9,9 +9,11 @@ set(SOURCE_FILES
         src/functional/gemm.cu
         src/functional/conv2d.cu
         src/functional/im2col.cu
+        src/functional/add.cu
         src/tensor.cpp
         src/dataset.cpp
         src/ops.cpp
         src/conv.cpp
+        src/linear.cpp
         src/functional/linear.cu
 )
