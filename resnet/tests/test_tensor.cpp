@@ -54,7 +54,7 @@ TEST(tensor, load) {
 TEST(tensor, device) {
   // Test if device loaded as same as host loads
   std::string filename = RESNET18_ROOT;
-  filename += "/conv1_weight.bin";
+  filename += "/resnet18_conv1_weight.bin";
   Tensor x;
   x.load(filename);
   EXPECT_EQ(x.getDevice(), Impl::DeviceType::CPU);

@@ -76,6 +76,13 @@ Conv2d::~Conv2d() {
   }
 }
 
+void Conv2d::to(Impl::DeviceType device) {
+  Module::to(device);
+  if (bias.getDevice() != device) {
+    bias.to(device);
+  }
+}
+
 // Perform the convert on-size, this could be inefficient
 Tensor functional::conv2d(const Tensor &input,
                           const Tensor &weight,

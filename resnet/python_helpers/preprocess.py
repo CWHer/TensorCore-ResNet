@@ -32,7 +32,7 @@ def writeTensor(tensor: torch.Tensor, filename: str) -> None:
 def writeNetwork(network: torch.nn.Module, directory: str) -> None:
     state_dict = network.state_dict()
     for name, tensor in state_dict.items():
-        filename = os.path.join(directory, name.replace('.', '_') + ".bin")
+        filename = os.path.join(directory, "resnet18_" + name.replace('.', '_') + ".bin")
         writeTensor(tensor, filename)
 
 

@@ -7,7 +7,6 @@
 namespace Impl {
 
 class Conv2d : public Module {
-  // TODO
 private:
   Tensor weight, bias;
   float_16 *weight_f16;
@@ -21,7 +20,9 @@ public:
          int padding = 0,
          int dilation = 1,
          int groups = 1,
-         bool bias = true);
+         bool bias = false);
+
+  void to(Impl::DeviceType device) override;
 
   ~Conv2d();
 

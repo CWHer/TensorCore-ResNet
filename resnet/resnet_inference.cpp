@@ -97,7 +97,7 @@ public:
         addModule("avgpool", avgpool);
         addModule("fc", fc);
 
-        // TODO: load weights from model_path
+        this->loadWeights(model_path);
     }
 
   Tensor forward(const Tensor &x) override {
@@ -142,14 +142,17 @@ private:
     }
 };
 
-int main()
+int main(int argc, char* argv[])
 {
     // 1. load resnet18 model
     // 2. load image dataset
     // 3. inference
 
-    Tensor x({50, 3, 224, 224});
-    ResNet18 resnet18("path");
+    // TODO: argument parsing
+    // TODO: fed the model with real data
+    Tensor x({100, 3, 224, 224}, Impl::DeviceType::CUDA);
+    ResNet18 resnet18("weight/resnet18");
+    resnet18.to(Impl::DeviceType::CUDA);
     resnet18.printModule("resnet18");
     std::cout << std::endl;
 
