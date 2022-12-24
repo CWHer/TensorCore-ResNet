@@ -1,5 +1,6 @@
 # Include dirs
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/common)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/common/functional)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/modules)
 
 # ... Add more if you need them

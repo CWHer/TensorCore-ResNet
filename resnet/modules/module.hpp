@@ -27,7 +27,7 @@ public:
     virtual void loadWeights(const std::string &path)
     {
         for (auto &named_tensor : tensor_list)
-            named_tensor.tensor.load(path + "_" + named_tensor.name);
+            named_tensor.tensor.load(path + "_" + named_tensor.name + ".bin");
     }
 
     virtual void to(DeviceType device)
