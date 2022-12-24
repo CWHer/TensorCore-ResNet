@@ -35,10 +35,10 @@ public:
 
         // NOTE: x is in NCHW format
         // NOTE: computation is done channel-wise
-        unsigned int batch_size = x.sizes()[0];
-        unsigned int num_channels = x.sizes()[1];
-        unsigned int height = x.sizes()[2];
-        unsigned int width = x.sizes()[3];
+        int batch_size = x.sizes()[0];
+        int num_channels = x.sizes()[1];
+        int height = x.sizes()[2];
+        int width = x.sizes()[3];
 
         float *input_data = x.data_ptr();
         float *mean_data = running_mean.data_ptr();
