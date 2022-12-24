@@ -155,7 +155,7 @@ private:
             }
         }
 
-        void view(const std::vector<int> &shape)
+        void reshape(const std::vector<int> &shape)
         {
             // HACK: DO NOT support -1
             this->shape = shape;
@@ -265,9 +265,9 @@ public:
 
     std::vector<int> sizes() const { return storage->shape; }
 
-    void view(const std::vector<int> &shape)
+    void reshape(const std::vector<int> &shape)
     {
-        storage->view(shape);
+        storage->reshape(shape);
     }
 
     void to(DeviceType device)

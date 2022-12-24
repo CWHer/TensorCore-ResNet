@@ -113,7 +113,7 @@ public:
 
         x = avgpool->forward(x);
         auto x_shape = x.sizes();
-        x.view({x_shape[0], x.totalSize() / x_shape[0]});
+        x.reshape({x_shape[0], x.totalSize() / x_shape[0]});
         x = fc->forward(x);
 
         return x;

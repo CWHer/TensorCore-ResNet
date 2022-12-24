@@ -26,18 +26,18 @@
 
 __global__ void dimBatchNorm2dKernel(float *input_data, float *mean_data, float *var_data,
                                      float *weight_data, float *bias_data,
-                                     float eps, unsigned int batch_size, unsigned int num_channels,
-                                     unsigned int height, unsigned int width,
-                                     unsigned int element_per_thread)
+                                     float eps, int batch_size, int num_channels,
+                                     int height, int width,
+                                     int element_per_thread)
 {
-    const unsigned int channel = threadIdx.x;
+    const int channel = threadIdx.x;
     const float cur_mean = mean_data[channel];
     const float cur_var = var_data[channel];
     const float cur_weight = weight_data[channel];
     const float cur_bias = bias_data[channel];
     float r = 1.0f / sqrtf(cur_var + eps);
 
-    unsigned int global_tid = blockIdx.x * blockDim.x + threadIdx.x;
+    int global_tid = blockIdx.x * blockDim.x + threadIdx.x;
     input_data = input_data + global_tid * element_per_thread;
     for (int i = 0; i < element_per_thread; i++)
         input_data[i] = ((input_data[i] - cur_mean) * r) * cur_weight + cur_bias;
@@ -45,8 +45,8 @@ __global__ void dimBatchNorm2dKernel(float *input_data, float *mean_data, float 
 
 void hostBatchNorm2d(float *input_data, float *mean_data, float *var_data,
                      float *weight_data, float *bias_data,
-                     float eps, unsigned int batch_size, unsigned int num_channels,
-                     unsigned int height, unsigned int width)
+                     float eps, int batch_size, int num_channels,
+                     int height, int width)
 {
     // #if INDEX_BY_HW
     //     unsigned int total_ele = batch_size * num_channels * height * width;
@@ -58,7 +58,6 @@ void hostBatchNorm2d(float *input_data, float *mean_data, float *var_data,
 
     // TODO: FIXME: this maybe extremely inefficient as input shape varies from
     //  something like (64, ~100, ~100) to (512, ~7, ~7)
-    unsigned int n_elements = batch_size * num_channels * height * width;
     dim3 grid_dim(batch_size);
     dim3 block_dim(num_channels);
     dimBatchNorm2dKernel<<<grid_dim, block_dim>>>(
