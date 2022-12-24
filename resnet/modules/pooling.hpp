@@ -20,7 +20,7 @@ public:
         // TODO
     }
 
-    Tensor forward(Tensor x) override
+    Tensor forward(const Tensor &x) override
     {
         // TODO
         int out_height = (x.sizes()[2] + 2 * padding - dilation * (kernel_size - 1) - 1) / stride + 1;
@@ -47,7 +47,7 @@ public:
         // TODO
     }
 
-    Tensor forward(Tensor x) override
+    Tensor forward(const Tensor &x) override
     {
         // TODO
         return Tensor({x.sizes()[0], x.sizes()[1], output_size, output_size});

@@ -10,10 +10,13 @@ set(SOURCE_FILES
         src/functional/conv2d.cu
         src/functional/im2col.cu
         src/functional/add.cu
+        src/functional/batchnorm.cu
+        src/common.cpp
         src/tensor.cpp
         src/dataset.cpp
         src/ops.cpp
         src/conv.cpp
         src/linear.cpp
+        src/batchnorm.cpp
         src/functional/linear.cu
 )

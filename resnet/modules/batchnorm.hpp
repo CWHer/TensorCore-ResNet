@@ -1,29 +1,25 @@
 #pragma once
 
-#include "common.h"
+
 #include "module.hpp"
+#include <string>
 
 namespace Impl {
 class BatchNorm2d : public Module
 {
-    // TODO
 private:
+    int num_features;
+    double eps;
+    Tensor weight, bias, running_mean, running_var;
+
 public:
+    // FIXME: these parameters are not used,
+    //  recommend to add conflict check or remove them
     BatchNorm2d(int num_features, double eps = 1e-5, double momentum = 0.1,
-                bool affine = true, bool track_running_stats = true)
-    {
-        // TODO
-    }
+                bool affine = true, bool track_running_stats = true);
 
-    Tensor forward(Tensor x) override
-    {
-        // TODO
-        return Tensor(x.sizes());
-    }
+    Tensor forward(const Tensor &x) override;
 
-    void printModule(const std::string &prefix) override
-    {
-        std::cout << prefix << ":BatchNorm2d" << std::endl;
-    }
+    void printModule(const std::string &prefix) override;
 };
 }

@@ -13,6 +13,7 @@
 #include <memory>
 #include <cmath>
 #include <numeric>
+#include <random>
 #include <sstream>
 //Volta structure only allows FP16 to be multiplied.
 #include <cuda_fp16.h>
@@ -90,3 +91,7 @@ public:
     return duration.count();
   }
 };
+
+int randomInt(int min, int max);
+
+float randomFloat(float min, float max);

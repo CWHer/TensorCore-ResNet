@@ -28,7 +28,7 @@ public:
   void setWeight(const Tensor &new_weight);
   void setBias(const Tensor &new_bias);
 
-  Tensor forward(Tensor x) override;
+  Tensor forward(const Tensor &x) override;
 
   void printModule(const std::string &prefix) override;
 };

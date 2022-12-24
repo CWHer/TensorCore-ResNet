@@ -69,7 +69,7 @@ Impl::Tensor functional::linear(const Tensor &input, const float_16 *weight, con
   return result;
 }
 
-Impl::Tensor Impl::Linear::forward(Impl::Tensor x) {
+Impl::Tensor Impl::Linear::forward(const Tensor &x) {
   if (weight_f16 == nullptr) {
     switch (x.getDevice()) {
     case Impl::DeviceType::CPU:weight_f16 = new float_16[weight.totalSize()];

@@ -15,11 +15,11 @@ private:
 public:
   Linear(int in_features, int out_features);
   ~Linear();
-  Tensor forward(Tensor x) override;
+  Tensor forward(const Tensor &x) override;
   void printModule(const std::string &prefix) override;
 
-void setWeight(const Tensor &new_weight);
-    void setBias(const Tensor &new_bias);
+  void setWeight(const Tensor &new_weight);
+  void setBias(const Tensor &new_bias);
 
 };
 }

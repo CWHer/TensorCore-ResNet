@@ -35,7 +35,7 @@ Conv2d::Conv2d(int in_channels,
   }
 }
 
-Tensor Conv2d::forward(Tensor x) {
+Tensor Conv2d::forward(const Tensor &x) {
   if (weight_f16 == nullptr) {
     weight_f16 = fp32_array_to_fp16_array(weight.data_ptr(), weight.totalSize(), weight.getDevice());
   }

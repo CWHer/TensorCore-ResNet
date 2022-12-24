@@ -39,25 +39,24 @@ public:
             addModule("downsample", this->downsample);
     }
 
-    Tensor forward(Tensor x) override
-    {
-        Tensor identity = x;
+  Tensor forward(const Tensor &x) override {
+    Tensor identity = x, result;
 
-        x = conv1->forward(x);
-        x = bn1->forward(x);
-        TensorOps::relu_(x);
+    result = conv1->forward(x);
+    result = bn1->forward(result);
+    TensorOps::relu_(result);
 
-        x = conv2->forward(x);
-        x = bn2->forward(x);
+    result = conv2->forward(result);
+    result = bn2->forward(result);
 
-        if (!downsample->empty())
-            identity = downsample->forward(identity);
+    if (!downsample->empty())
+      identity = downsample->forward(identity);
 
-        TensorOps::add_(x, identity);
-        TensorOps::relu_(x);
+    TensorOps::add_(result, identity);
+    TensorOps::relu_(result);
 
-        return x;
-    }
+    return result;
+  }
 };
 
 class ResNet18 : public ModuleList
@@ -101,25 +100,25 @@ public:
         // TODO: load weights from model_path
     }
 
-    Tensor forward(Tensor x) override
-    {
-        x = conv1->forward(x);
-        x = bn1->forward(x);
-        TensorOps::relu_(x);
-        x = maxpool->forward(x);
+  Tensor forward(const Tensor &x) override {
+    Tensor result;
+    result = conv1->forward(x);
+    result = bn1->forward(result);
+    TensorOps::relu_(result);
+    result = maxpool->forward(result);
 
-        x = layer1->forward(x);
-        x = layer2->forward(x);
-        x = layer3->forward(x);
-        x = layer4->forward(x);
+    result = layer1->forward(result);
+    result = layer2->forward(result);
+    result = layer3->forward(result);
+    result = layer4->forward(result);
 
-        x = avgpool->forward(x);
-        auto x_shape = x.sizes();
-        x.view({x_shape[0], static_cast<int>(x.totalSize() / x_shape[0])});
-        x = fc->forward(x);
+    result = avgpool->forward(result);
+    auto x_shape = result.sizes();
+    result.view({x_shape[0], static_cast<int>(result.totalSize() / x_shape[0])});
+    result = fc->forward(x);
 
-        return x;
-    }
+    return result;
+  }
 
 private:
     ModuleList makeLayer(int64_t planes, int64_t blocks, int64_t stride = 1)

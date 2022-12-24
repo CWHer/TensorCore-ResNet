@@ -1,4 +1,5 @@
 import os
+from typing import Iterable
 
 import torch
 import tqdm
@@ -57,6 +58,51 @@ class ImageDataset(torch.utils.data.Dataset):
         return len(self.image_names)
 
 
+def randomInt(min: int, max: int, seed: int = 0, a=131, c=1031, m=2147483647) -> Iterable[int]:
+    seed = (a * seed + c) % m
+    while True:
+        yield seed % (max - min) + min
+        seed = (a * seed + c) % m
+
+
+def randomTensor(shape: Iterable[int], generator) -> torch.Tensor:
+    tensor_size = torch.prod(torch.tensor(shape)).item()
+    raw_data = [next(generator) for _ in range(tensor_size)]
+    ret_data = list(map(lambda x: x / 10, raw_data))
+    return torch.FloatTensor(ret_data).view(*shape)
+
+
+def write_test_batchnorm_files(file_root):
+    seed = 0
+    generator = randomInt(5, 25, seed=seed)
+
+    # fix torch random seed
+    torch.manual_seed(seed)
+    # Hack: not using torch CUDA part
+
+    batch_size = 2
+    num_features = 3
+    height = 224
+    width = 224
+
+    x_tensor = randomTensor((batch_size, num_features, height, width), generator)
+    writeTensor(x_tensor, os.path.join(file_root, "test_batchnorm_x.bin"))
+
+    net = torch.nn.BatchNorm2d(num_features=num_features)
+    state_dict = net.state_dict()
+    for name, tensor in state_dict.items():
+        if name not in ["num_batches_tracked"]:
+            new_tensor = randomTensor(tensor.shape, generator)
+            state_dict[name] = new_tensor
+            writeTensor(new_tensor, os.path.join(file_root, "test_batchnorm_bn_{}.bin".format(name)))
+    net.load_state_dict(state_dict)
+
+    net.eval()
+    with torch.no_grad():
+        y = net(x_tensor)
+    writeTensor(y, os.path.join(file_root, "test_batchnorm_y.bin"))
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--batch-size", type=int, default=4)
@@ -64,6 +110,7 @@ if __name__ == "__main__":
     parser.add_argument("--dataset-dir", type=str, default="dataset")
     parser.add_argument("--tensor-output-dir", type=str, default="dataset_tensor")
     parser.add_argument("--network-output-dir", type=str, default="resnet18")
+    parser.add_argument("--test-data-dir", type=str, default="test_data")
 
     # Check if pytorch supports cuda
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -95,6 +142,8 @@ if __name__ == "__main__":
     output_dir = args.tensor_output_dir
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
+
+    write_test_batchnorm_files(args.test_data_dir)
 
     with torch.no_grad() and tqdm.tqdm(total=len(dataset)) as pbar:
         for i, (images, labels) in enumerate(data_loader):

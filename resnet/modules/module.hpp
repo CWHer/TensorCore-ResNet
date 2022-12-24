@@ -15,7 +15,7 @@ private:
   std::vector<NamedTensor> tensor_list;
 
 public:
-  virtual Tensor forward(Tensor x) = 0;
+  virtual Tensor forward(const Tensor &x) = 0;
 
   virtual void printModule(const std::string &prefix) = 0;
 
@@ -25,7 +25,7 @@ public:
 
   virtual void loadWeights(const std::string &path) {
     for (auto &named_tensor : tensor_list)
-      named_tensor.tensor.load(path + "_" + named_tensor.name);
+      named_tensor.tensor.load(path + "_" + named_tensor.name + ".bin");
   }
 
   virtual void to(Impl::DeviceType device) {
@@ -55,10 +55,12 @@ public:
       named_module.module->loadWeights(path + "_" + named_module.name);
   }
 
-  virtual Tensor forward(Tensor x) override {
+  Tensor forward(const Tensor &x) override {
+    Tensor result = x;
+    checkCppErrorsMsg(module_list.empty(), "ModuleList is empty");
     for (auto &named_module : module_list)
-      x = named_module.module->forward(x);
-    return x;
+      result = named_module.module->forward(result);
+    return result;
   }
 
   void to(Impl::DeviceType device) override {
