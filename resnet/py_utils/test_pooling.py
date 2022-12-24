@@ -15,7 +15,7 @@ if __name__ == "__main__":
     torch.backends.cudnn.benchmark = False
 
     # MaxPool2d
-    batch_size = 2
+    batch_size = 20
     num_features = 64
     height = 112
     width = 112
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     writeTensor(y.detach(), "test_maxpool_y.bin")
 
     # AvgPool2d
-    batch_size = 2
+    batch_size = 20
     num_features = 256
     height = 10
     width = 10

@@ -8,9 +8,9 @@ __global__ void deviceMaxPool2dKernel(float *input_data, int height, int width,
                                       float *output_data, int out_height, int out_width,
                                       int kernel_size, int padding, int stride)
 {
-    // NOTE: B/2 (block) x 128 (thread) x H x W (within)
-    int input_grid_offset = 2 * blockDim.x * height * width;
-    int output_grid_offset = 2 * blockDim.x * out_height * out_width;
+    // NOTE: ... (block) x 128 (thread) x H x W (within)
+    int input_grid_offset = blockDim.x * height * width;
+    int output_grid_offset = blockDim.x * out_height * out_width;
     int input_thread_offset = height * width;
     int output_thread_offset = out_height * out_width;
 
@@ -47,9 +47,9 @@ __global__ void deviceAvgPool2dKernel(float *input_data, int height, int width,
                                       float *output_data, int out_height, int out_width,
                                       int kernel_size, int padding, int stride)
 {
-    // NOTE: B/2 (block) x 128 (thread) x H x W (within)
-    int input_grid_offset = 2 * blockDim.x * height * width;
-    int output_grid_offset = 2 * blockDim.x * out_height * out_width;
+    // NOTE: ... (block) x 128 (thread) x H x W (within)
+    int input_grid_offset = blockDim.x * height * width;
+    int output_grid_offset = blockDim.x * out_height * out_width;
     int input_thread_offset = height * width;
     int output_thread_offset = out_height * out_width;
 
