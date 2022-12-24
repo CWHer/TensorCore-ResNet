@@ -22,8 +22,8 @@
 //     }
 // }
 
-__global__ static void dimBatchNorm2dKernel(float *input_data, float *mean_data, float *var_data,
-                                     float *weight_data, float *bias_data,
+__global__ static void dimBatchNorm2dKernel(float *input_data, const float *mean_data, const float *var_data,
+                                     const float *weight_data, const float *bias_data,
                                      float eps, unsigned int batch_size, unsigned int num_channels,
                                      unsigned int height, unsigned int width,
                                      unsigned int element_per_thread)
@@ -41,8 +41,8 @@ __global__ static void dimBatchNorm2dKernel(float *input_data, float *mean_data,
         input_data[i] = ((input_data[i] - cur_mean) * r) * cur_weight + cur_bias;
 }
 
-void hostBatchNorm2d(float *input_data, float *mean_data, float *var_data,
-                     float *weight_data, float *bias_data,
+void hostBatchNorm2d(float *input_data, const float *mean_data, const float *var_data,
+                     const float *weight_data, const float *bias_data,
                      float eps, unsigned int batch_size, unsigned int num_channels,
                      unsigned int height, unsigned int width)
 {
