@@ -41,38 +41,38 @@ __global__ void deviceMaxPool2dKernel(float *input_data, int height, int width,
         }
 }
 
-// // TODO: tiling and leverage cache
-// template <int block_size>
-// __global__ void deviceAvgPool2dKernel(float *input_data, int height, int width,
-//                                       float *output_data, int out_height, int out_width,
-//                                       int kernel_size, int padding, int stride)
-// {
-//     // NOTE: B/2 (block) x 128 (thread) x H x W (within)
-//     int input_grid_offset = 2 * blockDim.x * height * width;
-//     int output_grid_offset = 2 * blockDim.x * out_height * out_width;
-//     int input_thread_offset = height * width;
-//     int output_thread_offset = out_height * out_width;
+// TODO: tiling and leverage cache
+template <int block_size>
+__global__ void deviceAvgPool2dKernel(float *input_data, int height, int width,
+                                      float *output_data, int out_height, int out_width,
+                                      int kernel_size, int padding, int stride)
+{
+    // NOTE: B/2 (block) x 128 (thread) x H x W (within)
+    int input_grid_offset = 2 * blockDim.x * height * width;
+    int output_grid_offset = 2 * blockDim.x * out_height * out_width;
+    int input_thread_offset = height * width;
+    int output_thread_offset = out_height * out_width;
 
-//     input_data += blockIdx.x * input_grid_offset +
-//                   threadIdx.x * input_thread_offset;
-//     output_data += blockIdx.x * output_grid_offset +
-//                    threadIdx.x * output_thread_offset;
+    input_data += blockIdx.x * input_grid_offset +
+                  threadIdx.x * input_thread_offset;
+    output_data += blockIdx.x * output_grid_offset +
+                   threadIdx.x * output_thread_offset;
 
-//     int output_offset = 0;
-//     float r = 1.0f / (kernel_size * kernel_size);
-//     for (int i = kernel_size - 1 - padding; i < height + padding; i += stride)
-//         for (int j = kernel_size - 1 - padding; j < width + padding; j += stride)
-//         {
-//             float ret = 0;
-//             for (int x = i - kernel_size + 1; x <= i; x++)
-//                 for (int y = j - kernel_size + 1; y <= j; y++)
-//                 {
-//                     float value = 0 <= x && x < height &&
-//                                           0 <= y && y < width
-//                                       ? input_data[x * width + y]
-//                                       : 0; // zero padding
-//                     ret += value;
-//                 }
-//             output_data[output_offset++] = ret * r;
-//         }
-// }
+    int output_offset = 0;
+    float r = 1.0f / (kernel_size * kernel_size);
+    for (int i = kernel_size - 1 - padding; i < height + padding; i += stride)
+        for (int j = kernel_size - 1 - padding; j < width + padding; j += stride)
+        {
+            float ret = 0;
+            for (int x = i - kernel_size + 1; x <= i; x++)
+                for (int y = j - kernel_size + 1; y <= j; y++)
+                {
+                    float value = 0 <= x && x < height &&
+                                          0 <= y && y < width
+                                      ? input_data[x * width + y]
+                                      : 0; // zero padding
+                    ret += value;
+                }
+            output_data[output_offset++] = ret * r;
+        }
+}
