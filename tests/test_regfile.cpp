@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "reg_file.hpp"
+#include "reg_file.h"
 
 TEST(reg, reg_file)
 {
