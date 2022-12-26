@@ -7,6 +7,7 @@
 
 namespace Sim
 {
+
     struct dim3
     {
         u32 x, y, z;
@@ -31,6 +32,8 @@ namespace Sim
         PRegisterFile &preg_file;
         SRegisterFile &sreg_file;
 
+        i32 exit_thread_count;
+
     public:
         // frankly speaking, DeviceMemory & Register should be internal modules of GPUSimulator
         //  but make them external can reduce the difficulty of writing test cases
@@ -41,21 +44,22 @@ namespace Sim
 
         // SASS instructions
         // NOTE: HACK: DO NOT support BRANCH & SIMT STACK instructions
-        void LDG_INSTR();
-        void STG_INSTR();
+        void LDG_INSTR(const GPUSimulator::ThreadWarp &warp,
+                       u32 n_bits, u32 Rd, u32 Ra, u64 imm);
+        void STG_INSTR(const GPUSimulator::ThreadWarp &warp,
+                       u32 n_bits, u32 Rd, u32 Ra, u64 imm);
         void HMMA_INSTR_STEP0();
         void HMMA_INSTR_STEP1();
         void HMMA_INSTR_STEP2();
         void HMMA_INSTR_STEP3();
-        void S2R_INSTR();
-        void IMAD_INSTR();
-        void LOP3_INSTR(unsigned Rd, unsigned Ra, unsigned Sb, unsigned Sc,
-                        unsigned imm);
-        void SHF_INSTR();
-        void CS2R_INSTR();
-        void LEA_INSTR(bool HI, bool X, unsigned Rd, unsigned Ra, unsigned Sb,
-                       unsigned imm, unsigned Pd0 = 7, unsigned Ps0 = 7);
-        void EXIT_INSTR();
+        void S2R_INSTR(const GPUSimulator::ThreadWarp &warp, u32 Rd, u32 Sb);
+        void IMAD_INSTR(const GPUSimulator::ThreadWarp &warp, bool wide,
+                        u32 Rd, u64 Ra, u64 Sb, u64 Sc, u32 options);
+        void LOP3_INSTR();
+        void SHF_INSTR(const GPUSimulator::ThreadWarp &warp,
+                       bool left, u32 Rd, u32 Ra, u32 Sb, u32 Sc);
+        void LEA_INSTR();
+        void EXIT_INSTR(const GPUSimulator::ThreadWarp &warp);
 
         // Launch kernel
         // NOTE: to simplify the simulator, we assume one SM is all-mighty
@@ -108,6 +112,7 @@ namespace Sim
                         sreg_file.write(thread_num, static_cast<u32>(SRegisterType::SR_NTID_Z), block_dim.z, true);
                     }
 
+            exit_thread_count = 0;
             ThreadWarp warp;
             for (u32 i = 0; i < thread_num_list.size(); i += WARP_SIZE)
             {
@@ -116,6 +121,8 @@ namespace Sim
                           warp.begin());
                 kernel_func(*this, warp, std::forward<Args>(args)...);
             }
+            printCppError(exit_thread_count != thread_num_count,
+                          "Not all threads have exited", __FILE__, __LINE__);
         }
 
         std::tuple<unit3, dim3> readThreadInfo(u32 thread_num)
