@@ -1,0 +1,2566 @@
+(cuda-gdb) cuda thread (0,0,15)
+[Switching focus to CUDA kernel 0, grid 1, block (0,0,0), thread (0,0,15), device 0, sm 0, warp 0, lane 15]
+0x0000555555e5ad80 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+(cuda-gdb) display /10i $pc
+1: x/10i $pc
+=> 0x555555e5ad80 <_Z11wmma_kernelP6__halfS0_Pf>:       IMAD.MOV.U32 R1, RZ, RZ, c[0x0][0x28]
+   0x555555e5ad90 <_Z11wmma_kernelP6__halfS0_Pf+16>:    @!PT SHFL.IDX PT, RZ, RZ, RZ, RZ
+   0x555555e5ada0 <_Z11wmma_kernelP6__halfS0_Pf+32>:    S2R R2, SR_LANEID
+   0x555555e5adb0 <_Z11wmma_kernelP6__halfS0_Pf+48>:    IMAD.MOV.U32 R12, RZ, RZ, 0x10
+   0x555555e5adc0 <_Z11wmma_kernelP6__halfS0_Pf+64>:    SHF.R.U32.HI R3, RZ, 0x2, R2.reuse
+   0x555555e5add0 <_Z11wmma_kernelP6__halfS0_Pf+80>:    LOP3.LUT R29, R2, 0x3, RZ, 0xc0, !PT
+   0x555555e5ade0 <_Z11wmma_kernelP6__halfS0_Pf+96>:    LOP3.LUT R3, R3, 0x3, RZ, 0xc0, !PT
+   0x555555e5adf0 <_Z11wmma_kernelP6__halfS0_Pf+112>:   SHF.R.U32.HI R2, RZ, 0x4, R2
+   0x555555e5ae00 <_Z11wmma_kernelP6__halfS0_Pf+128>:   SHF.R.U32.HI R0, RZ, 0x1, R3
+   0x555555e5ae10 <_Z11wmma_kernelP6__halfS0_Pf+144>:   IMAD.SHL.U32 R6, R3, 0x8, RZ
+(cuda-gdb) ni
+0x0000555555e5ad90 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5ad90 <_Z11wmma_kernelP6__halfS0_Pf+16>:    @!PT SHFL.IDX PT, RZ, RZ, RZ, RZ
+   0x555555e5ada0 <_Z11wmma_kernelP6__halfS0_Pf+32>:    S2R R2, SR_LANEID
+   0x555555e5adb0 <_Z11wmma_kernelP6__halfS0_Pf+48>:    IMAD.MOV.U32 R12, RZ, RZ, 0x10
+   0x555555e5adc0 <_Z11wmma_kernelP6__halfS0_Pf+64>:    SHF.R.U32.HI R3, RZ, 0x2, R2.reuse
+   0x555555e5add0 <_Z11wmma_kernelP6__halfS0_Pf+80>:    LOP3.LUT R29, R2, 0x3, RZ, 0xc0, !PT
+   0x555555e5ade0 <_Z11wmma_kernelP6__halfS0_Pf+96>:    LOP3.LUT R3, R3, 0x3, RZ, 0xc0, !PT
+   0x555555e5adf0 <_Z11wmma_kernelP6__halfS0_Pf+112>:   SHF.R.U32.HI R2, RZ, 0x4, R2
+   0x555555e5ae00 <_Z11wmma_kernelP6__halfS0_Pf+128>:   SHF.R.U32.HI R0, RZ, 0x1, R3
+   0x555555e5ae10 <_Z11wmma_kernelP6__halfS0_Pf+144>:   IMAD.SHL.U32 R6, R3, 0x8, RZ
+   0x555555e5ae20 <_Z11wmma_kernelP6__halfS0_Pf+160>:   LOP3.LUT R4, R2, 0x1, RZ, 0xc0, !PT
+(cuda-gdb) i r
+R0             0x442c7954       1143765332
+R1             0xfffdc0 16776640
+R2             0x442c7954       1143765332
+R3             0x43ac7954       1135376724
+R4             0x442c7954       1143765332
+R5             0x43ac7954       1135376724
+R6             0x442c7954       1143765332
+R7             0x43ac7954       1135376724
+R8             0x442c7954       1143765332
+R9             0x43ac7954       1135376724
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0x442c7954       1143765332
+R13            0x43ac7954       1135376724
+R14            0x442c7954       1143765332
+R15            0x43ac7954       1135376724
+R16            0x442c7954       1143765332
+R17            0x43ac7954       1135376724
+R18            0x442c7954       1143765332
+R19            0x43ac7954       1135376724
+R20            0x442c7954       1143765332
+R21            0x43ac7954       1135376724
+R22            0x442c7954       1143765332
+R23            0x43ac7954       1135376724
+R24            0x442c7954       1143765332
+R25            0x43ac7954       1135376724
+R26            0x442c7954       1143765332
+R27            0x43ac7954       1135376724
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5ada0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5ada0 <_Z11wmma_kernelP6__halfS0_Pf+32>:    S2R R2, SR_LANEID
+   0x555555e5adb0 <_Z11wmma_kernelP6__halfS0_Pf+48>:    IMAD.MOV.U32 R12, RZ, RZ, 0x10
+   0x555555e5adc0 <_Z11wmma_kernelP6__halfS0_Pf+64>:    SHF.R.U32.HI R3, RZ, 0x2, R2.reuse
+   0x555555e5add0 <_Z11wmma_kernelP6__halfS0_Pf+80>:    LOP3.LUT R29, R2, 0x3, RZ, 0xc0, !PT
+   0x555555e5ade0 <_Z11wmma_kernelP6__halfS0_Pf+96>:    LOP3.LUT R3, R3, 0x3, RZ, 0xc0, !PT
+   0x555555e5adf0 <_Z11wmma_kernelP6__halfS0_Pf+112>:   SHF.R.U32.HI R2, RZ, 0x4, R2
+   0x555555e5ae00 <_Z11wmma_kernelP6__halfS0_Pf+128>:   SHF.R.U32.HI R0, RZ, 0x1, R3
+   0x555555e5ae10 <_Z11wmma_kernelP6__halfS0_Pf+144>:   IMAD.SHL.U32 R6, R3, 0x8, RZ
+   0x555555e5ae20 <_Z11wmma_kernelP6__halfS0_Pf+160>:   LOP3.LUT R4, R2, 0x1, RZ, 0xc0, !PT
+   0x555555e5ae30 <_Z11wmma_kernelP6__halfS0_Pf+176>:   IMAD R7, R0, 0x8, R29.reuse
+(cuda-gdb) i r
+R0             0x442c7954       1143765332
+R1             0xfffdc0 16776640
+R2             0x442c7954       1143765332
+R3             0x43ac7954       1135376724
+R4             0x442c7954       1143765332
+R5             0x43ac7954       1135376724
+R6             0x442c7954       1143765332
+R7             0x43ac7954       1135376724
+R8             0x442c7954       1143765332
+R9             0x43ac7954       1135376724
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0x442c7954       1143765332
+R13            0x43ac7954       1135376724
+R14            0x442c7954       1143765332
+R15            0x43ac7954       1135376724
+R16            0x442c7954       1143765332
+R17            0x43ac7954       1135376724
+R18            0x442c7954       1143765332
+R19            0x43ac7954       1135376724
+R20            0x442c7954       1143765332
+R21            0x43ac7954       1135376724
+R22            0x442c7954       1143765332
+R23            0x43ac7954       1135376724
+R24            0x442c7954       1143765332
+R25            0x43ac7954       1135376724
+R26            0x442c7954       1143765332
+R27            0x43ac7954       1135376724
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5adb0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5adb0 <_Z11wmma_kernelP6__halfS0_Pf+48>:    IMAD.MOV.U32 R12, RZ, RZ, 0x10
+   0x555555e5adc0 <_Z11wmma_kernelP6__halfS0_Pf+64>:    SHF.R.U32.HI R3, RZ, 0x2, R2.reuse
+   0x555555e5add0 <_Z11wmma_kernelP6__halfS0_Pf+80>:    LOP3.LUT R29, R2, 0x3, RZ, 0xc0, !PT
+   0x555555e5ade0 <_Z11wmma_kernelP6__halfS0_Pf+96>:    LOP3.LUT R3, R3, 0x3, RZ, 0xc0, !PT
+   0x555555e5adf0 <_Z11wmma_kernelP6__halfS0_Pf+112>:   SHF.R.U32.HI R2, RZ, 0x4, R2
+   0x555555e5ae00 <_Z11wmma_kernelP6__halfS0_Pf+128>:   SHF.R.U32.HI R0, RZ, 0x1, R3
+   0x555555e5ae10 <_Z11wmma_kernelP6__halfS0_Pf+144>:   IMAD.SHL.U32 R6, R3, 0x8, RZ
+   0x555555e5ae20 <_Z11wmma_kernelP6__halfS0_Pf+160>:   LOP3.LUT R4, R2, 0x1, RZ, 0xc0, !PT
+   0x555555e5ae30 <_Z11wmma_kernelP6__halfS0_Pf+176>:   IMAD R7, R0, 0x8, R29.reuse
+   0x555555e5ae40 <_Z11wmma_kernelP6__halfS0_Pf+192>:   LOP3.LUT R5, R6, 0x8, R29, 0xe2, !PT
+(cuda-gdb) i r
+R0             0x442c7954       1143765332
+R1             0xfffdc0 16776640
+R2             0xf      15
+R3             0x43ac7954       1135376724
+R4             0x442c7954       1143765332
+R5             0x43ac7954       1135376724
+R6             0x442c7954       1143765332
+R7             0x43ac7954       1135376724
+R8             0x442c7954       1143765332
+R9             0x43ac7954       1135376724
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0x442c7954       1143765332
+R13            0x43ac7954       1135376724
+R14            0x442c7954       1143765332
+R15            0x43ac7954       1135376724
+R16            0x442c7954       1143765332
+R17            0x43ac7954       1135376724
+R18            0x442c7954       1143765332
+R19            0x43ac7954       1135376724
+R20            0x442c7954       1143765332
+R21            0x43ac7954       1135376724
+R22            0x442c7954       1143765332
+R23            0x43ac7954       1135376724
+R24            0x442c7954       1143765332
+R25            0x43ac7954       1135376724
+R26            0x442c7954       1143765332
+R27            0x43ac7954       1135376724
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5adc0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5adc0 <_Z11wmma_kernelP6__halfS0_Pf+64>:    SHF.R.U32.HI R3, RZ, 0x2, R2.reuse
+   0x555555e5add0 <_Z11wmma_kernelP6__halfS0_Pf+80>:    LOP3.LUT R29, R2, 0x3, RZ, 0xc0, !PT
+   0x555555e5ade0 <_Z11wmma_kernelP6__halfS0_Pf+96>:    LOP3.LUT R3, R3, 0x3, RZ, 0xc0, !PT
+   0x555555e5adf0 <_Z11wmma_kernelP6__halfS0_Pf+112>:   SHF.R.U32.HI R2, RZ, 0x4, R2
+   0x555555e5ae00 <_Z11wmma_kernelP6__halfS0_Pf+128>:   SHF.R.U32.HI R0, RZ, 0x1, R3
+   0x555555e5ae10 <_Z11wmma_kernelP6__halfS0_Pf+144>:   IMAD.SHL.U32 R6, R3, 0x8, RZ
+   0x555555e5ae20 <_Z11wmma_kernelP6__halfS0_Pf+160>:   LOP3.LUT R4, R2, 0x1, RZ, 0xc0, !PT
+   0x555555e5ae30 <_Z11wmma_kernelP6__halfS0_Pf+176>:   IMAD R7, R0, 0x8, R29.reuse
+   0x555555e5ae40 <_Z11wmma_kernelP6__halfS0_Pf+192>:   LOP3.LUT R5, R6, 0x8, R29, 0xe2, !PT
+   0x555555e5ae50 <_Z11wmma_kernelP6__halfS0_Pf+208>:   IMAD R7, R4.reuse, 0x4, R7
+(cuda-gdb) i r
+R0             0x442c7954       1143765332
+R1             0xfffdc0 16776640
+R2             0xf      15
+R3             0x43ac7954       1135376724
+R4             0x442c7954       1143765332
+R5             0x43ac7954       1135376724
+R6             0x442c7954       1143765332
+R7             0x43ac7954       1135376724
+R8             0x442c7954       1143765332
+R9             0x43ac7954       1135376724
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0x10     16
+R13            0x43ac7954       1135376724
+R14            0x442c7954       1143765332
+R15            0x43ac7954       1135376724
+R16            0x442c7954       1143765332
+R17            0x43ac7954       1135376724
+R18            0x442c7954       1143765332
+R19            0x43ac7954       1135376724
+R20            0x442c7954       1143765332
+R21            0x43ac7954       1135376724
+R22            0x442c7954       1143765332
+R23            0x43ac7954       1135376724
+R24            0x442c7954       1143765332
+R25            0x43ac7954       1135376724
+R26            0x442c7954       1143765332
+R27            0x43ac7954       1135376724
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5add0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5add0 <_Z11wmma_kernelP6__halfS0_Pf+80>:    LOP3.LUT R29, R2, 0x3, RZ, 0xc0, !PT
+   0x555555e5ade0 <_Z11wmma_kernelP6__halfS0_Pf+96>:    LOP3.LUT R3, R3, 0x3, RZ, 0xc0, !PT
+   0x555555e5adf0 <_Z11wmma_kernelP6__halfS0_Pf+112>:   SHF.R.U32.HI R2, RZ, 0x4, R2
+   0x555555e5ae00 <_Z11wmma_kernelP6__halfS0_Pf+128>:   SHF.R.U32.HI R0, RZ, 0x1, R3
+   0x555555e5ae10 <_Z11wmma_kernelP6__halfS0_Pf+144>:   IMAD.SHL.U32 R6, R3, 0x8, RZ
+   0x555555e5ae20 <_Z11wmma_kernelP6__halfS0_Pf+160>:   LOP3.LUT R4, R2, 0x1, RZ, 0xc0, !PT
+   0x555555e5ae30 <_Z11wmma_kernelP6__halfS0_Pf+176>:   IMAD R7, R0, 0x8, R29.reuse
+   0x555555e5ae40 <_Z11wmma_kernelP6__halfS0_Pf+192>:   LOP3.LUT R5, R6, 0x8, R29, 0xe2, !PT
+   0x555555e5ae50 <_Z11wmma_kernelP6__halfS0_Pf+208>:   IMAD R7, R4.reuse, 0x4, R7
+   0x555555e5ae60 <_Z11wmma_kernelP6__halfS0_Pf+224>:   IMAD R5, R4, 0x4, R5
+(cuda-gdb) i r
+R0             0x442c7954       1143765332
+R1             0xfffdc0 16776640
+R2             0xf      15
+R3             0x3      3
+R4             0x442c7954       1143765332
+R5             0x43ac7954       1135376724
+R6             0x442c7954       1143765332
+R7             0x43ac7954       1135376724
+R8             0x442c7954       1143765332
+R9             0x43ac7954       1135376724
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0x10     16
+R13            0x43ac7954       1135376724
+R14            0x442c7954       1143765332
+R15            0x43ac7954       1135376724
+R16            0x442c7954       1143765332
+R17            0x43ac7954       1135376724
+R18            0x442c7954       1143765332
+R19            0x43ac7954       1135376724
+R20            0x442c7954       1143765332
+R21            0x43ac7954       1135376724
+R22            0x442c7954       1143765332
+R23            0x43ac7954       1135376724
+R24            0x442c7954       1143765332
+R25            0x43ac7954       1135376724
+R26            0x442c7954       1143765332
+R27            0x43ac7954       1135376724
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5ade0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5ade0 <_Z11wmma_kernelP6__halfS0_Pf+96>:    LOP3.LUT R3, R3, 0x3, RZ, 0xc0, !PT
+   0x555555e5adf0 <_Z11wmma_kernelP6__halfS0_Pf+112>:   SHF.R.U32.HI R2, RZ, 0x4, R2
+   0x555555e5ae00 <_Z11wmma_kernelP6__halfS0_Pf+128>:   SHF.R.U32.HI R0, RZ, 0x1, R3
+   0x555555e5ae10 <_Z11wmma_kernelP6__halfS0_Pf+144>:   IMAD.SHL.U32 R6, R3, 0x8, RZ
+   0x555555e5ae20 <_Z11wmma_kernelP6__halfS0_Pf+160>:   LOP3.LUT R4, R2, 0x1, RZ, 0xc0, !PT
+   0x555555e5ae30 <_Z11wmma_kernelP6__halfS0_Pf+176>:   IMAD R7, R0, 0x8, R29.reuse
+   0x555555e5ae40 <_Z11wmma_kernelP6__halfS0_Pf+192>:   LOP3.LUT R5, R6, 0x8, R29, 0xe2, !PT
+   0x555555e5ae50 <_Z11wmma_kernelP6__halfS0_Pf+208>:   IMAD R7, R4.reuse, 0x4, R7
+   0x555555e5ae60 <_Z11wmma_kernelP6__halfS0_Pf+224>:   IMAD R5, R4, 0x4, R5
+   0x555555e5ae70 <_Z11wmma_kernelP6__halfS0_Pf+240>:   IMAD.SHL.U32 R7, R7, 0x2, RZ
+(cuda-gdb) i r
+R0             0x442c7954       1143765332
+R1             0xfffdc0 16776640
+R2             0xf      15
+R3             0x3      3
+R4             0x442c7954       1143765332
+R5             0x43ac7954       1135376724
+R6             0x442c7954       1143765332
+R7             0x43ac7954       1135376724
+R8             0x442c7954       1143765332
+R9             0x43ac7954       1135376724
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0x10     16
+R13            0x43ac7954       1135376724
+R14            0x442c7954       1143765332
+R15            0x43ac7954       1135376724
+R16            0x442c7954       1143765332
+R17            0x43ac7954       1135376724
+R18            0x442c7954       1143765332
+R19            0x43ac7954       1135376724
+R20            0x442c7954       1143765332
+R21            0x43ac7954       1135376724
+R22            0x442c7954       1143765332
+R23            0x43ac7954       1135376724
+R24            0x442c7954       1143765332
+R25            0x43ac7954       1135376724
+R26            0x442c7954       1143765332
+R27            0x43ac7954       1135376724
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5adf0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5adf0 <_Z11wmma_kernelP6__halfS0_Pf+112>:   SHF.R.U32.HI R2, RZ, 0x4, R2
+   0x555555e5ae00 <_Z11wmma_kernelP6__halfS0_Pf+128>:   SHF.R.U32.HI R0, RZ, 0x1, R3
+   0x555555e5ae10 <_Z11wmma_kernelP6__halfS0_Pf+144>:   IMAD.SHL.U32 R6, R3, 0x8, RZ
+   0x555555e5ae20 <_Z11wmma_kernelP6__halfS0_Pf+160>:   LOP3.LUT R4, R2, 0x1, RZ, 0xc0, !PT
+   0x555555e5ae30 <_Z11wmma_kernelP6__halfS0_Pf+176>:   IMAD R7, R0, 0x8, R29.reuse
+   0x555555e5ae40 <_Z11wmma_kernelP6__halfS0_Pf+192>:   LOP3.LUT R5, R6, 0x8, R29, 0xe2, !PT
+   0x555555e5ae50 <_Z11wmma_kernelP6__halfS0_Pf+208>:   IMAD R7, R4.reuse, 0x4, R7
+   0x555555e5ae60 <_Z11wmma_kernelP6__halfS0_Pf+224>:   IMAD R5, R4, 0x4, R5
+   0x555555e5ae70 <_Z11wmma_kernelP6__halfS0_Pf+240>:   IMAD.SHL.U32 R7, R7, 0x2, RZ
+   0x555555e5ae80 <_Z11wmma_kernelP6__halfS0_Pf+256>:   SHF.L.U32 R5, R5, 0x1, RZ
+(cuda-gdb) i r
+R0             0x442c7954       1143765332
+R1             0xfffdc0 16776640
+R2             0xf      15
+R3             0x3      3
+R4             0x442c7954       1143765332
+R5             0x43ac7954       1135376724
+R6             0x442c7954       1143765332
+R7             0x43ac7954       1135376724
+R8             0x442c7954       1143765332
+R9             0x43ac7954       1135376724
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0x10     16
+R13            0x43ac7954       1135376724
+R14            0x442c7954       1143765332
+R15            0x43ac7954       1135376724
+R16            0x442c7954       1143765332
+R17            0x43ac7954       1135376724
+R18            0x442c7954       1143765332
+R19            0x43ac7954       1135376724
+R20            0x442c7954       1143765332
+R21            0x43ac7954       1135376724
+R22            0x442c7954       1143765332
+R23            0x43ac7954       1135376724
+R24            0x442c7954       1143765332
+R25            0x43ac7954       1135376724
+R26            0x442c7954       1143765332
+R27            0x43ac7954       1135376724
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5ae00 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5ae00 <_Z11wmma_kernelP6__halfS0_Pf+128>:   SHF.R.U32.HI R0, RZ, 0x1, R3
+   0x555555e5ae10 <_Z11wmma_kernelP6__halfS0_Pf+144>:   IMAD.SHL.U32 R6, R3, 0x8, RZ
+   0x555555e5ae20 <_Z11wmma_kernelP6__halfS0_Pf+160>:   LOP3.LUT R4, R2, 0x1, RZ, 0xc0, !PT
+   0x555555e5ae30 <_Z11wmma_kernelP6__halfS0_Pf+176>:   IMAD R7, R0, 0x8, R29.reuse
+   0x555555e5ae40 <_Z11wmma_kernelP6__halfS0_Pf+192>:   LOP3.LUT R5, R6, 0x8, R29, 0xe2, !PT
+   0x555555e5ae50 <_Z11wmma_kernelP6__halfS0_Pf+208>:   IMAD R7, R4.reuse, 0x4, R7
+   0x555555e5ae60 <_Z11wmma_kernelP6__halfS0_Pf+224>:   IMAD R5, R4, 0x4, R5
+   0x555555e5ae70 <_Z11wmma_kernelP6__halfS0_Pf+240>:   IMAD.SHL.U32 R7, R7, 0x2, RZ
+   0x555555e5ae80 <_Z11wmma_kernelP6__halfS0_Pf+256>:   SHF.L.U32 R5, R5, 0x1, RZ
+   0x555555e5ae90 <_Z11wmma_kernelP6__halfS0_Pf+272>:   IMAD.WIDE.U32 R20, R5, R12, c[0x0][0x160]
+(cuda-gdb) i r
+R0             0x442c7954       1143765332
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x442c7954       1143765332
+R5             0x43ac7954       1135376724
+R6             0x442c7954       1143765332
+R7             0x43ac7954       1135376724
+R8             0x442c7954       1143765332
+R9             0x43ac7954       1135376724
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0x10     16
+R13            0x43ac7954       1135376724
+R14            0x442c7954       1143765332
+R15            0x43ac7954       1135376724
+R16            0x442c7954       1143765332
+R17            0x43ac7954       1135376724
+R18            0x442c7954       1143765332
+R19            0x43ac7954       1135376724
+R20            0x442c7954       1143765332
+R21            0x43ac7954       1135376724
+R22            0x442c7954       1143765332
+R23            0x43ac7954       1135376724
+R24            0x442c7954       1143765332
+R25            0x43ac7954       1135376724
+R26            0x442c7954       1143765332
+R27            0x43ac7954       1135376724
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5ae10 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5ae10 <_Z11wmma_kernelP6__halfS0_Pf+144>:   IMAD.SHL.U32 R6, R3, 0x8, RZ
+   0x555555e5ae20 <_Z11wmma_kernelP6__halfS0_Pf+160>:   LOP3.LUT R4, R2, 0x1, RZ, 0xc0, !PT
+   0x555555e5ae30 <_Z11wmma_kernelP6__halfS0_Pf+176>:   IMAD R7, R0, 0x8, R29.reuse
+   0x555555e5ae40 <_Z11wmma_kernelP6__halfS0_Pf+192>:   LOP3.LUT R5, R6, 0x8, R29, 0xe2, !PT
+   0x555555e5ae50 <_Z11wmma_kernelP6__halfS0_Pf+208>:   IMAD R7, R4.reuse, 0x4, R7
+   0x555555e5ae60 <_Z11wmma_kernelP6__halfS0_Pf+224>:   IMAD R5, R4, 0x4, R5
+   0x555555e5ae70 <_Z11wmma_kernelP6__halfS0_Pf+240>:   IMAD.SHL.U32 R7, R7, 0x2, RZ
+   0x555555e5ae80 <_Z11wmma_kernelP6__halfS0_Pf+256>:   SHF.L.U32 R5, R5, 0x1, RZ
+   0x555555e5ae90 <_Z11wmma_kernelP6__halfS0_Pf+272>:   IMAD.WIDE.U32 R20, R5, R12, c[0x0][0x160]
+   0x555555e5aea0 <_Z11wmma_kernelP6__halfS0_Pf+288>:   IMAD.WIDE.U32 R12, R7, R12, c[0x0][0x168]
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x442c7954       1143765332
+R5             0x43ac7954       1135376724
+R6             0x442c7954       1143765332
+R7             0x43ac7954       1135376724
+R8             0x442c7954       1143765332
+R9             0x43ac7954       1135376724
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0x10     16
+R13            0x43ac7954       1135376724
+R14            0x442c7954       1143765332
+R15            0x43ac7954       1135376724
+R16            0x442c7954       1143765332
+R17            0x43ac7954       1135376724
+R18            0x442c7954       1143765332
+R19            0x43ac7954       1135376724
+R20            0x442c7954       1143765332
+R21            0x43ac7954       1135376724
+R22            0x442c7954       1143765332
+R23            0x43ac7954       1135376724
+R24            0x442c7954       1143765332
+R25            0x43ac7954       1135376724
+R26            0x442c7954       1143765332
+R27            0x43ac7954       1135376724
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5ae20 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5ae20 <_Z11wmma_kernelP6__halfS0_Pf+160>:   LOP3.LUT R4, R2, 0x1, RZ, 0xc0, !PT
+   0x555555e5ae30 <_Z11wmma_kernelP6__halfS0_Pf+176>:   IMAD R7, R0, 0x8, R29.reuse
+   0x555555e5ae40 <_Z11wmma_kernelP6__halfS0_Pf+192>:   LOP3.LUT R5, R6, 0x8, R29, 0xe2, !PT
+   0x555555e5ae50 <_Z11wmma_kernelP6__halfS0_Pf+208>:   IMAD R7, R4.reuse, 0x4, R7
+   0x555555e5ae60 <_Z11wmma_kernelP6__halfS0_Pf+224>:   IMAD R5, R4, 0x4, R5
+   0x555555e5ae70 <_Z11wmma_kernelP6__halfS0_Pf+240>:   IMAD.SHL.U32 R7, R7, 0x2, RZ
+   0x555555e5ae80 <_Z11wmma_kernelP6__halfS0_Pf+256>:   SHF.L.U32 R5, R5, 0x1, RZ
+   0x555555e5ae90 <_Z11wmma_kernelP6__halfS0_Pf+272>:   IMAD.WIDE.U32 R20, R5, R12, c[0x0][0x160]
+   0x555555e5aea0 <_Z11wmma_kernelP6__halfS0_Pf+288>:   IMAD.WIDE.U32 R12, R7, R12, c[0x0][0x168]
+   0x555555e5aeb0 <_Z11wmma_kernelP6__halfS0_Pf+304>:   LDG.E.128.SYS R24, [R20]
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x442c7954       1143765332
+R5             0x43ac7954       1135376724
+R6             0x18     24
+R7             0x43ac7954       1135376724
+R8             0x442c7954       1143765332
+R9             0x43ac7954       1135376724
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0x10     16
+R13            0x43ac7954       1135376724
+R14            0x442c7954       1143765332
+R15            0x43ac7954       1135376724
+R16            0x442c7954       1143765332
+R17            0x43ac7954       1135376724
+R18            0x442c7954       1143765332
+R19            0x43ac7954       1135376724
+R20            0x442c7954       1143765332
+R21            0x43ac7954       1135376724
+R22            0x442c7954       1143765332
+R23            0x43ac7954       1135376724
+R24            0x442c7954       1143765332
+R25            0x43ac7954       1135376724
+R26            0x442c7954       1143765332
+R27            0x43ac7954       1135376724
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5ae30 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5ae30 <_Z11wmma_kernelP6__halfS0_Pf+176>:   IMAD R7, R0, 0x8, R29.reuse
+   0x555555e5ae40 <_Z11wmma_kernelP6__halfS0_Pf+192>:   LOP3.LUT R5, R6, 0x8, R29, 0xe2, !PT
+   0x555555e5ae50 <_Z11wmma_kernelP6__halfS0_Pf+208>:   IMAD R7, R4.reuse, 0x4, R7
+   0x555555e5ae60 <_Z11wmma_kernelP6__halfS0_Pf+224>:   IMAD R5, R4, 0x4, R5
+   0x555555e5ae70 <_Z11wmma_kernelP6__halfS0_Pf+240>:   IMAD.SHL.U32 R7, R7, 0x2, RZ
+   0x555555e5ae80 <_Z11wmma_kernelP6__halfS0_Pf+256>:   SHF.L.U32 R5, R5, 0x1, RZ
+   0x555555e5ae90 <_Z11wmma_kernelP6__halfS0_Pf+272>:   IMAD.WIDE.U32 R20, R5, R12, c[0x0][0x160]
+   0x555555e5aea0 <_Z11wmma_kernelP6__halfS0_Pf+288>:   IMAD.WIDE.U32 R12, R7, R12, c[0x0][0x168]
+   0x555555e5aeb0 <_Z11wmma_kernelP6__halfS0_Pf+304>:   LDG.E.128.SYS R24, [R20]
+   0x555555e5aec0 <_Z11wmma_kernelP6__halfS0_Pf+320>:   LDG.E.128.SYS R16, [R12]
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0x43ac7954       1135376724
+R6             0x18     24
+R7             0x43ac7954       1135376724
+R8             0x442c7954       1143765332
+R9             0x43ac7954       1135376724
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0x10     16
+R13            0x43ac7954       1135376724
+R14            0x442c7954       1143765332
+R15            0x43ac7954       1135376724
+R16            0x442c7954       1143765332
+R17            0x43ac7954       1135376724
+R18            0x442c7954       1143765332
+R19            0x43ac7954       1135376724
+R20            0x442c7954       1143765332
+R21            0x43ac7954       1135376724
+R22            0x442c7954       1143765332
+R23            0x43ac7954       1135376724
+R24            0x442c7954       1143765332
+R25            0x43ac7954       1135376724
+R26            0x442c7954       1143765332
+R27            0x43ac7954       1135376724
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5ae40 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5ae40 <_Z11wmma_kernelP6__halfS0_Pf+192>:   LOP3.LUT R5, R6, 0x8, R29, 0xe2, !PT
+   0x555555e5ae50 <_Z11wmma_kernelP6__halfS0_Pf+208>:   IMAD R7, R4.reuse, 0x4, R7
+   0x555555e5ae60 <_Z11wmma_kernelP6__halfS0_Pf+224>:   IMAD R5, R4, 0x4, R5
+   0x555555e5ae70 <_Z11wmma_kernelP6__halfS0_Pf+240>:   IMAD.SHL.U32 R7, R7, 0x2, RZ
+   0x555555e5ae80 <_Z11wmma_kernelP6__halfS0_Pf+256>:   SHF.L.U32 R5, R5, 0x1, RZ
+   0x555555e5ae90 <_Z11wmma_kernelP6__halfS0_Pf+272>:   IMAD.WIDE.U32 R20, R5, R12, c[0x0][0x160]
+   0x555555e5aea0 <_Z11wmma_kernelP6__halfS0_Pf+288>:   IMAD.WIDE.U32 R12, R7, R12, c[0x0][0x168]
+   0x555555e5aeb0 <_Z11wmma_kernelP6__halfS0_Pf+304>:   LDG.E.128.SYS R24, [R20]
+   0x555555e5aec0 <_Z11wmma_kernelP6__halfS0_Pf+320>:   LDG.E.128.SYS R16, [R12]
+   0x555555e5aed0 <_Z11wmma_kernelP6__halfS0_Pf+336>:   LDG.E.128.SYS R20, [R20+0x10]
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0x43ac7954       1135376724
+R6             0x18     24
+R7             0xb      11
+R8             0x442c7954       1143765332
+R9             0x43ac7954       1135376724
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0x10     16
+R13            0x43ac7954       1135376724
+R14            0x442c7954       1143765332
+R15            0x43ac7954       1135376724
+R16            0x442c7954       1143765332
+R17            0x43ac7954       1135376724
+R18            0x442c7954       1143765332
+R19            0x43ac7954       1135376724
+R20            0x442c7954       1143765332
+R21            0x43ac7954       1135376724
+R22            0x442c7954       1143765332
+R23            0x43ac7954       1135376724
+R24            0x442c7954       1143765332
+R25            0x43ac7954       1135376724
+R26            0x442c7954       1143765332
+R27            0x43ac7954       1135376724
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5ae50 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5ae50 <_Z11wmma_kernelP6__halfS0_Pf+208>:   IMAD R7, R4.reuse, 0x4, R7
+   0x555555e5ae60 <_Z11wmma_kernelP6__halfS0_Pf+224>:   IMAD R5, R4, 0x4, R5
+   0x555555e5ae70 <_Z11wmma_kernelP6__halfS0_Pf+240>:   IMAD.SHL.U32 R7, R7, 0x2, RZ
+   0x555555e5ae80 <_Z11wmma_kernelP6__halfS0_Pf+256>:   SHF.L.U32 R5, R5, 0x1, RZ
+   0x555555e5ae90 <_Z11wmma_kernelP6__halfS0_Pf+272>:   IMAD.WIDE.U32 R20, R5, R12, c[0x0][0x160]
+   0x555555e5aea0 <_Z11wmma_kernelP6__halfS0_Pf+288>:   IMAD.WIDE.U32 R12, R7, R12, c[0x0][0x168]
+   0x555555e5aeb0 <_Z11wmma_kernelP6__halfS0_Pf+304>:   LDG.E.128.SYS R24, [R20]
+   0x555555e5aec0 <_Z11wmma_kernelP6__halfS0_Pf+320>:   LDG.E.128.SYS R16, [R12]
+   0x555555e5aed0 <_Z11wmma_kernelP6__halfS0_Pf+336>:   LDG.E.128.SYS R20, [R20+0x10]
+   0x555555e5aee0 <_Z11wmma_kernelP6__halfS0_Pf+352>:   LDG.E.128.SYS R12, [R12+0x10]
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0xb      11
+R6             0x18     24
+R7             0xb      11
+R8             0x442c7954       1143765332
+R9             0x43ac7954       1135376724
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0x10     16
+R13            0x43ac7954       1135376724
+R14            0x442c7954       1143765332
+R15            0x43ac7954       1135376724
+R16            0x442c7954       1143765332
+R17            0x43ac7954       1135376724
+R18            0x442c7954       1143765332
+R19            0x43ac7954       1135376724
+R20            0x442c7954       1143765332
+R21            0x43ac7954       1135376724
+R22            0x442c7954       1143765332
+R23            0x43ac7954       1135376724
+R24            0x442c7954       1143765332
+R25            0x43ac7954       1135376724
+R26            0x442c7954       1143765332
+R27            0x43ac7954       1135376724
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5ae60 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5ae60 <_Z11wmma_kernelP6__halfS0_Pf+224>:   IMAD R5, R4, 0x4, R5
+   0x555555e5ae70 <_Z11wmma_kernelP6__halfS0_Pf+240>:   IMAD.SHL.U32 R7, R7, 0x2, RZ
+   0x555555e5ae80 <_Z11wmma_kernelP6__halfS0_Pf+256>:   SHF.L.U32 R5, R5, 0x1, RZ
+   0x555555e5ae90 <_Z11wmma_kernelP6__halfS0_Pf+272>:   IMAD.WIDE.U32 R20, R5, R12, c[0x0][0x160]
+   0x555555e5aea0 <_Z11wmma_kernelP6__halfS0_Pf+288>:   IMAD.WIDE.U32 R12, R7, R12, c[0x0][0x168]
+   0x555555e5aeb0 <_Z11wmma_kernelP6__halfS0_Pf+304>:   LDG.E.128.SYS R24, [R20]
+   0x555555e5aec0 <_Z11wmma_kernelP6__halfS0_Pf+320>:   LDG.E.128.SYS R16, [R12]
+   0x555555e5aed0 <_Z11wmma_kernelP6__halfS0_Pf+336>:   LDG.E.128.SYS R20, [R20+0x10]
+   0x555555e5aee0 <_Z11wmma_kernelP6__halfS0_Pf+352>:   LDG.E.128.SYS R12, [R12+0x10]
+   0x555555e5aef0 <_Z11wmma_kernelP6__halfS0_Pf+368>:   CS2R R8, SRZ
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0xb      11
+R6             0x18     24
+R7             0xb      11
+R8             0x442c7954       1143765332
+R9             0x43ac7954       1135376724
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0x10     16
+R13            0x43ac7954       1135376724
+R14            0x442c7954       1143765332
+R15            0x43ac7954       1135376724
+R16            0x442c7954       1143765332
+R17            0x43ac7954       1135376724
+R18            0x442c7954       1143765332
+R19            0x43ac7954       1135376724
+R20            0x442c7954       1143765332
+R21            0x43ac7954       1135376724
+R22            0x442c7954       1143765332
+R23            0x43ac7954       1135376724
+R24            0x442c7954       1143765332
+R25            0x43ac7954       1135376724
+R26            0x442c7954       1143765332
+R27            0x43ac7954       1135376724
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5ae70 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5ae70 <_Z11wmma_kernelP6__halfS0_Pf+240>:   IMAD.SHL.U32 R7, R7, 0x2, RZ
+   0x555555e5ae80 <_Z11wmma_kernelP6__halfS0_Pf+256>:   SHF.L.U32 R5, R5, 0x1, RZ
+   0x555555e5ae90 <_Z11wmma_kernelP6__halfS0_Pf+272>:   IMAD.WIDE.U32 R20, R5, R12, c[0x0][0x160]
+   0x555555e5aea0 <_Z11wmma_kernelP6__halfS0_Pf+288>:   IMAD.WIDE.U32 R12, R7, R12, c[0x0][0x168]
+   0x555555e5aeb0 <_Z11wmma_kernelP6__halfS0_Pf+304>:   LDG.E.128.SYS R24, [R20]
+   0x555555e5aec0 <_Z11wmma_kernelP6__halfS0_Pf+320>:   LDG.E.128.SYS R16, [R12]
+   0x555555e5aed0 <_Z11wmma_kernelP6__halfS0_Pf+336>:   LDG.E.128.SYS R20, [R20+0x10]
+   0x555555e5aee0 <_Z11wmma_kernelP6__halfS0_Pf+352>:   LDG.E.128.SYS R12, [R12+0x10]
+   0x555555e5aef0 <_Z11wmma_kernelP6__halfS0_Pf+368>:   CS2R R8, SRZ
+   0x555555e5af00 <_Z11wmma_kernelP6__halfS0_Pf+384>:   CS2R R10, SRZ
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0xb      11
+R6             0x18     24
+R7             0xb      11
+R8             0x442c7954       1143765332
+R9             0x43ac7954       1135376724
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0x10     16
+R13            0x43ac7954       1135376724
+R14            0x442c7954       1143765332
+R15            0x43ac7954       1135376724
+R16            0x442c7954       1143765332
+R17            0x43ac7954       1135376724
+R18            0x442c7954       1143765332
+R19            0x43ac7954       1135376724
+R20            0x442c7954       1143765332
+R21            0x43ac7954       1135376724
+R22            0x442c7954       1143765332
+R23            0x43ac7954       1135376724
+R24            0x442c7954       1143765332
+R25            0x43ac7954       1135376724
+R26            0x442c7954       1143765332
+R27            0x43ac7954       1135376724
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5ae80 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5ae80 <_Z11wmma_kernelP6__halfS0_Pf+256>:   SHF.L.U32 R5, R5, 0x1, RZ
+   0x555555e5ae90 <_Z11wmma_kernelP6__halfS0_Pf+272>:   IMAD.WIDE.U32 R20, R5, R12, c[0x0][0x160]
+   0x555555e5aea0 <_Z11wmma_kernelP6__halfS0_Pf+288>:   IMAD.WIDE.U32 R12, R7, R12, c[0x0][0x168]
+   0x555555e5aeb0 <_Z11wmma_kernelP6__halfS0_Pf+304>:   LDG.E.128.SYS R24, [R20]
+   0x555555e5aec0 <_Z11wmma_kernelP6__halfS0_Pf+320>:   LDG.E.128.SYS R16, [R12]
+   0x555555e5aed0 <_Z11wmma_kernelP6__halfS0_Pf+336>:   LDG.E.128.SYS R20, [R20+0x10]
+   0x555555e5aee0 <_Z11wmma_kernelP6__halfS0_Pf+352>:   LDG.E.128.SYS R12, [R12+0x10]
+   0x555555e5aef0 <_Z11wmma_kernelP6__halfS0_Pf+368>:   CS2R R8, SRZ
+   0x555555e5af00 <_Z11wmma_kernelP6__halfS0_Pf+384>:   CS2R R10, SRZ
+   0x555555e5af10 <_Z11wmma_kernelP6__halfS0_Pf+400>:   IMAD.SHL.U32 R2, R2, 0x4, RZ
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0xb      11
+R6             0x18     24
+R7             0x16     22
+R8             0x442c7954       1143765332
+R9             0x43ac7954       1135376724
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0x10     16
+R13            0x43ac7954       1135376724
+R14            0x442c7954       1143765332
+R15            0x43ac7954       1135376724
+R16            0x442c7954       1143765332
+R17            0x43ac7954       1135376724
+R18            0x442c7954       1143765332
+R19            0x43ac7954       1135376724
+R20            0x442c7954       1143765332
+R21            0x43ac7954       1135376724
+R22            0x442c7954       1143765332
+R23            0x43ac7954       1135376724
+R24            0x442c7954       1143765332
+R25            0x43ac7954       1135376724
+R26            0x442c7954       1143765332
+R27            0x43ac7954       1135376724
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5ae90 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5ae90 <_Z11wmma_kernelP6__halfS0_Pf+272>:   IMAD.WIDE.U32 R20, R5, R12, c[0x0][0x160]
+   0x555555e5aea0 <_Z11wmma_kernelP6__halfS0_Pf+288>:   IMAD.WIDE.U32 R12, R7, R12, c[0x0][0x168]
+   0x555555e5aeb0 <_Z11wmma_kernelP6__halfS0_Pf+304>:   LDG.E.128.SYS R24, [R20]
+   0x555555e5aec0 <_Z11wmma_kernelP6__halfS0_Pf+320>:   LDG.E.128.SYS R16, [R12]
+   0x555555e5aed0 <_Z11wmma_kernelP6__halfS0_Pf+336>:   LDG.E.128.SYS R20, [R20+0x10]
+   0x555555e5aee0 <_Z11wmma_kernelP6__halfS0_Pf+352>:   LDG.E.128.SYS R12, [R12+0x10]
+   0x555555e5aef0 <_Z11wmma_kernelP6__halfS0_Pf+368>:   CS2R R8, SRZ
+   0x555555e5af00 <_Z11wmma_kernelP6__halfS0_Pf+384>:   CS2R R10, SRZ
+   0x555555e5af10 <_Z11wmma_kernelP6__halfS0_Pf+400>:   IMAD.SHL.U32 R2, R2, 0x4, RZ
+   0x555555e5af20 <_Z11wmma_kernelP6__halfS0_Pf+416>:   CS2R R4, SRZ
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0x16     22
+R6             0x18     24
+R7             0x16     22
+R8             0x442c7954       1143765332
+R9             0x43ac7954       1135376724
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0x10     16
+R13            0x43ac7954       1135376724
+R14            0x442c7954       1143765332
+R15            0x43ac7954       1135376724
+R16            0x442c7954       1143765332
+R17            0x43ac7954       1135376724
+R18            0x442c7954       1143765332
+R19            0x43ac7954       1135376724
+R20            0x442c7954       1143765332
+R21            0x43ac7954       1135376724
+R22            0x442c7954       1143765332
+R23            0x43ac7954       1135376724
+R24            0x442c7954       1143765332
+R25            0x43ac7954       1135376724
+R26            0x442c7954       1143765332
+R27            0x43ac7954       1135376724
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5aea0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5aea0 <_Z11wmma_kernelP6__halfS0_Pf+288>:   IMAD.WIDE.U32 R12, R7, R12, c[0x0][0x168]
+   0x555555e5aeb0 <_Z11wmma_kernelP6__halfS0_Pf+304>:   LDG.E.128.SYS R24, [R20]
+   0x555555e5aec0 <_Z11wmma_kernelP6__halfS0_Pf+320>:   LDG.E.128.SYS R16, [R12]
+   0x555555e5aed0 <_Z11wmma_kernelP6__halfS0_Pf+336>:   LDG.E.128.SYS R20, [R20+0x10]
+   0x555555e5aee0 <_Z11wmma_kernelP6__halfS0_Pf+352>:   LDG.E.128.SYS R12, [R12+0x10]
+   0x555555e5aef0 <_Z11wmma_kernelP6__halfS0_Pf+368>:   CS2R R8, SRZ
+   0x555555e5af00 <_Z11wmma_kernelP6__halfS0_Pf+384>:   CS2R R10, SRZ
+   0x555555e5af10 <_Z11wmma_kernelP6__halfS0_Pf+400>:   IMAD.SHL.U32 R2, R2, 0x4, RZ
+   0x555555e5af20 <_Z11wmma_kernelP6__halfS0_Pf+416>:   CS2R R4, SRZ
+   0x555555e5af30 <_Z11wmma_kernelP6__halfS0_Pf+432>:   CS2R R6, SRZ
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0x16     22
+R6             0x18     24
+R7             0x16     22
+R8             0x442c7954       1143765332
+R9             0x43ac7954       1135376724
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0x10     16
+R13            0x43ac7954       1135376724
+R14            0x442c7954       1143765332
+R15            0x43ac7954       1135376724
+R16            0x442c7954       1143765332
+R17            0x43ac7954       1135376724
+R18            0x442c7954       1143765332
+R19            0x43ac7954       1135376724
+R20            0xcda00160       -845151904
+R21            0x7fff   32767
+R22            0x442c7954       1143765332
+R23            0x43ac7954       1135376724
+R24            0x442c7954       1143765332
+R25            0x43ac7954       1135376724
+R26            0x442c7954       1143765332
+R27            0x43ac7954       1135376724
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5aeb0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5aeb0 <_Z11wmma_kernelP6__halfS0_Pf+304>:   LDG.E.128.SYS R24, [R20]
+   0x555555e5aec0 <_Z11wmma_kernelP6__halfS0_Pf+320>:   LDG.E.128.SYS R16, [R12]
+   0x555555e5aed0 <_Z11wmma_kernelP6__halfS0_Pf+336>:   LDG.E.128.SYS R20, [R20+0x10]
+   0x555555e5aee0 <_Z11wmma_kernelP6__halfS0_Pf+352>:   LDG.E.128.SYS R12, [R12+0x10]
+   0x555555e5aef0 <_Z11wmma_kernelP6__halfS0_Pf+368>:   CS2R R8, SRZ
+   0x555555e5af00 <_Z11wmma_kernelP6__halfS0_Pf+384>:   CS2R R10, SRZ
+   0x555555e5af10 <_Z11wmma_kernelP6__halfS0_Pf+400>:   IMAD.SHL.U32 R2, R2, 0x4, RZ
+   0x555555e5af20 <_Z11wmma_kernelP6__halfS0_Pf+416>:   CS2R R4, SRZ
+   0x555555e5af30 <_Z11wmma_kernelP6__halfS0_Pf+432>:   CS2R R6, SRZ
+   0x555555e5af40 <_Z11wmma_kernelP6__halfS0_Pf+448>:   LOP3.LUT R29, R2, 0x4, R29, 0xe2, !PT
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0x16     22
+R6             0x18     24
+R7             0x16     22
+R8             0x442c7954       1143765332
+R9             0x43ac7954       1135376724
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0xcda00360       -845151392
+R13            0x7fff   32767
+R14            0x442c7954       1143765332
+R15            0x43ac7954       1135376724
+R16            0x442c7954       1143765332
+R17            0x43ac7954       1135376724
+R18            0x442c7954       1143765332
+R19            0x43ac7954       1135376724
+R20            0xcda00160       -845151904
+R21            0x7fff   32767
+R22            0x442c7954       1143765332
+R23            0x43ac7954       1135376724
+R24            0x442c7954       1143765332
+R25            0x43ac7954       1135376724
+R26            0x442c7954       1143765332
+R27            0x43ac7954       1135376724
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5aec0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5aec0 <_Z11wmma_kernelP6__halfS0_Pf+320>:   LDG.E.128.SYS R16, [R12]
+   0x555555e5aed0 <_Z11wmma_kernelP6__halfS0_Pf+336>:   LDG.E.128.SYS R20, [R20+0x10]
+   0x555555e5aee0 <_Z11wmma_kernelP6__halfS0_Pf+352>:   LDG.E.128.SYS R12, [R12+0x10]
+   0x555555e5aef0 <_Z11wmma_kernelP6__halfS0_Pf+368>:   CS2R R8, SRZ
+   0x555555e5af00 <_Z11wmma_kernelP6__halfS0_Pf+384>:   CS2R R10, SRZ
+   0x555555e5af10 <_Z11wmma_kernelP6__halfS0_Pf+400>:   IMAD.SHL.U32 R2, R2, 0x4, RZ
+   0x555555e5af20 <_Z11wmma_kernelP6__halfS0_Pf+416>:   CS2R R4, SRZ
+   0x555555e5af30 <_Z11wmma_kernelP6__halfS0_Pf+432>:   CS2R R6, SRZ
+   0x555555e5af40 <_Z11wmma_kernelP6__halfS0_Pf+448>:   LOP3.LUT R29, R2, 0x4, R29, 0xe2, !PT
+   0x555555e5af50 <_Z11wmma_kernelP6__halfS0_Pf+464>:   HMMA.884.F32.F32.STEP0 R8, R24.reuse.ROW, R16.reuse.COL, R8
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0x16     22
+R6             0x18     24
+R7             0x16     22
+R8             0x442c7954       1143765332
+R9             0x43ac7954       1135376724
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0xcda00360       -845151392
+R13            0x7fff   32767
+R14            0x442c7954       1143765332
+R15            0x43ac7954       1135376724
+R16            0x442c7954       1143765332
+R17            0x43ac7954       1135376724
+R18            0x442c7954       1143765332
+R19            0x43ac7954       1135376724
+R20            0xcda00160       -845151904
+R21            0x7fff   32767
+R22            0x442c7954       1143765332
+R23            0x43ac7954       1135376724
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5aed0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5aed0 <_Z11wmma_kernelP6__halfS0_Pf+336>:   LDG.E.128.SYS R20, [R20+0x10]
+   0x555555e5aee0 <_Z11wmma_kernelP6__halfS0_Pf+352>:   LDG.E.128.SYS R12, [R12+0x10]
+   0x555555e5aef0 <_Z11wmma_kernelP6__halfS0_Pf+368>:   CS2R R8, SRZ
+   0x555555e5af00 <_Z11wmma_kernelP6__halfS0_Pf+384>:   CS2R R10, SRZ
+   0x555555e5af10 <_Z11wmma_kernelP6__halfS0_Pf+400>:   IMAD.SHL.U32 R2, R2, 0x4, RZ
+   0x555555e5af20 <_Z11wmma_kernelP6__halfS0_Pf+416>:   CS2R R4, SRZ
+   0x555555e5af30 <_Z11wmma_kernelP6__halfS0_Pf+432>:   CS2R R6, SRZ
+   0x555555e5af40 <_Z11wmma_kernelP6__halfS0_Pf+448>:   LOP3.LUT R29, R2, 0x4, R29, 0xe2, !PT
+   0x555555e5af50 <_Z11wmma_kernelP6__halfS0_Pf+464>:   HMMA.884.F32.F32.STEP0 R8, R24.reuse.ROW, R16.reuse.COL, R8
+   0x555555e5af60 <_Z11wmma_kernelP6__halfS0_Pf+480>:   HMMA.884.F32.F32.STEP1 R10, R24.reuse.ROW, R16.reuse.COL, R10
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0x16     22
+R6             0x18     24
+R7             0x16     22
+R8             0x442c7954       1143765332
+R9             0x43ac7954       1135376724
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0xcda00360       -845151392
+R13            0x7fff   32767
+R14            0x442c7954       1143765332
+R15            0x43ac7954       1135376724
+R16            0x3c003c00       1006648320
+R17            0x3c003c00       1006648320
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0xcda00160       -845151904
+R21            0x7fff   32767
+R22            0x442c7954       1143765332
+R23            0x43ac7954       1135376724
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5aee0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5aee0 <_Z11wmma_kernelP6__halfS0_Pf+352>:   LDG.E.128.SYS R12, [R12+0x10]
+   0x555555e5aef0 <_Z11wmma_kernelP6__halfS0_Pf+368>:   CS2R R8, SRZ
+   0x555555e5af00 <_Z11wmma_kernelP6__halfS0_Pf+384>:   CS2R R10, SRZ
+   0x555555e5af10 <_Z11wmma_kernelP6__halfS0_Pf+400>:   IMAD.SHL.U32 R2, R2, 0x4, RZ
+   0x555555e5af20 <_Z11wmma_kernelP6__halfS0_Pf+416>:   CS2R R4, SRZ
+   0x555555e5af30 <_Z11wmma_kernelP6__halfS0_Pf+432>:   CS2R R6, SRZ
+   0x555555e5af40 <_Z11wmma_kernelP6__halfS0_Pf+448>:   LOP3.LUT R29, R2, 0x4, R29, 0xe2, !PT
+   0x555555e5af50 <_Z11wmma_kernelP6__halfS0_Pf+464>:   HMMA.884.F32.F32.STEP0 R8, R24.reuse.ROW, R16.reuse.COL, R8
+   0x555555e5af60 <_Z11wmma_kernelP6__halfS0_Pf+480>:   HMMA.884.F32.F32.STEP1 R10, R24.reuse.ROW, R16.reuse.COL, R10
+   0x555555e5af70 <_Z11wmma_kernelP6__halfS0_Pf+496>:   HMMA.884.F32.F32.STEP2 R4, R24.reuse.ROW, R16.reuse.COL, R4
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0x16     22
+R6             0x18     24
+R7             0x16     22
+R8             0x442c7954       1143765332
+R9             0x43ac7954       1135376724
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0xcda00360       -845151392
+R13            0x7fff   32767
+R14            0x442c7954       1143765332
+R15            0x43ac7954       1135376724
+R16            0x3c003c00       1006648320
+R17            0x3c003c00       1006648320
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5aef0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5aef0 <_Z11wmma_kernelP6__halfS0_Pf+368>:   CS2R R8, SRZ
+   0x555555e5af00 <_Z11wmma_kernelP6__halfS0_Pf+384>:   CS2R R10, SRZ
+   0x555555e5af10 <_Z11wmma_kernelP6__halfS0_Pf+400>:   IMAD.SHL.U32 R2, R2, 0x4, RZ
+   0x555555e5af20 <_Z11wmma_kernelP6__halfS0_Pf+416>:   CS2R R4, SRZ
+   0x555555e5af30 <_Z11wmma_kernelP6__halfS0_Pf+432>:   CS2R R6, SRZ
+   0x555555e5af40 <_Z11wmma_kernelP6__halfS0_Pf+448>:   LOP3.LUT R29, R2, 0x4, R29, 0xe2, !PT
+   0x555555e5af50 <_Z11wmma_kernelP6__halfS0_Pf+464>:   HMMA.884.F32.F32.STEP0 R8, R24.reuse.ROW, R16.reuse.COL, R8
+   0x555555e5af60 <_Z11wmma_kernelP6__halfS0_Pf+480>:   HMMA.884.F32.F32.STEP1 R10, R24.reuse.ROW, R16.reuse.COL, R10
+   0x555555e5af70 <_Z11wmma_kernelP6__halfS0_Pf+496>:   HMMA.884.F32.F32.STEP2 R4, R24.reuse.ROW, R16.reuse.COL, R4
+   0x555555e5af80 <_Z11wmma_kernelP6__halfS0_Pf+512>:   HMMA.884.F32.F32.STEP3 R6, R24.ROW, R16.COL, R6
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0x16     22
+R6             0x18     24
+R7             0x16     22
+R8             0x442c7954       1143765332
+R9             0x43ac7954       1135376724
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x3c003c00       1006648320
+R17            0x3c003c00       1006648320
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5af00 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5af00 <_Z11wmma_kernelP6__halfS0_Pf+384>:   CS2R R10, SRZ
+   0x555555e5af10 <_Z11wmma_kernelP6__halfS0_Pf+400>:   IMAD.SHL.U32 R2, R2, 0x4, RZ
+   0x555555e5af20 <_Z11wmma_kernelP6__halfS0_Pf+416>:   CS2R R4, SRZ
+   0x555555e5af30 <_Z11wmma_kernelP6__halfS0_Pf+432>:   CS2R R6, SRZ
+   0x555555e5af40 <_Z11wmma_kernelP6__halfS0_Pf+448>:   LOP3.LUT R29, R2, 0x4, R29, 0xe2, !PT
+   0x555555e5af50 <_Z11wmma_kernelP6__halfS0_Pf+464>:   HMMA.884.F32.F32.STEP0 R8, R24.reuse.ROW, R16.reuse.COL, R8
+   0x555555e5af60 <_Z11wmma_kernelP6__halfS0_Pf+480>:   HMMA.884.F32.F32.STEP1 R10, R24.reuse.ROW, R16.reuse.COL, R10
+   0x555555e5af70 <_Z11wmma_kernelP6__halfS0_Pf+496>:   HMMA.884.F32.F32.STEP2 R4, R24.reuse.ROW, R16.reuse.COL, R4
+   0x555555e5af80 <_Z11wmma_kernelP6__halfS0_Pf+512>:   HMMA.884.F32.F32.STEP3 R6, R24.ROW, R16.COL, R6
+   0x555555e5af90 <_Z11wmma_kernelP6__halfS0_Pf+528>:   HMMA.884.F32.F32.STEP0 R8, R26.reuse.ROW, R18.reuse.COL, R8
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0x16     22
+R6             0x18     24
+R7             0x16     22
+R8             0x0      0
+R9             0x0      0
+R10            0x442c7954       1143765332
+R11            0x43ac7954       1135376724
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x3c003c00       1006648320
+R17            0x3c003c00       1006648320
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5af10 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5af10 <_Z11wmma_kernelP6__halfS0_Pf+400>:   IMAD.SHL.U32 R2, R2, 0x4, RZ
+   0x555555e5af20 <_Z11wmma_kernelP6__halfS0_Pf+416>:   CS2R R4, SRZ
+   0x555555e5af30 <_Z11wmma_kernelP6__halfS0_Pf+432>:   CS2R R6, SRZ
+   0x555555e5af40 <_Z11wmma_kernelP6__halfS0_Pf+448>:   LOP3.LUT R29, R2, 0x4, R29, 0xe2, !PT
+   0x555555e5af50 <_Z11wmma_kernelP6__halfS0_Pf+464>:   HMMA.884.F32.F32.STEP0 R8, R24.reuse.ROW, R16.reuse.COL, R8
+   0x555555e5af60 <_Z11wmma_kernelP6__halfS0_Pf+480>:   HMMA.884.F32.F32.STEP1 R10, R24.reuse.ROW, R16.reuse.COL, R10
+   0x555555e5af70 <_Z11wmma_kernelP6__halfS0_Pf+496>:   HMMA.884.F32.F32.STEP2 R4, R24.reuse.ROW, R16.reuse.COL, R4
+   0x555555e5af80 <_Z11wmma_kernelP6__halfS0_Pf+512>:   HMMA.884.F32.F32.STEP3 R6, R24.ROW, R16.COL, R6
+   0x555555e5af90 <_Z11wmma_kernelP6__halfS0_Pf+528>:   HMMA.884.F32.F32.STEP0 R8, R26.reuse.ROW, R18.reuse.COL, R8
+   0x555555e5afa0 <_Z11wmma_kernelP6__halfS0_Pf+544>:   LOP3.LUT R17, R29, 0x2, RZ, 0xc0, !PT
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0x16     22
+R6             0x18     24
+R7             0x16     22
+R8             0x0      0
+R9             0x0      0
+R10            0x0      0
+R11            0x0      0
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x3c003c00       1006648320
+R17            0x3c003c00       1006648320
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5af20 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5af20 <_Z11wmma_kernelP6__halfS0_Pf+416>:   CS2R R4, SRZ
+   0x555555e5af30 <_Z11wmma_kernelP6__halfS0_Pf+432>:   CS2R R6, SRZ
+   0x555555e5af40 <_Z11wmma_kernelP6__halfS0_Pf+448>:   LOP3.LUT R29, R2, 0x4, R29, 0xe2, !PT
+   0x555555e5af50 <_Z11wmma_kernelP6__halfS0_Pf+464>:   HMMA.884.F32.F32.STEP0 R8, R24.reuse.ROW, R16.reuse.COL, R8
+   0x555555e5af60 <_Z11wmma_kernelP6__halfS0_Pf+480>:   HMMA.884.F32.F32.STEP1 R10, R24.reuse.ROW, R16.reuse.COL, R10
+   0x555555e5af70 <_Z11wmma_kernelP6__halfS0_Pf+496>:   HMMA.884.F32.F32.STEP2 R4, R24.reuse.ROW, R16.reuse.COL, R4
+   0x555555e5af80 <_Z11wmma_kernelP6__halfS0_Pf+512>:   HMMA.884.F32.F32.STEP3 R6, R24.ROW, R16.COL, R6
+   0x555555e5af90 <_Z11wmma_kernelP6__halfS0_Pf+528>:   HMMA.884.F32.F32.STEP0 R8, R26.reuse.ROW, R18.reuse.COL, R8
+   0x555555e5afa0 <_Z11wmma_kernelP6__halfS0_Pf+544>:   LOP3.LUT R17, R29, 0x2, RZ, 0xc0, !PT
+   0x555555e5afb0 <_Z11wmma_kernelP6__halfS0_Pf+560>:   IMAD.SHL.U32 R16, R3, 0x8, RZ
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0x16     22
+R6             0x18     24
+R7             0x16     22
+R8             0x0      0
+R9             0x0      0
+R10            0x0      0
+R11            0x0      0
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x3c003c00       1006648320
+R17            0x3c003c00       1006648320
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5af30 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5af30 <_Z11wmma_kernelP6__halfS0_Pf+432>:   CS2R R6, SRZ
+   0x555555e5af40 <_Z11wmma_kernelP6__halfS0_Pf+448>:   LOP3.LUT R29, R2, 0x4, R29, 0xe2, !PT
+   0x555555e5af50 <_Z11wmma_kernelP6__halfS0_Pf+464>:   HMMA.884.F32.F32.STEP0 R8, R24.reuse.ROW, R16.reuse.COL, R8
+   0x555555e5af60 <_Z11wmma_kernelP6__halfS0_Pf+480>:   HMMA.884.F32.F32.STEP1 R10, R24.reuse.ROW, R16.reuse.COL, R10
+   0x555555e5af70 <_Z11wmma_kernelP6__halfS0_Pf+496>:   HMMA.884.F32.F32.STEP2 R4, R24.reuse.ROW, R16.reuse.COL, R4
+   0x555555e5af80 <_Z11wmma_kernelP6__halfS0_Pf+512>:   HMMA.884.F32.F32.STEP3 R6, R24.ROW, R16.COL, R6
+   0x555555e5af90 <_Z11wmma_kernelP6__halfS0_Pf+528>:   HMMA.884.F32.F32.STEP0 R8, R26.reuse.ROW, R18.reuse.COL, R8
+   0x555555e5afa0 <_Z11wmma_kernelP6__halfS0_Pf+544>:   LOP3.LUT R17, R29, 0x2, RZ, 0xc0, !PT
+   0x555555e5afb0 <_Z11wmma_kernelP6__halfS0_Pf+560>:   IMAD.SHL.U32 R16, R3, 0x8, RZ
+   0x555555e5afc0 <_Z11wmma_kernelP6__halfS0_Pf+576>:   LOP3.LUT R29, R29, 0x5, RZ, 0xc0, !PT
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0x0      0
+R6             0x18     24
+R7             0x16     22
+R8             0x0      0
+R9             0x0      0
+R10            0x0      0
+R11            0x0      0
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x3c003c00       1006648320
+R17            0x3c003c00       1006648320
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5af40 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5af40 <_Z11wmma_kernelP6__halfS0_Pf+448>:   LOP3.LUT R29, R2, 0x4, R29, 0xe2, !PT
+   0x555555e5af50 <_Z11wmma_kernelP6__halfS0_Pf+464>:   HMMA.884.F32.F32.STEP0 R8, R24.reuse.ROW, R16.reuse.COL, R8
+   0x555555e5af60 <_Z11wmma_kernelP6__halfS0_Pf+480>:   HMMA.884.F32.F32.STEP1 R10, R24.reuse.ROW, R16.reuse.COL, R10
+   0x555555e5af70 <_Z11wmma_kernelP6__halfS0_Pf+496>:   HMMA.884.F32.F32.STEP2 R4, R24.reuse.ROW, R16.reuse.COL, R4
+   0x555555e5af80 <_Z11wmma_kernelP6__halfS0_Pf+512>:   HMMA.884.F32.F32.STEP3 R6, R24.ROW, R16.COL, R6
+   0x555555e5af90 <_Z11wmma_kernelP6__halfS0_Pf+528>:   HMMA.884.F32.F32.STEP0 R8, R26.reuse.ROW, R18.reuse.COL, R8
+   0x555555e5afa0 <_Z11wmma_kernelP6__halfS0_Pf+544>:   LOP3.LUT R17, R29, 0x2, RZ, 0xc0, !PT
+   0x555555e5afb0 <_Z11wmma_kernelP6__halfS0_Pf+560>:   IMAD.SHL.U32 R16, R3, 0x8, RZ
+   0x555555e5afc0 <_Z11wmma_kernelP6__halfS0_Pf+576>:   LOP3.LUT R29, R29, 0x5, RZ, 0xc0, !PT
+   0x555555e5afd0 <_Z11wmma_kernelP6__halfS0_Pf+592>:   IMAD.MOV.U32 R3, RZ, RZ, RZ
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0x0      0
+R6             0x0      0
+R7             0x0      0
+R8             0x0      0
+R9             0x0      0
+R10            0x0      0
+R11            0x0      0
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x3c003c00       1006648320
+R17            0x3c003c00       1006648320
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5af50 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5af50 <_Z11wmma_kernelP6__halfS0_Pf+464>:   HMMA.884.F32.F32.STEP0 R8, R24.reuse.ROW, R16.reuse.COL, R8
+   0x555555e5af60 <_Z11wmma_kernelP6__halfS0_Pf+480>:   HMMA.884.F32.F32.STEP1 R10, R24.reuse.ROW, R16.reuse.COL, R10
+   0x555555e5af70 <_Z11wmma_kernelP6__halfS0_Pf+496>:   HMMA.884.F32.F32.STEP2 R4, R24.reuse.ROW, R16.reuse.COL, R4
+   0x555555e5af80 <_Z11wmma_kernelP6__halfS0_Pf+512>:   HMMA.884.F32.F32.STEP3 R6, R24.ROW, R16.COL, R6
+   0x555555e5af90 <_Z11wmma_kernelP6__halfS0_Pf+528>:   HMMA.884.F32.F32.STEP0 R8, R26.reuse.ROW, R18.reuse.COL, R8
+   0x555555e5afa0 <_Z11wmma_kernelP6__halfS0_Pf+544>:   LOP3.LUT R17, R29, 0x2, RZ, 0xc0, !PT
+   0x555555e5afb0 <_Z11wmma_kernelP6__halfS0_Pf+560>:   IMAD.SHL.U32 R16, R3, 0x8, RZ
+   0x555555e5afc0 <_Z11wmma_kernelP6__halfS0_Pf+576>:   LOP3.LUT R29, R29, 0x5, RZ, 0xc0, !PT
+   0x555555e5afd0 <_Z11wmma_kernelP6__halfS0_Pf+592>:   IMAD.MOV.U32 R3, RZ, RZ, RZ
+   0x555555e5afe0 <_Z11wmma_kernelP6__halfS0_Pf+608>:   LEA R2, R0, R17, 0x3
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0x0      0
+R6             0x0      0
+R7             0x0      0
+R8             0x0      0
+R9             0x0      0
+R10            0x0      0
+R11            0x0      0
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x3c003c00       1006648320
+R17            0x3c003c00       1006648320
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5af60 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5af60 <_Z11wmma_kernelP6__halfS0_Pf+480>:   HMMA.884.F32.F32.STEP1 R10, R24.reuse.ROW, R16.reuse.COL, R10
+   0x555555e5af70 <_Z11wmma_kernelP6__halfS0_Pf+496>:   HMMA.884.F32.F32.STEP2 R4, R24.reuse.ROW, R16.reuse.COL, R4
+   0x555555e5af80 <_Z11wmma_kernelP6__halfS0_Pf+512>:   HMMA.884.F32.F32.STEP3 R6, R24.ROW, R16.COL, R6
+   0x555555e5af90 <_Z11wmma_kernelP6__halfS0_Pf+528>:   HMMA.884.F32.F32.STEP0 R8, R26.reuse.ROW, R18.reuse.COL, R8
+   0x555555e5afa0 <_Z11wmma_kernelP6__halfS0_Pf+544>:   LOP3.LUT R17, R29, 0x2, RZ, 0xc0, !PT
+   0x555555e5afb0 <_Z11wmma_kernelP6__halfS0_Pf+560>:   IMAD.SHL.U32 R16, R3, 0x8, RZ
+   0x555555e5afc0 <_Z11wmma_kernelP6__halfS0_Pf+576>:   LOP3.LUT R29, R29, 0x5, RZ, 0xc0, !PT
+   0x555555e5afd0 <_Z11wmma_kernelP6__halfS0_Pf+592>:   IMAD.MOV.U32 R3, RZ, RZ, RZ
+   0x555555e5afe0 <_Z11wmma_kernelP6__halfS0_Pf+608>:   LEA R2, R0, R17, 0x3
+   0x555555e5aff0 <_Z11wmma_kernelP6__halfS0_Pf+624>:   HMMA.884.F32.F32.STEP1 R10, R26.reuse.ROW, R18.reuse.COL, R10
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0x0      0
+R6             0x0      0
+R7             0x0      0
+R8             0x0      0
+R9             0x0      0
+R10            0x0      0
+R11            0x0      0
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x3c003c00       1006648320
+R17            0x3c003c00       1006648320
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5af70 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5af70 <_Z11wmma_kernelP6__halfS0_Pf+496>:   HMMA.884.F32.F32.STEP2 R4, R24.reuse.ROW, R16.reuse.COL, R4
+   0x555555e5af80 <_Z11wmma_kernelP6__halfS0_Pf+512>:   HMMA.884.F32.F32.STEP3 R6, R24.ROW, R16.COL, R6
+   0x555555e5af90 <_Z11wmma_kernelP6__halfS0_Pf+528>:   HMMA.884.F32.F32.STEP0 R8, R26.reuse.ROW, R18.reuse.COL, R8
+   0x555555e5afa0 <_Z11wmma_kernelP6__halfS0_Pf+544>:   LOP3.LUT R17, R29, 0x2, RZ, 0xc0, !PT
+   0x555555e5afb0 <_Z11wmma_kernelP6__halfS0_Pf+560>:   IMAD.SHL.U32 R16, R3, 0x8, RZ
+   0x555555e5afc0 <_Z11wmma_kernelP6__halfS0_Pf+576>:   LOP3.LUT R29, R29, 0x5, RZ, 0xc0, !PT
+   0x555555e5afd0 <_Z11wmma_kernelP6__halfS0_Pf+592>:   IMAD.MOV.U32 R3, RZ, RZ, RZ
+   0x555555e5afe0 <_Z11wmma_kernelP6__halfS0_Pf+608>:   LEA R2, R0, R17, 0x3
+   0x555555e5aff0 <_Z11wmma_kernelP6__halfS0_Pf+624>:   HMMA.884.F32.F32.STEP1 R10, R26.reuse.ROW, R18.reuse.COL, R10
+   0x555555e5b000 <_Z11wmma_kernelP6__halfS0_Pf+640>:   HMMA.884.F32.F32.STEP2 R4, R26.reuse.ROW, R18.reuse.COL, R4
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0x0      0
+R6             0x0      0
+R7             0x0      0
+R8             0x0      0
+R9             0x0      0
+R10            0x0      0
+R11            0x0      0
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x3c003c00       1006648320
+R17            0x3c003c00       1006648320
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5af80 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5af80 <_Z11wmma_kernelP6__halfS0_Pf+512>:   HMMA.884.F32.F32.STEP3 R6, R24.ROW, R16.COL, R6
+   0x555555e5af90 <_Z11wmma_kernelP6__halfS0_Pf+528>:   HMMA.884.F32.F32.STEP0 R8, R26.reuse.ROW, R18.reuse.COL, R8
+   0x555555e5afa0 <_Z11wmma_kernelP6__halfS0_Pf+544>:   LOP3.LUT R17, R29, 0x2, RZ, 0xc0, !PT
+   0x555555e5afb0 <_Z11wmma_kernelP6__halfS0_Pf+560>:   IMAD.SHL.U32 R16, R3, 0x8, RZ
+   0x555555e5afc0 <_Z11wmma_kernelP6__halfS0_Pf+576>:   LOP3.LUT R29, R29, 0x5, RZ, 0xc0, !PT
+   0x555555e5afd0 <_Z11wmma_kernelP6__halfS0_Pf+592>:   IMAD.MOV.U32 R3, RZ, RZ, RZ
+   0x555555e5afe0 <_Z11wmma_kernelP6__halfS0_Pf+608>:   LEA R2, R0, R17, 0x3
+   0x555555e5aff0 <_Z11wmma_kernelP6__halfS0_Pf+624>:   HMMA.884.F32.F32.STEP1 R10, R26.reuse.ROW, R18.reuse.COL, R10
+   0x555555e5b000 <_Z11wmma_kernelP6__halfS0_Pf+640>:   HMMA.884.F32.F32.STEP2 R4, R26.reuse.ROW, R18.reuse.COL, R4
+   0x555555e5b010 <_Z11wmma_kernelP6__halfS0_Pf+656>:   LOP3.LUT R29, R16, 0x8, R29, 0xe2, !PT
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0x0      0
+R6             0x0      0
+R7             0x0      0
+R8             0x0      0
+R9             0x0      0
+R10            0x0      0
+R11            0x0      0
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x3c003c00       1006648320
+R17            0x3c003c00       1006648320
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5af90 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5af90 <_Z11wmma_kernelP6__halfS0_Pf+528>:   HMMA.884.F32.F32.STEP0 R8, R26.reuse.ROW, R18.reuse.COL, R8
+   0x555555e5afa0 <_Z11wmma_kernelP6__halfS0_Pf+544>:   LOP3.LUT R17, R29, 0x2, RZ, 0xc0, !PT
+   0x555555e5afb0 <_Z11wmma_kernelP6__halfS0_Pf+560>:   IMAD.SHL.U32 R16, R3, 0x8, RZ
+   0x555555e5afc0 <_Z11wmma_kernelP6__halfS0_Pf+576>:   LOP3.LUT R29, R29, 0x5, RZ, 0xc0, !PT
+   0x555555e5afd0 <_Z11wmma_kernelP6__halfS0_Pf+592>:   IMAD.MOV.U32 R3, RZ, RZ, RZ
+   0x555555e5afe0 <_Z11wmma_kernelP6__halfS0_Pf+608>:   LEA R2, R0, R17, 0x3
+   0x555555e5aff0 <_Z11wmma_kernelP6__halfS0_Pf+624>:   HMMA.884.F32.F32.STEP1 R10, R26.reuse.ROW, R18.reuse.COL, R10
+   0x555555e5b000 <_Z11wmma_kernelP6__halfS0_Pf+640>:   HMMA.884.F32.F32.STEP2 R4, R26.reuse.ROW, R18.reuse.COL, R4
+   0x555555e5b010 <_Z11wmma_kernelP6__halfS0_Pf+656>:   LOP3.LUT R29, R16, 0x8, R29, 0xe2, !PT
+   0x555555e5b020 <_Z11wmma_kernelP6__halfS0_Pf+672>:   HMMA.884.F32.F32.STEP3 R6, R26.ROW, R18.COL, R6
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0x0      0
+R6             0x0      0
+R7             0x0      0
+R8             0x0      0
+R9             0x0      0
+R10            0x0      0
+R11            0x0      0
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x3c003c00       1006648320
+R17            0x3c003c00       1006648320
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5afa0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5afa0 <_Z11wmma_kernelP6__halfS0_Pf+544>:   LOP3.LUT R17, R29, 0x2, RZ, 0xc0, !PT
+   0x555555e5afb0 <_Z11wmma_kernelP6__halfS0_Pf+560>:   IMAD.SHL.U32 R16, R3, 0x8, RZ
+   0x555555e5afc0 <_Z11wmma_kernelP6__halfS0_Pf+576>:   LOP3.LUT R29, R29, 0x5, RZ, 0xc0, !PT
+   0x555555e5afd0 <_Z11wmma_kernelP6__halfS0_Pf+592>:   IMAD.MOV.U32 R3, RZ, RZ, RZ
+   0x555555e5afe0 <_Z11wmma_kernelP6__halfS0_Pf+608>:   LEA R2, R0, R17, 0x3
+   0x555555e5aff0 <_Z11wmma_kernelP6__halfS0_Pf+624>:   HMMA.884.F32.F32.STEP1 R10, R26.reuse.ROW, R18.reuse.COL, R10
+   0x555555e5b000 <_Z11wmma_kernelP6__halfS0_Pf+640>:   HMMA.884.F32.F32.STEP2 R4, R26.reuse.ROW, R18.reuse.COL, R4
+   0x555555e5b010 <_Z11wmma_kernelP6__halfS0_Pf+656>:   LOP3.LUT R29, R16, 0x8, R29, 0xe2, !PT
+   0x555555e5b020 <_Z11wmma_kernelP6__halfS0_Pf+672>:   HMMA.884.F32.F32.STEP3 R6, R26.ROW, R18.COL, R6
+   0x555555e5b030 <_Z11wmma_kernelP6__halfS0_Pf+688>:   HMMA.884.F32.F32.STEP0 R8, R20.reuse.ROW, R12.reuse.COL, R8
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0x0      0
+R6             0x0      0
+R7             0x0      0
+R8             0x0      0
+R9             0x0      0
+R10            0x0      0
+R11            0x0      0
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x3c003c00       1006648320
+R17            0x3c003c00       1006648320
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5afb0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5afb0 <_Z11wmma_kernelP6__halfS0_Pf+560>:   IMAD.SHL.U32 R16, R3, 0x8, RZ
+   0x555555e5afc0 <_Z11wmma_kernelP6__halfS0_Pf+576>:   LOP3.LUT R29, R29, 0x5, RZ, 0xc0, !PT
+   0x555555e5afd0 <_Z11wmma_kernelP6__halfS0_Pf+592>:   IMAD.MOV.U32 R3, RZ, RZ, RZ
+   0x555555e5afe0 <_Z11wmma_kernelP6__halfS0_Pf+608>:   LEA R2, R0, R17, 0x3
+   0x555555e5aff0 <_Z11wmma_kernelP6__halfS0_Pf+624>:   HMMA.884.F32.F32.STEP1 R10, R26.reuse.ROW, R18.reuse.COL, R10
+   0x555555e5b000 <_Z11wmma_kernelP6__halfS0_Pf+640>:   HMMA.884.F32.F32.STEP2 R4, R26.reuse.ROW, R18.reuse.COL, R4
+   0x555555e5b010 <_Z11wmma_kernelP6__halfS0_Pf+656>:   LOP3.LUT R29, R16, 0x8, R29, 0xe2, !PT
+   0x555555e5b020 <_Z11wmma_kernelP6__halfS0_Pf+672>:   HMMA.884.F32.F32.STEP3 R6, R26.ROW, R18.COL, R6
+   0x555555e5b030 <_Z11wmma_kernelP6__halfS0_Pf+688>:   HMMA.884.F32.F32.STEP0 R8, R20.reuse.ROW, R12.reuse.COL, R8
+   0x555555e5b040 <_Z11wmma_kernelP6__halfS0_Pf+704>:   IMAD.WIDE.U32 R2, R29, 0x10, R2
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0x0      0
+R6             0x0      0
+R7             0x0      0
+R8             0x0      0
+R9             0x0      0
+R10            0x0      0
+R11            0x0      0
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x3c003c00       1006648320
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5afc0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5afc0 <_Z11wmma_kernelP6__halfS0_Pf+576>:   LOP3.LUT R29, R29, 0x5, RZ, 0xc0, !PT
+   0x555555e5afd0 <_Z11wmma_kernelP6__halfS0_Pf+592>:   IMAD.MOV.U32 R3, RZ, RZ, RZ
+   0x555555e5afe0 <_Z11wmma_kernelP6__halfS0_Pf+608>:   LEA R2, R0, R17, 0x3
+   0x555555e5aff0 <_Z11wmma_kernelP6__halfS0_Pf+624>:   HMMA.884.F32.F32.STEP1 R10, R26.reuse.ROW, R18.reuse.COL, R10
+   0x555555e5b000 <_Z11wmma_kernelP6__halfS0_Pf+640>:   HMMA.884.F32.F32.STEP2 R4, R26.reuse.ROW, R18.reuse.COL, R4
+   0x555555e5b010 <_Z11wmma_kernelP6__halfS0_Pf+656>:   LOP3.LUT R29, R16, 0x8, R29, 0xe2, !PT
+   0x555555e5b020 <_Z11wmma_kernelP6__halfS0_Pf+672>:   HMMA.884.F32.F32.STEP3 R6, R26.ROW, R18.COL, R6
+   0x555555e5b030 <_Z11wmma_kernelP6__halfS0_Pf+688>:   HMMA.884.F32.F32.STEP0 R8, R20.reuse.ROW, R12.reuse.COL, R8
+   0x555555e5b040 <_Z11wmma_kernelP6__halfS0_Pf+704>:   IMAD.WIDE.U32 R2, R29, 0x10, R2
+   0x555555e5b050 <_Z11wmma_kernelP6__halfS0_Pf+720>:   HMMA.884.F32.F32.STEP1 R10, R20.reuse.ROW, R12.reuse.COL, R10
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0x0      0
+R6             0x0      0
+R7             0x0      0
+R8             0x0      0
+R9             0x0      0
+R10            0x0      0
+R11            0x0      0
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x18     24
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5afd0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5afd0 <_Z11wmma_kernelP6__halfS0_Pf+592>:   IMAD.MOV.U32 R3, RZ, RZ, RZ
+   0x555555e5afe0 <_Z11wmma_kernelP6__halfS0_Pf+608>:   LEA R2, R0, R17, 0x3
+   0x555555e5aff0 <_Z11wmma_kernelP6__halfS0_Pf+624>:   HMMA.884.F32.F32.STEP1 R10, R26.reuse.ROW, R18.reuse.COL, R10
+   0x555555e5b000 <_Z11wmma_kernelP6__halfS0_Pf+640>:   HMMA.884.F32.F32.STEP2 R4, R26.reuse.ROW, R18.reuse.COL, R4
+   0x555555e5b010 <_Z11wmma_kernelP6__halfS0_Pf+656>:   LOP3.LUT R29, R16, 0x8, R29, 0xe2, !PT
+   0x555555e5b020 <_Z11wmma_kernelP6__halfS0_Pf+672>:   HMMA.884.F32.F32.STEP3 R6, R26.ROW, R18.COL, R6
+   0x555555e5b030 <_Z11wmma_kernelP6__halfS0_Pf+688>:   HMMA.884.F32.F32.STEP0 R8, R20.reuse.ROW, R12.reuse.COL, R8
+   0x555555e5b040 <_Z11wmma_kernelP6__halfS0_Pf+704>:   IMAD.WIDE.U32 R2, R29, 0x10, R2
+   0x555555e5b050 <_Z11wmma_kernelP6__halfS0_Pf+720>:   HMMA.884.F32.F32.STEP1 R10, R20.reuse.ROW, R12.reuse.COL, R10
+   0x555555e5b060 <_Z11wmma_kernelP6__halfS0_Pf+736>:   HMMA.884.F32.F32.STEP2 R4, R20.reuse.ROW, R12.reuse.COL, R4
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x3      3
+R4             0x0      0
+R5             0x0      0
+R6             0x0      0
+R7             0x0      0
+R8             0x0      0
+R9             0x0      0
+R10            0x0      0
+R11            0x0      0
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x18     24
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5afe0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5afe0 <_Z11wmma_kernelP6__halfS0_Pf+608>:   LEA R2, R0, R17, 0x3
+   0x555555e5aff0 <_Z11wmma_kernelP6__halfS0_Pf+624>:   HMMA.884.F32.F32.STEP1 R10, R26.reuse.ROW, R18.reuse.COL, R10
+   0x555555e5b000 <_Z11wmma_kernelP6__halfS0_Pf+640>:   HMMA.884.F32.F32.STEP2 R4, R26.reuse.ROW, R18.reuse.COL, R4
+   0x555555e5b010 <_Z11wmma_kernelP6__halfS0_Pf+656>:   LOP3.LUT R29, R16, 0x8, R29, 0xe2, !PT
+   0x555555e5b020 <_Z11wmma_kernelP6__halfS0_Pf+672>:   HMMA.884.F32.F32.STEP3 R6, R26.ROW, R18.COL, R6
+   0x555555e5b030 <_Z11wmma_kernelP6__halfS0_Pf+688>:   HMMA.884.F32.F32.STEP0 R8, R20.reuse.ROW, R12.reuse.COL, R8
+   0x555555e5b040 <_Z11wmma_kernelP6__halfS0_Pf+704>:   IMAD.WIDE.U32 R2, R29, 0x10, R2
+   0x555555e5b050 <_Z11wmma_kernelP6__halfS0_Pf+720>:   HMMA.884.F32.F32.STEP1 R10, R20.reuse.ROW, R12.reuse.COL, R10
+   0x555555e5b060 <_Z11wmma_kernelP6__halfS0_Pf+736>:   HMMA.884.F32.F32.STEP2 R4, R20.reuse.ROW, R12.reuse.COL, R4
+   0x555555e5b070 <_Z11wmma_kernelP6__halfS0_Pf+752>:   HMMA.884.F32.F32.STEP3 R6, R20.ROW, R12.COL, R6
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x0      0
+R3             0x0      0
+R4             0x0      0
+R5             0x0      0
+R6             0x0      0
+R7             0x0      0
+R8             0x0      0
+R9             0x0      0
+R10            0x0      0
+R11            0x0      0
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x18     24
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5aff0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5aff0 <_Z11wmma_kernelP6__halfS0_Pf+624>:   HMMA.884.F32.F32.STEP1 R10, R26.reuse.ROW, R18.reuse.COL, R10
+   0x555555e5b000 <_Z11wmma_kernelP6__halfS0_Pf+640>:   HMMA.884.F32.F32.STEP2 R4, R26.reuse.ROW, R18.reuse.COL, R4
+   0x555555e5b010 <_Z11wmma_kernelP6__halfS0_Pf+656>:   LOP3.LUT R29, R16, 0x8, R29, 0xe2, !PT
+   0x555555e5b020 <_Z11wmma_kernelP6__halfS0_Pf+672>:   HMMA.884.F32.F32.STEP3 R6, R26.ROW, R18.COL, R6
+   0x555555e5b030 <_Z11wmma_kernelP6__halfS0_Pf+688>:   HMMA.884.F32.F32.STEP0 R8, R20.reuse.ROW, R12.reuse.COL, R8
+   0x555555e5b040 <_Z11wmma_kernelP6__halfS0_Pf+704>:   IMAD.WIDE.U32 R2, R29, 0x10, R2
+   0x555555e5b050 <_Z11wmma_kernelP6__halfS0_Pf+720>:   HMMA.884.F32.F32.STEP1 R10, R20.reuse.ROW, R12.reuse.COL, R10
+   0x555555e5b060 <_Z11wmma_kernelP6__halfS0_Pf+736>:   HMMA.884.F32.F32.STEP2 R4, R20.reuse.ROW, R12.reuse.COL, R4
+   0x555555e5b070 <_Z11wmma_kernelP6__halfS0_Pf+752>:   HMMA.884.F32.F32.STEP3 R6, R20.ROW, R12.COL, R6
+   0x555555e5b080 <_Z11wmma_kernelP6__halfS0_Pf+768>:   HMMA.884.F32.F32.STEP0 R8, R22.reuse.ROW, R14.reuse.COL, R8
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0xa      10
+R3             0x0      0
+R4             0x0      0
+R5             0x0      0
+R6             0x0      0
+R7             0x0      0
+R8             0x0      0
+R9             0x0      0
+R10            0x0      0
+R11            0x0      0
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x18     24
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5b000 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5b000 <_Z11wmma_kernelP6__halfS0_Pf+640>:   HMMA.884.F32.F32.STEP2 R4, R26.reuse.ROW, R18.reuse.COL, R4
+   0x555555e5b010 <_Z11wmma_kernelP6__halfS0_Pf+656>:   LOP3.LUT R29, R16, 0x8, R29, 0xe2, !PT
+   0x555555e5b020 <_Z11wmma_kernelP6__halfS0_Pf+672>:   HMMA.884.F32.F32.STEP3 R6, R26.ROW, R18.COL, R6
+   0x555555e5b030 <_Z11wmma_kernelP6__halfS0_Pf+688>:   HMMA.884.F32.F32.STEP0 R8, R20.reuse.ROW, R12.reuse.COL, R8
+   0x555555e5b040 <_Z11wmma_kernelP6__halfS0_Pf+704>:   IMAD.WIDE.U32 R2, R29, 0x10, R2
+   0x555555e5b050 <_Z11wmma_kernelP6__halfS0_Pf+720>:   HMMA.884.F32.F32.STEP1 R10, R20.reuse.ROW, R12.reuse.COL, R10
+   0x555555e5b060 <_Z11wmma_kernelP6__halfS0_Pf+736>:   HMMA.884.F32.F32.STEP2 R4, R20.reuse.ROW, R12.reuse.COL, R4
+   0x555555e5b070 <_Z11wmma_kernelP6__halfS0_Pf+752>:   HMMA.884.F32.F32.STEP3 R6, R20.ROW, R12.COL, R6
+   0x555555e5b080 <_Z11wmma_kernelP6__halfS0_Pf+768>:   HMMA.884.F32.F32.STEP0 R8, R22.reuse.ROW, R14.reuse.COL, R8
+   0x555555e5b090 <_Z11wmma_kernelP6__halfS0_Pf+784>:   LEA R12, P0, R2.reuse, c[0x0][0x170], 0x2
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0xa      10
+R3             0x0      0
+R4             0x0      0
+R5             0x0      0
+R6             0x0      0
+R7             0x0      0
+R8             0x0      0
+R9             0x0      0
+R10            0x0      0
+R11            0x0      0
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x18     24
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5b010 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5b010 <_Z11wmma_kernelP6__halfS0_Pf+656>:   LOP3.LUT R29, R16, 0x8, R29, 0xe2, !PT
+   0x555555e5b020 <_Z11wmma_kernelP6__halfS0_Pf+672>:   HMMA.884.F32.F32.STEP3 R6, R26.ROW, R18.COL, R6
+   0x555555e5b030 <_Z11wmma_kernelP6__halfS0_Pf+688>:   HMMA.884.F32.F32.STEP0 R8, R20.reuse.ROW, R12.reuse.COL, R8
+   0x555555e5b040 <_Z11wmma_kernelP6__halfS0_Pf+704>:   IMAD.WIDE.U32 R2, R29, 0x10, R2
+   0x555555e5b050 <_Z11wmma_kernelP6__halfS0_Pf+720>:   HMMA.884.F32.F32.STEP1 R10, R20.reuse.ROW, R12.reuse.COL, R10
+   0x555555e5b060 <_Z11wmma_kernelP6__halfS0_Pf+736>:   HMMA.884.F32.F32.STEP2 R4, R20.reuse.ROW, R12.reuse.COL, R4
+   0x555555e5b070 <_Z11wmma_kernelP6__halfS0_Pf+752>:   HMMA.884.F32.F32.STEP3 R6, R20.ROW, R12.COL, R6
+   0x555555e5b080 <_Z11wmma_kernelP6__halfS0_Pf+768>:   HMMA.884.F32.F32.STEP0 R8, R22.reuse.ROW, R14.reuse.COL, R8
+   0x555555e5b090 <_Z11wmma_kernelP6__halfS0_Pf+784>:   LEA R12, P0, R2.reuse, c[0x0][0x170], 0x2
+   0x555555e5b0a0 <_Z11wmma_kernelP6__halfS0_Pf+800>:   HMMA.884.F32.F32.STEP1 R10, R22.reuse.ROW, R14.reuse.COL, R10
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0xa      10
+R3             0x0      0
+R4             0x0      0
+R5             0x0      0
+R6             0x0      0
+R7             0x0      0
+R8             0x0      0
+R9             0x0      0
+R10            0x0      0
+R11            0x0      0
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x18     24
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5b020 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5b020 <_Z11wmma_kernelP6__halfS0_Pf+672>:   HMMA.884.F32.F32.STEP3 R6, R26.ROW, R18.COL, R6
+   0x555555e5b030 <_Z11wmma_kernelP6__halfS0_Pf+688>:   HMMA.884.F32.F32.STEP0 R8, R20.reuse.ROW, R12.reuse.COL, R8
+   0x555555e5b040 <_Z11wmma_kernelP6__halfS0_Pf+704>:   IMAD.WIDE.U32 R2, R29, 0x10, R2
+   0x555555e5b050 <_Z11wmma_kernelP6__halfS0_Pf+720>:   HMMA.884.F32.F32.STEP1 R10, R20.reuse.ROW, R12.reuse.COL, R10
+   0x555555e5b060 <_Z11wmma_kernelP6__halfS0_Pf+736>:   HMMA.884.F32.F32.STEP2 R4, R20.reuse.ROW, R12.reuse.COL, R4
+   0x555555e5b070 <_Z11wmma_kernelP6__halfS0_Pf+752>:   HMMA.884.F32.F32.STEP3 R6, R20.ROW, R12.COL, R6
+   0x555555e5b080 <_Z11wmma_kernelP6__halfS0_Pf+768>:   HMMA.884.F32.F32.STEP0 R8, R22.reuse.ROW, R14.reuse.COL, R8
+   0x555555e5b090 <_Z11wmma_kernelP6__halfS0_Pf+784>:   LEA R12, P0, R2.reuse, c[0x0][0x170], 0x2
+   0x555555e5b0a0 <_Z11wmma_kernelP6__halfS0_Pf+800>:   HMMA.884.F32.F32.STEP1 R10, R22.reuse.ROW, R14.reuse.COL, R10
+   0x555555e5b0b0 <_Z11wmma_kernelP6__halfS0_Pf+816>:   HMMA.884.F32.F32.STEP2 R4, R22.reuse.ROW, R14.reuse.COL, R4
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0xa      10
+R3             0x0      0
+R4             0x0      0
+R5             0x0      0
+R6             0x0      0
+R7             0x0      0
+R8             0x0      0
+R9             0x0      0
+R10            0x0      0
+R11            0x0      0
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x18     24
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5b030 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5b030 <_Z11wmma_kernelP6__halfS0_Pf+688>:   HMMA.884.F32.F32.STEP0 R8, R20.reuse.ROW, R12.reuse.COL, R8
+   0x555555e5b040 <_Z11wmma_kernelP6__halfS0_Pf+704>:   IMAD.WIDE.U32 R2, R29, 0x10, R2
+   0x555555e5b050 <_Z11wmma_kernelP6__halfS0_Pf+720>:   HMMA.884.F32.F32.STEP1 R10, R20.reuse.ROW, R12.reuse.COL, R10
+   0x555555e5b060 <_Z11wmma_kernelP6__halfS0_Pf+736>:   HMMA.884.F32.F32.STEP2 R4, R20.reuse.ROW, R12.reuse.COL, R4
+   0x555555e5b070 <_Z11wmma_kernelP6__halfS0_Pf+752>:   HMMA.884.F32.F32.STEP3 R6, R20.ROW, R12.COL, R6
+   0x555555e5b080 <_Z11wmma_kernelP6__halfS0_Pf+768>:   HMMA.884.F32.F32.STEP0 R8, R22.reuse.ROW, R14.reuse.COL, R8
+   0x555555e5b090 <_Z11wmma_kernelP6__halfS0_Pf+784>:   LEA R12, P0, R2.reuse, c[0x0][0x170], 0x2
+   0x555555e5b0a0 <_Z11wmma_kernelP6__halfS0_Pf+800>:   HMMA.884.F32.F32.STEP1 R10, R22.reuse.ROW, R14.reuse.COL, R10
+   0x555555e5b0b0 <_Z11wmma_kernelP6__halfS0_Pf+816>:   HMMA.884.F32.F32.STEP2 R4, R22.reuse.ROW, R14.reuse.COL, R4
+   0x555555e5b0c0 <_Z11wmma_kernelP6__halfS0_Pf+832>:   LEA.HI.X R13, R2, c[0x0][0x174], R3, 0x2, P0
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0xa      10
+R3             0x0      0
+R4             0x0      0
+R5             0x0      0
+R6             0x0      0
+R7             0x0      0
+R8             0x0      0
+R9             0x0      0
+R10            0x0      0
+R11            0x0      0
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x18     24
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5b040 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5b040 <_Z11wmma_kernelP6__halfS0_Pf+704>:   IMAD.WIDE.U32 R2, R29, 0x10, R2
+   0x555555e5b050 <_Z11wmma_kernelP6__halfS0_Pf+720>:   HMMA.884.F32.F32.STEP1 R10, R20.reuse.ROW, R12.reuse.COL, R10
+   0x555555e5b060 <_Z11wmma_kernelP6__halfS0_Pf+736>:   HMMA.884.F32.F32.STEP2 R4, R20.reuse.ROW, R12.reuse.COL, R4
+   0x555555e5b070 <_Z11wmma_kernelP6__halfS0_Pf+752>:   HMMA.884.F32.F32.STEP3 R6, R20.ROW, R12.COL, R6
+   0x555555e5b080 <_Z11wmma_kernelP6__halfS0_Pf+768>:   HMMA.884.F32.F32.STEP0 R8, R22.reuse.ROW, R14.reuse.COL, R8
+   0x555555e5b090 <_Z11wmma_kernelP6__halfS0_Pf+784>:   LEA R12, P0, R2.reuse, c[0x0][0x170], 0x2
+   0x555555e5b0a0 <_Z11wmma_kernelP6__halfS0_Pf+800>:   HMMA.884.F32.F32.STEP1 R10, R22.reuse.ROW, R14.reuse.COL, R10
+   0x555555e5b0b0 <_Z11wmma_kernelP6__halfS0_Pf+816>:   HMMA.884.F32.F32.STEP2 R4, R22.reuse.ROW, R14.reuse.COL, R4
+   0x555555e5b0c0 <_Z11wmma_kernelP6__halfS0_Pf+832>:   LEA.HI.X R13, R2, c[0x0][0x174], R3, 0x2, P0
+   0x555555e5b0d0 <_Z11wmma_kernelP6__halfS0_Pf+848>:   HMMA.884.F32.F32.STEP3 R6, R22.ROW, R14.COL, R6
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0xa      10
+R3             0x0      0
+R4             0x0      0
+R5             0x0      0
+R6             0x0      0
+R7             0x0      0
+R8             0x40000000       1073741824
+R9             0x40400000       1077936128
+R10            0x0      0
+R11            0x0      0
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x18     24
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5b050 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5b050 <_Z11wmma_kernelP6__halfS0_Pf+720>:   HMMA.884.F32.F32.STEP1 R10, R20.reuse.ROW, R12.reuse.COL, R10
+   0x555555e5b060 <_Z11wmma_kernelP6__halfS0_Pf+736>:   HMMA.884.F32.F32.STEP2 R4, R20.reuse.ROW, R12.reuse.COL, R4
+   0x555555e5b070 <_Z11wmma_kernelP6__halfS0_Pf+752>:   HMMA.884.F32.F32.STEP3 R6, R20.ROW, R12.COL, R6
+   0x555555e5b080 <_Z11wmma_kernelP6__halfS0_Pf+768>:   HMMA.884.F32.F32.STEP0 R8, R22.reuse.ROW, R14.reuse.COL, R8
+   0x555555e5b090 <_Z11wmma_kernelP6__halfS0_Pf+784>:   LEA R12, P0, R2.reuse, c[0x0][0x170], 0x2
+   0x555555e5b0a0 <_Z11wmma_kernelP6__halfS0_Pf+800>:   HMMA.884.F32.F32.STEP1 R10, R22.reuse.ROW, R14.reuse.COL, R10
+   0x555555e5b0b0 <_Z11wmma_kernelP6__halfS0_Pf+816>:   HMMA.884.F32.F32.STEP2 R4, R22.reuse.ROW, R14.reuse.COL, R4
+   0x555555e5b0c0 <_Z11wmma_kernelP6__halfS0_Pf+832>:   LEA.HI.X R13, R2, c[0x0][0x174], R3, 0x2, P0
+   0x555555e5b0d0 <_Z11wmma_kernelP6__halfS0_Pf+848>:   HMMA.884.F32.F32.STEP3 R6, R22.ROW, R14.COL, R6
+   0x555555e5b0e0 <_Z11wmma_kernelP6__halfS0_Pf+864>:   STG.E.64.SYS [R12], R8
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x9a     154
+R3             0x0      0
+R4             0x0      0
+R5             0x0      0
+R6             0x0      0
+R7             0x0      0
+R8             0x40000000       1073741824
+R9             0x40400000       1077936128
+R10            0x0      0
+R11            0x0      0
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x18     24
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5b060 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5b060 <_Z11wmma_kernelP6__halfS0_Pf+736>:   HMMA.884.F32.F32.STEP2 R4, R20.reuse.ROW, R12.reuse.COL, R4
+   0x555555e5b070 <_Z11wmma_kernelP6__halfS0_Pf+752>:   HMMA.884.F32.F32.STEP3 R6, R20.ROW, R12.COL, R6
+   0x555555e5b080 <_Z11wmma_kernelP6__halfS0_Pf+768>:   HMMA.884.F32.F32.STEP0 R8, R22.reuse.ROW, R14.reuse.COL, R8
+   0x555555e5b090 <_Z11wmma_kernelP6__halfS0_Pf+784>:   LEA R12, P0, R2.reuse, c[0x0][0x170], 0x2
+   0x555555e5b0a0 <_Z11wmma_kernelP6__halfS0_Pf+800>:   HMMA.884.F32.F32.STEP1 R10, R22.reuse.ROW, R14.reuse.COL, R10
+   0x555555e5b0b0 <_Z11wmma_kernelP6__halfS0_Pf+816>:   HMMA.884.F32.F32.STEP2 R4, R22.reuse.ROW, R14.reuse.COL, R4
+   0x555555e5b0c0 <_Z11wmma_kernelP6__halfS0_Pf+832>:   LEA.HI.X R13, R2, c[0x0][0x174], R3, 0x2, P0
+   0x555555e5b0d0 <_Z11wmma_kernelP6__halfS0_Pf+848>:   HMMA.884.F32.F32.STEP3 R6, R22.ROW, R14.COL, R6
+   0x555555e5b0e0 <_Z11wmma_kernelP6__halfS0_Pf+864>:   STG.E.64.SYS [R12], R8
+   0x555555e5b0f0 <_Z11wmma_kernelP6__halfS0_Pf+880>:   STG.E.64.SYS [R12+0x80], R10
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x9a     154
+R3             0x0      0
+R4             0x0      0
+R5             0x0      0
+R6             0x0      0
+R7             0x0      0
+R8             0x40000000       1073741824
+R9             0x40400000       1077936128
+R10            0x0      0
+R11            0x3f800000       1065353216
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x18     24
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5b070 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5b070 <_Z11wmma_kernelP6__halfS0_Pf+752>:   HMMA.884.F32.F32.STEP3 R6, R20.ROW, R12.COL, R6
+   0x555555e5b080 <_Z11wmma_kernelP6__halfS0_Pf+768>:   HMMA.884.F32.F32.STEP0 R8, R22.reuse.ROW, R14.reuse.COL, R8
+   0x555555e5b090 <_Z11wmma_kernelP6__halfS0_Pf+784>:   LEA R12, P0, R2.reuse, c[0x0][0x170], 0x2
+   0x555555e5b0a0 <_Z11wmma_kernelP6__halfS0_Pf+800>:   HMMA.884.F32.F32.STEP1 R10, R22.reuse.ROW, R14.reuse.COL, R10
+   0x555555e5b0b0 <_Z11wmma_kernelP6__halfS0_Pf+816>:   HMMA.884.F32.F32.STEP2 R4, R22.reuse.ROW, R14.reuse.COL, R4
+   0x555555e5b0c0 <_Z11wmma_kernelP6__halfS0_Pf+832>:   LEA.HI.X R13, R2, c[0x0][0x174], R3, 0x2, P0
+   0x555555e5b0d0 <_Z11wmma_kernelP6__halfS0_Pf+848>:   HMMA.884.F32.F32.STEP3 R6, R22.ROW, R14.COL, R6
+   0x555555e5b0e0 <_Z11wmma_kernelP6__halfS0_Pf+864>:   STG.E.64.SYS [R12], R8
+   0x555555e5b0f0 <_Z11wmma_kernelP6__halfS0_Pf+880>:   STG.E.64.SYS [R12+0x80], R10
+   0x555555e5b100 <_Z11wmma_kernelP6__halfS0_Pf+896>:   STG.E.64.SYS [R12+0x10], R4
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x9a     154
+R3             0x0      0
+R4             0x40400000       1077936128
+R5             0x40400000       1077936128
+R6             0x0      0
+R7             0x0      0
+R8             0x40000000       1073741824
+R9             0x40400000       1077936128
+R10            0x0      0
+R11            0x3f800000       1065353216
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x18     24
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5b080 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5b080 <_Z11wmma_kernelP6__halfS0_Pf+768>:   HMMA.884.F32.F32.STEP0 R8, R22.reuse.ROW, R14.reuse.COL, R8
+   0x555555e5b090 <_Z11wmma_kernelP6__halfS0_Pf+784>:   LEA R12, P0, R2.reuse, c[0x0][0x170], 0x2
+   0x555555e5b0a0 <_Z11wmma_kernelP6__halfS0_Pf+800>:   HMMA.884.F32.F32.STEP1 R10, R22.reuse.ROW, R14.reuse.COL, R10
+   0x555555e5b0b0 <_Z11wmma_kernelP6__halfS0_Pf+816>:   HMMA.884.F32.F32.STEP2 R4, R22.reuse.ROW, R14.reuse.COL, R4
+   0x555555e5b0c0 <_Z11wmma_kernelP6__halfS0_Pf+832>:   LEA.HI.X R13, R2, c[0x0][0x174], R3, 0x2, P0
+   0x555555e5b0d0 <_Z11wmma_kernelP6__halfS0_Pf+848>:   HMMA.884.F32.F32.STEP3 R6, R22.ROW, R14.COL, R6
+   0x555555e5b0e0 <_Z11wmma_kernelP6__halfS0_Pf+864>:   STG.E.64.SYS [R12], R8
+   0x555555e5b0f0 <_Z11wmma_kernelP6__halfS0_Pf+880>:   STG.E.64.SYS [R12+0x80], R10
+   0x555555e5b100 <_Z11wmma_kernelP6__halfS0_Pf+896>:   STG.E.64.SYS [R12+0x10], R4
+   0x555555e5b110 <_Z11wmma_kernelP6__halfS0_Pf+912>:   STG.E.64.SYS [R12+0x90], R6
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x9a     154
+R3             0x0      0
+R4             0x40400000       1077936128
+R5             0x40400000       1077936128
+R6             0x3f800000       1065353216
+R7             0x3f800000       1065353216
+R8             0x40000000       1073741824
+R9             0x40400000       1077936128
+R10            0x0      0
+R11            0x3f800000       1065353216
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x18     24
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5b090 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5b090 <_Z11wmma_kernelP6__halfS0_Pf+784>:   LEA R12, P0, R2.reuse, c[0x0][0x170], 0x2
+   0x555555e5b0a0 <_Z11wmma_kernelP6__halfS0_Pf+800>:   HMMA.884.F32.F32.STEP1 R10, R22.reuse.ROW, R14.reuse.COL, R10
+   0x555555e5b0b0 <_Z11wmma_kernelP6__halfS0_Pf+816>:   HMMA.884.F32.F32.STEP2 R4, R22.reuse.ROW, R14.reuse.COL, R4
+   0x555555e5b0c0 <_Z11wmma_kernelP6__halfS0_Pf+832>:   LEA.HI.X R13, R2, c[0x0][0x174], R3, 0x2, P0
+   0x555555e5b0d0 <_Z11wmma_kernelP6__halfS0_Pf+848>:   HMMA.884.F32.F32.STEP3 R6, R22.ROW, R14.COL, R6
+   0x555555e5b0e0 <_Z11wmma_kernelP6__halfS0_Pf+864>:   STG.E.64.SYS [R12], R8
+   0x555555e5b0f0 <_Z11wmma_kernelP6__halfS0_Pf+880>:   STG.E.64.SYS [R12+0x80], R10
+   0x555555e5b100 <_Z11wmma_kernelP6__halfS0_Pf+896>:   STG.E.64.SYS [R12+0x10], R4
+   0x555555e5b110 <_Z11wmma_kernelP6__halfS0_Pf+912>:   STG.E.64.SYS [R12+0x90], R6
+   0x555555e5b120 <_Z11wmma_kernelP6__halfS0_Pf+928>:   EXIT
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x9a     154
+R3             0x0      0
+R4             0x40400000       1077936128
+R5             0x40400000       1077936128
+R6             0x3f800000       1065353216
+R7             0x3f800000       1065353216
+R8             0x40000000       1073741824
+R9             0x40400000       1077936128
+R10            0x0      0
+R11            0x3f800000       1065353216
+R12            0x3c003c00       1006648320
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x18     24
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5b0a0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5b0a0 <_Z11wmma_kernelP6__halfS0_Pf+800>:   HMMA.884.F32.F32.STEP1 R10, R22.reuse.ROW, R14.reuse.COL, R10
+   0x555555e5b0b0 <_Z11wmma_kernelP6__halfS0_Pf+816>:   HMMA.884.F32.F32.STEP2 R4, R22.reuse.ROW, R14.reuse.COL, R4
+   0x555555e5b0c0 <_Z11wmma_kernelP6__halfS0_Pf+832>:   LEA.HI.X R13, R2, c[0x0][0x174], R3, 0x2, P0
+   0x555555e5b0d0 <_Z11wmma_kernelP6__halfS0_Pf+848>:   HMMA.884.F32.F32.STEP3 R6, R22.ROW, R14.COL, R6
+   0x555555e5b0e0 <_Z11wmma_kernelP6__halfS0_Pf+864>:   STG.E.64.SYS [R12], R8
+   0x555555e5b0f0 <_Z11wmma_kernelP6__halfS0_Pf+880>:   STG.E.64.SYS [R12+0x80], R10
+   0x555555e5b100 <_Z11wmma_kernelP6__halfS0_Pf+896>:   STG.E.64.SYS [R12+0x10], R4
+   0x555555e5b110 <_Z11wmma_kernelP6__halfS0_Pf+912>:   STG.E.64.SYS [R12+0x90], R6
+   0x555555e5b120 <_Z11wmma_kernelP6__halfS0_Pf+928>:   EXIT
+   0x555555e5b130 <_Z11wmma_kernelP6__halfS0_Pf+944>:   BRA 0x3b0
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x9a     154
+R3             0x0      0
+R4             0x40400000       1077936128
+R5             0x40400000       1077936128
+R6             0x3f800000       1065353216
+R7             0x3f800000       1065353216
+R8             0x40000000       1073741824
+R9             0x40400000       1077936128
+R10            0x0      0
+R11            0x3f800000       1065353216
+R12            0xcda00668       -845150616
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x18     24
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5b0b0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5b0b0 <_Z11wmma_kernelP6__halfS0_Pf+816>:   HMMA.884.F32.F32.STEP2 R4, R22.reuse.ROW, R14.reuse.COL, R4
+   0x555555e5b0c0 <_Z11wmma_kernelP6__halfS0_Pf+832>:   LEA.HI.X R13, R2, c[0x0][0x174], R3, 0x2, P0
+   0x555555e5b0d0 <_Z11wmma_kernelP6__halfS0_Pf+848>:   HMMA.884.F32.F32.STEP3 R6, R22.ROW, R14.COL, R6
+   0x555555e5b0e0 <_Z11wmma_kernelP6__halfS0_Pf+864>:   STG.E.64.SYS [R12], R8
+   0x555555e5b0f0 <_Z11wmma_kernelP6__halfS0_Pf+880>:   STG.E.64.SYS [R12+0x80], R10
+   0x555555e5b100 <_Z11wmma_kernelP6__halfS0_Pf+896>:   STG.E.64.SYS [R12+0x10], R4
+   0x555555e5b110 <_Z11wmma_kernelP6__halfS0_Pf+912>:   STG.E.64.SYS [R12+0x90], R6
+   0x555555e5b120 <_Z11wmma_kernelP6__halfS0_Pf+928>:   EXIT
+   0x555555e5b130 <_Z11wmma_kernelP6__halfS0_Pf+944>:   BRA 0x3b0
+   0x555555e5b140 <_Z11wmma_kernelP6__halfS0_Pf+960>:   NOP
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x9a     154
+R3             0x0      0
+R4             0x40400000       1077936128
+R5             0x40400000       1077936128
+R6             0x3f800000       1065353216
+R7             0x3f800000       1065353216
+R8             0x40000000       1073741824
+R9             0x40400000       1077936128
+R10            0x0      0
+R11            0x3f800000       1065353216
+R12            0xcda00668       -845150616
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x18     24
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5b0c0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5b0c0 <_Z11wmma_kernelP6__halfS0_Pf+832>:   LEA.HI.X R13, R2, c[0x0][0x174], R3, 0x2, P0
+   0x555555e5b0d0 <_Z11wmma_kernelP6__halfS0_Pf+848>:   HMMA.884.F32.F32.STEP3 R6, R22.ROW, R14.COL, R6
+   0x555555e5b0e0 <_Z11wmma_kernelP6__halfS0_Pf+864>:   STG.E.64.SYS [R12], R8
+   0x555555e5b0f0 <_Z11wmma_kernelP6__halfS0_Pf+880>:   STG.E.64.SYS [R12+0x80], R10
+   0x555555e5b100 <_Z11wmma_kernelP6__halfS0_Pf+896>:   STG.E.64.SYS [R12+0x10], R4
+   0x555555e5b110 <_Z11wmma_kernelP6__halfS0_Pf+912>:   STG.E.64.SYS [R12+0x90], R6
+   0x555555e5b120 <_Z11wmma_kernelP6__halfS0_Pf+928>:   EXIT
+   0x555555e5b130 <_Z11wmma_kernelP6__halfS0_Pf+944>:   BRA 0x3b0
+   0x555555e5b140 <_Z11wmma_kernelP6__halfS0_Pf+960>:   NOP
+   0x555555e5b150 <_Z11wmma_kernelP6__halfS0_Pf+976>:   NOP
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x9a     154
+R3             0x0      0
+R4             0x40c00000       1086324736
+R5             0x40e00000       1088421888
+R6             0x3f800000       1065353216
+R7             0x3f800000       1065353216
+R8             0x40000000       1073741824
+R9             0x40400000       1077936128
+R10            0x0      0
+R11            0x3f800000       1065353216
+R12            0xcda00668       -845150616
+R13            0x3c003c00       1006648320
+R14            0x0      0
+R15            0x0      0
+R16            0x18     24
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5b0d0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5b0d0 <_Z11wmma_kernelP6__halfS0_Pf+848>:   HMMA.884.F32.F32.STEP3 R6, R22.ROW, R14.COL, R6
+   0x555555e5b0e0 <_Z11wmma_kernelP6__halfS0_Pf+864>:   STG.E.64.SYS [R12], R8
+   0x555555e5b0f0 <_Z11wmma_kernelP6__halfS0_Pf+880>:   STG.E.64.SYS [R12+0x80], R10
+   0x555555e5b100 <_Z11wmma_kernelP6__halfS0_Pf+896>:   STG.E.64.SYS [R12+0x10], R4
+   0x555555e5b110 <_Z11wmma_kernelP6__halfS0_Pf+912>:   STG.E.64.SYS [R12+0x90], R6
+   0x555555e5b120 <_Z11wmma_kernelP6__halfS0_Pf+928>:   EXIT
+   0x555555e5b130 <_Z11wmma_kernelP6__halfS0_Pf+944>:   BRA 0x3b0
+   0x555555e5b140 <_Z11wmma_kernelP6__halfS0_Pf+960>:   NOP
+   0x555555e5b150 <_Z11wmma_kernelP6__halfS0_Pf+976>:   NOP
+   0x555555e5b160 <_Z11wmma_kernelP6__halfS0_Pf+992>:   NOP
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x9a     154
+R3             0x0      0
+R4             0x40c00000       1086324736
+R5             0x40e00000       1088421888
+R6             0x3f800000       1065353216
+R7             0x3f800000       1065353216
+R8             0x40000000       1073741824
+R9             0x40400000       1077936128
+R10            0x0      0
+R11            0x3f800000       1065353216
+R12            0xcda00668       -845150616
+R13            0x7fff   32767
+R14            0x0      0
+R15            0x0      0
+R16            0x18     24
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5b0e0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5b0e0 <_Z11wmma_kernelP6__halfS0_Pf+864>:   STG.E.64.SYS [R12], R8
+   0x555555e5b0f0 <_Z11wmma_kernelP6__halfS0_Pf+880>:   STG.E.64.SYS [R12+0x80], R10
+   0x555555e5b100 <_Z11wmma_kernelP6__halfS0_Pf+896>:   STG.E.64.SYS [R12+0x10], R4
+   0x555555e5b110 <_Z11wmma_kernelP6__halfS0_Pf+912>:   STG.E.64.SYS [R12+0x90], R6
+   0x555555e5b120 <_Z11wmma_kernelP6__halfS0_Pf+928>:   EXIT
+   0x555555e5b130 <_Z11wmma_kernelP6__halfS0_Pf+944>:   BRA 0x3b0
+   0x555555e5b140 <_Z11wmma_kernelP6__halfS0_Pf+960>:   NOP
+   0x555555e5b150 <_Z11wmma_kernelP6__halfS0_Pf+976>:   NOP
+   0x555555e5b160 <_Z11wmma_kernelP6__halfS0_Pf+992>:   NOP
+   0x555555e5b170 <_Z11wmma_kernelP6__halfS0_Pf+1008>:  NOP
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x9a     154
+R3             0x0      0
+R4             0x40c00000       1086324736
+R5             0x40e00000       1088421888
+R6             0x40800000       1082130432
+R7             0x40a00000       1084227584
+R8             0x40000000       1073741824
+R9             0x40400000       1077936128
+R10            0x0      0
+R11            0x3f800000       1065353216
+R12            0xcda00668       -845150616
+R13            0x7fff   32767
+R14            0x0      0
+R15            0x0      0
+R16            0x18     24
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5b0f0 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5b0f0 <_Z11wmma_kernelP6__halfS0_Pf+880>:   STG.E.64.SYS [R12+0x80], R10
+   0x555555e5b100 <_Z11wmma_kernelP6__halfS0_Pf+896>:   STG.E.64.SYS [R12+0x10], R4
+   0x555555e5b110 <_Z11wmma_kernelP6__halfS0_Pf+912>:   STG.E.64.SYS [R12+0x90], R6
+   0x555555e5b120 <_Z11wmma_kernelP6__halfS0_Pf+928>:   EXIT
+   0x555555e5b130 <_Z11wmma_kernelP6__halfS0_Pf+944>:   BRA 0x3b0
+   0x555555e5b140 <_Z11wmma_kernelP6__halfS0_Pf+960>:   NOP
+   0x555555e5b150 <_Z11wmma_kernelP6__halfS0_Pf+976>:   NOP
+   0x555555e5b160 <_Z11wmma_kernelP6__halfS0_Pf+992>:   NOP
+   0x555555e5b170 <_Z11wmma_kernelP6__halfS0_Pf+1008>:  NOP
+   0x555555e5b180:
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x9a     154
+R3             0x0      0
+R4             0x40c00000       1086324736
+R5             0x40e00000       1088421888
+R6             0x40800000       1082130432
+R7             0x40a00000       1084227584
+R8             0x40000000       1073741824
+R9             0x40400000       1077936128
+R10            0x0      0
+R11            0x3f800000       1065353216
+R12            0xcda00668       -845150616
+R13            0x7fff   32767
+R14            0x0      0
+R15            0x0      0
+R16            0x18     24
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5b100 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5b100 <_Z11wmma_kernelP6__halfS0_Pf+896>:   STG.E.64.SYS [R12+0x10], R4
+   0x555555e5b110 <_Z11wmma_kernelP6__halfS0_Pf+912>:   STG.E.64.SYS [R12+0x90], R6
+   0x555555e5b120 <_Z11wmma_kernelP6__halfS0_Pf+928>:   EXIT
+   0x555555e5b130 <_Z11wmma_kernelP6__halfS0_Pf+944>:   BRA 0x3b0
+   0x555555e5b140 <_Z11wmma_kernelP6__halfS0_Pf+960>:   NOP
+   0x555555e5b150 <_Z11wmma_kernelP6__halfS0_Pf+976>:   NOP
+   0x555555e5b160 <_Z11wmma_kernelP6__halfS0_Pf+992>:   NOP
+   0x555555e5b170 <_Z11wmma_kernelP6__halfS0_Pf+1008>:  NOP
+   0x555555e5b180:
+   0x555555e5b181:
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x9a     154
+R3             0x0      0
+R4             0x40c00000       1086324736
+R5             0x40e00000       1088421888
+R6             0x40800000       1082130432
+R7             0x40a00000       1084227584
+R8             0x40000000       1073741824
+R9             0x40400000       1077936128
+R10            0x0      0
+R11            0x3f800000       1065353216
+R12            0xcda00668       -845150616
+R13            0x7fff   32767
+R14            0x0      0
+R15            0x0      0
+R16            0x18     24
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5b110 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5b110 <_Z11wmma_kernelP6__halfS0_Pf+912>:   STG.E.64.SYS [R12+0x90], R6
+   0x555555e5b120 <_Z11wmma_kernelP6__halfS0_Pf+928>:   EXIT
+   0x555555e5b130 <_Z11wmma_kernelP6__halfS0_Pf+944>:   BRA 0x3b0
+   0x555555e5b140 <_Z11wmma_kernelP6__halfS0_Pf+960>:   NOP
+   0x555555e5b150 <_Z11wmma_kernelP6__halfS0_Pf+976>:   NOP
+   0x555555e5b160 <_Z11wmma_kernelP6__halfS0_Pf+992>:   NOP
+   0x555555e5b170 <_Z11wmma_kernelP6__halfS0_Pf+1008>:  NOP
+   0x555555e5b180:
+   0x555555e5b181:
+   0x555555e5b182:
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x9a     154
+R3             0x0      0
+R4             0x40c00000       1086324736
+R5             0x40e00000       1088421888
+R6             0x40800000       1082130432
+R7             0x40a00000       1084227584
+R8             0x40000000       1073741824
+R9             0x40400000       1077936128
+R10            0x0      0
+R11            0x3f800000       1065353216
+R12            0xcda00668       -845150616
+R13            0x7fff   32767
+R14            0x0      0
+R15            0x0      0
+R16            0x18     24
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
+
+(cuda-gdb) ni
+0x0000555555e5b120 in wmma_kernel(__half*, __half*, float*)<<<(1,1,1),(1,1,32)>>> ()
+1: x/10i $pc
+=> 0x555555e5b120 <_Z11wmma_kernelP6__halfS0_Pf+928>:   EXIT
+   0x555555e5b130 <_Z11wmma_kernelP6__halfS0_Pf+944>:   BRA 0x3b0
+   0x555555e5b140 <_Z11wmma_kernelP6__halfS0_Pf+960>:   NOP
+   0x555555e5b150 <_Z11wmma_kernelP6__halfS0_Pf+976>:   NOP
+   0x555555e5b160 <_Z11wmma_kernelP6__halfS0_Pf+992>:   NOP
+   0x555555e5b170 <_Z11wmma_kernelP6__halfS0_Pf+1008>:  NOP
+   0x555555e5b180:
+   0x555555e5b181:
+   0x555555e5b182:
+   0x555555e5b183:
+(cuda-gdb) i r
+R0             0x1      1
+R1             0xfffdc0 16776640
+R2             0x9a     154
+R3             0x0      0
+R4             0x40c00000       1086324736
+R5             0x40e00000       1088421888
+R6             0x40800000       1082130432
+R7             0x40a00000       1084227584
+R8             0x40000000       1073741824
+R9             0x40400000       1077936128
+R10            0x0      0
+R11            0x3f800000       1065353216
+R12            0xcda00668       -845150616
+R13            0x7fff   32767
+R14            0x0      0
+R15            0x0      0
+R16            0x18     24
+R17            0x2      2
+R18            0x3c003c00       1006648320
+R19            0x3c003c00       1006648320
+R20            0x0      0
+R21            0x3c000000       1006632960
+R22            0x3c003c00       1006648320
+R23            0x3c003c00       1006648320
+R24            0x0      0
+R25            0x0      0
+R26            0x0      0
+R27            0x0      0
+R28            0x442c7954       1143765332
