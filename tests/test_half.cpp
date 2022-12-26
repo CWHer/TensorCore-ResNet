@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "half.hpp"
+#include "half.h"
 
 TEST(half, conversion)
 {
