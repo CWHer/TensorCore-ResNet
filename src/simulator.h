@@ -1,9 +1,9 @@
 #pragma once
 
 #include "common.h"
-#include "half.hpp"
+#include "half.h"
 #include "device_memory.hpp"
-#include "reg_file.hpp"
+#include "reg_file.h"
 
 namespace Sim
 {
@@ -27,12 +27,16 @@ namespace Sim
         using ThreadWarp = std::array<u32, WARP_SIZE>;
 
     private:
+        // threadgroup utilities
+        static const u32 THREAD_PER_GROUP = 4;
+
+        std::array<f16, 1 * 4> loadReg(u32 thread_num, u32 R);
+
+    private:
         GlobalMemory &global_memory;
         RegisterFile &reg_file;
         PRegisterFile &preg_file;
         SRegisterFile &sreg_file;
-
-        i32 exit_thread_count;
 
     public:
         // frankly speaking, DeviceMemory & Register should be internal modules of GPUSimulator
@@ -44,20 +48,16 @@ namespace Sim
 
         // SASS instructions
         // NOTE: HACK: DO NOT support BRANCH & SIMT STACK instructions
-        void LDG_INSTR(const GPUSimulator::ThreadWarp &warp,
-                       u32 n_bits, u32 Rd, u32 Ra, u64 imm);
-        void STG_INSTR(const GPUSimulator::ThreadWarp &warp,
-                       u32 n_bits, u32 Rd, u32 Ra, u64 imm);
-        void HMMA_INSTR_STEP0();
-        void HMMA_INSTR_STEP1();
-        void HMMA_INSTR_STEP2();
-        void HMMA_INSTR_STEP3();
+        void LDG_INSTR(const GPUSimulator::ThreadWarp &warp, u32 n_bits, u32 Rd, u32 Ra, u64 imm);
+        void STG_INSTR(const GPUSimulator::ThreadWarp &warp, u32 n_bits, u32 Rd, u32 Ra, u64 imm);
+        void HMMA_INSTR_STEP0(const GPUSimulator::ThreadWarp &warp, u32 Rd, u32 Ra, u32 Rb, u32 Rc);
+        void HMMA_INSTR_STEP1(const GPUSimulator::ThreadWarp &warp, u32 Rd, u32 Ra, u32 Rb, u32 Rc);
+        void HMMA_INSTR_STEP2(const GPUSimulator::ThreadWarp &warp, u32 Rd, u32 Ra, u32 Rb, u32 Rc);
+        void HMMA_INSTR_STEP3(const GPUSimulator::ThreadWarp &warp, u32 Rd, u32 Ra, u32 Rb, u32 Rc);
         void S2R_INSTR(const GPUSimulator::ThreadWarp &warp, u32 Rd, u32 Sb);
-        void IMAD_INSTR(const GPUSimulator::ThreadWarp &warp, bool wide,
-                        u32 Rd, u64 Ra, u64 Sb, u64 Sc, u32 options);
-        void LOP3_INSTR();
-        void SHF_INSTR(const GPUSimulator::ThreadWarp &warp,
-                       bool left, u32 Rd, u32 Ra, u32 Sb, u32 Sc);
+        void IMAD_INSTR(const GPUSimulator::ThreadWarp &warp, bool wide, u32 Rd, u64 Ra, u64 Sb, u64 Sc, u32 options);
+        void LOP3_INSTR(const GPUSimulator::ThreadWarp &warp, u32 Rd, u64 Ra, u64 Sb, u64 Sc, u32 imm, u32 options);
+        void SHF_INSTR(const GPUSimulator::ThreadWarp &warp, bool left, u32 Rd, u32 Ra, u32 Sb, u32 Sc);
         void LEA_INSTR();
         void EXIT_INSTR(const GPUSimulator::ThreadWarp &warp);
 
@@ -112,7 +112,6 @@ namespace Sim
                         sreg_file.write(thread_num, static_cast<u32>(SRegisterType::SR_NTID_Z), block_dim.z, true);
                     }
 
-            exit_thread_count = 0;
             ThreadWarp warp;
             for (u32 i = 0; i < thread_num_list.size(); i += WARP_SIZE)
             {
@@ -121,53 +120,14 @@ namespace Sim
                           warp.begin());
                 kernel_func(*this, warp, std::forward<Args>(args)...);
             }
-            printCppError(exit_thread_count != thread_num_count,
-                          "Not all threads have exited", __FILE__, __LINE__);
         }
 
-        std::tuple<unit3, dim3> readThreadInfo(u32 thread_num)
-        {
-            return std::make_tuple(
-                unit3(sreg_file.read(thread_num, static_cast<u32>(SRegisterType::SR_TID_X)),
-                      sreg_file.read(thread_num, static_cast<u32>(SRegisterType::SR_TID_Y)),
-                      sreg_file.read(thread_num, static_cast<u32>(SRegisterType::SR_TID_Z))),
-                dim3(sreg_file.read(thread_num, static_cast<u32>(SRegisterType::SR_NTID_X)),
-                     sreg_file.read(thread_num, static_cast<u32>(SRegisterType::SR_NTID_Y)),
-                     sreg_file.read(thread_num, static_cast<u32>(SRegisterType::SR_NTID_Z))));
-        }
+        std::tuple<unit3, dim3> readThreadInfo(u32 thread_num);
 
         // Memory management
-        void cudaMalloc(void **ptr, size_t size)
-        {
-            global_memory.cudaMalloc(ptr, size);
-        }
-
-        void cudaMemcpy(void *dst, void *src, size_t count, CUDAMemcpyType type)
-        {
-            switch (type)
-            {
-            case CUDAMemcpyType::MemcpyDeviceToHost:
-                printCppError(!global_memory.isAllocated(src),
-                              "Wrong address for cudaMemcpy",
-                              __FILE__, __LINE__);
-                break;
-            case CUDAMemcpyType::MemcpyHostToDevice:
-                printCppError(!global_memory.isAllocated(dst),
-                              "Wrong address for cudaMemcpy",
-                              __FILE__, __LINE__);
-                break;
-            default:
-                printCppError(true, "Not implemented cudaMemcpy type",
-                              __FILE__, __LINE__);
-            }
-            std::copy((char *)src, (char *)src + count, (char *)dst);
-        }
-
-        template <typename T>
-        void cudaFree(T *ptr)
-        {
-            global_memory.cudaFree(ptr);
-        }
+        void cudaMalloc(void **ptr, size_t size);
+        void cudaMemcpy(void *dst, void *src, size_t count, CUDAMemcpyType type);
+        void cudaFree(void *ptr);
     };
 
 }

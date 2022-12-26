@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "simulator.hpp"
+#include "simulator.h"
 
 TEST(gpu_simulator, memory)
 {
@@ -99,9 +99,4 @@ TEST(gpu_simulator, launch_kernel)
     for (int i = 0; i < 16; i++)
         for (int j = 0; j < 16; j++)
             EXPECT_NEAR(h_matrix[i][j], 1.0f, eps);
-}
-
-TEST(gpu_simulator, instructions)
-{
-    // TODO
 }

@@ -1,26 +1,34 @@
-#pragma once
-
-#include "common.h"
-#include "simulator.hpp"
+#include "functions.h"
 
 namespace Sim
 {
 
     void wmma_kernel(GPUSimulator &sim,
                      const GPUSimulator::ThreadWarp &warp,
-                     f16 *a, f16 *b, f32 *c){
-        // NOTE: wmma functions
-        // wmma::fragment<wmma::matrix_a, 16, 16, 16, half, wmma::row_major> a_frag;
-        // wmma::fragment<wmma::matrix_b, 16, 16, 16, half, wmma::col_major> b_frag;
-        // wmma::fragment<wmma::accumulator, 16, 16, 16, float> c_frag;
-
-        // wmma::fill_fragment(c_frag, 0.0f);
-        // wmma::load_matrix_sync(a_frag, a, 16);
-        // wmma::load_matrix_sync(b_frag, b, 16);
-        // wmma::mma_sync(c_frag, a_frag, b_frag, c_frag);
-        // wmma::store_matrix_sync(c, c_frag, 16, wmma::mem_row_major);
-
-        // TODO:
+                     f16 *a, f16 *b, f32 *c)
+    {
+        sim.S2R_INSTR(warp, 2, SRegisterType::SR_LANEID);
+        sim.IMAD_INSTR(warp, false, 12, 255, 255, 0x10, 0b001);
+        sim.SHF_INSTR(warp, false, 3, 2, 0x2, 255);
+        sim.LOP3_INSTR(warp, 29, 2, 0x3, 255, 0xc0, 0b010);
+        sim.LOP3_INSTR(warp, 3, 3, 0x3, 255, 0xc0, 0b010);
+        sim.SHF_INSTR(warp, false, 2, 2, 0x4, 255);
+        sim.SHF_INSTR(warp, false, 0, 3, 0x1, 255);
+        sim.IMAD_INSTR(warp, false, 6, 3, 0x8, 255, 0b010);
+        sim.LOP3_INSTR(warp, 4, 2, 0x1, 255, 0xc0, 0b010);
+        sim.IMAD_INSTR(warp, false, 7, 0, 0x8, 29, 0b010);
+        sim.LOP3_INSTR(warp, 5, 6, 0x8, 29, 0xe2, 0b010);
+        sim.IMAD_INSTR(warp, false, 7, 4, 0x4, 7, 0b010);
+        sim.IMAD_INSTR(warp, false, 5, 4, 0x4, 5, 0b010);
+        sim.IMAD_INSTR(warp, false, 7, 7, 0x2, 255, 0b010);
+        sim.SHF_INSTR(warp, false, 5, 5, 0x1, 255);
+        sim.IMAD_INSTR(warp, true, 20, 5, 12, reinterpret_cast<intptr_t>(a), 0b001);
+        sim.IMAD_INSTR(warp, true, 12, 7, 12, reinterpret_cast<intptr_t>(b), 0b001);
+        sim.LDG_INSTR(warp, 128, 24, 20, 0x0);
+        sim.LDG_INSTR(warp, 128, 16, 12, 0x0);
+        sim.LDG_INSTR(warp, 128, 20, 20, 0x10);
+        sim.LDG_INSTR(warp, 128, 12, 12, 0x10);
+        // TODO
     };
 
     void device_gemm(GPUSimulator &sim,
@@ -56,8 +64,8 @@ namespace Sim
                 if (row + i < m && col + j < n)
                 {
                     // TODO: check this
-                    a_frag[i][j].fromFloat(a[(row + i) * k + col + j]);
-                    b_frag[i][j].fromFloat(b[(row + i) * k + col + j]);
+                    a_frag[i][j] = __float2half(a[(row + i) * k + col + j]);
+                    b_frag[i][j] = __float2half(b[(row + i) * k + col + j]);
                     c_frag[i][j] = c[(row + i) * k + col + j];
                 }
         wmma_kernel(sim, warp, (f16 *)a_frag, (f16 *)b_frag, (f32 *)c_frag);
@@ -81,7 +89,7 @@ namespace Sim
 
         static const int N_WMMA = 16;
         // TODO: padding
-        dim3 block_dim(16, 16, GPUSimulator::WARP_SIZE);
+        dim3 block_dim(1, 1, GPUSimulator::WARP_SIZE);
         sim.launchKernel(block_dim, device_gemm, d_a, d_b, d_c, m, n, k);
 
         sim.cudaMemcpy((void *)c, d_c, m * n * sizeof(f32), CUDAMemcpyType::MemcpyDeviceToHost);
