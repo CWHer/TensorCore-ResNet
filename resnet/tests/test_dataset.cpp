@@ -51,6 +51,7 @@ TEST(dataset, load) {
   dataset.load(DATASET_ROOT, max_inspect_dataset_size);
 
   for (int dataset_idx = 0; dataset_idx < max_inspect_dataset_size; dataset_idx++) {
+    dataset.next();
     auto validation_image = validation_data_load(DATASET_ROOT, "image", dataset_idx, max_inspect_data_length);
     Tensor x = dataset[dataset_idx];
 

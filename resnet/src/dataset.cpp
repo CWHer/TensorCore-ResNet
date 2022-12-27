@@ -5,13 +5,22 @@
 void Impl::ImageDataset::load(const std::string &path, int num_tensors) {
   // NOTE: HACK: use preprocess.py to generate the binary files
   // Load batched tensors
+  data_path = path;
   for (int i = 0; i < num_tensors; i++) {
     batched_tensors.emplace_back();
     batched_labels.emplace_back();
-    std::string index = std::to_string(i);
+  }
+}
+void Impl::ImageDataset::next() {
+  int num_tensors = batched_tensors.size();
+  if (cur_idx + 1 < num_tensors) {
+    std::string index = std::to_string(cur_idx);
     index = std::string(4 - index.size(), '0') + index;
-    batched_tensors.back().load(path + "/images_" + index + ".bin");
-    batched_labels.back().load(path + "/labels_" + index + ".bin");
+    batched_tensors.back().load(data_path + "/images_" + index + ".bin");
+    batched_labels.back().load(data_path + "/labels_" + index + ".bin");
+    cur_idx++;
+  } else {
+    std::cerr << "dataset loader error: index out of bounds" << std::endl;
   }
 }
 Impl::Tensor Impl::ImageDataset::operator[](int index) {
