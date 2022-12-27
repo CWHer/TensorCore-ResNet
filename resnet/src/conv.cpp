@@ -40,12 +40,17 @@ Tensor Conv2d::forward(const Tensor &x) {
     weight_f16 = fp32_array_to_fp16_array(weight.data_ptr(), weight.totalSize(), weight.getDevice());
   }
 
-  return functional::conv2d(x, weight_f16, bias, out_channels, kernel_size, stride, padding, dilation, groups);
+  return std::move(functional::conv2d(x, weight_f16, bias, out_channels, kernel_size, stride, padding, dilation, groups));
+}
+
+Tensor Conv2d::forward(Tensor &&x) {
+  return std::move(forward(x));
 }
 
 void Conv2d::printModule(const std::string &prefix) {
   std::cout << prefix << ":Conv2d" << std::endl;
 }
+
 void Conv2d::setWeight(const Tensor &new_weight) {
   if (weight_f16 != nullptr) {
     switch (this->weight.getDevice()) {
@@ -61,6 +66,7 @@ void Conv2d::setWeight(const Tensor &new_weight) {
 
   this->weight = new_weight;
 }
+
 void Conv2d::setBias(const Tensor &new_bias) {
   this->bias = new_bias;
 }
@@ -82,6 +88,7 @@ void Conv2d::to(Impl::DeviceType device) {
     bias.to(device);
   }
 }
+
 
 // Perform the convert on-size, this could be inefficient
 Tensor functional::conv2d(const Tensor &input,

@@ -116,10 +116,10 @@ static T *gemm_padding_col_major(const T *source, size_t row, size_t col, size_t
   cudaMalloc(&padded, sizeof(T) * pad_col * pad_row);
 
   if (require_copy) {
-    cudaMemset(padded, 0, sizeof(T) * pad_col * pad_row);
-    cudaMemcpy2D(padded, sizeof(T) * pad_col, source, sizeof(T) * col, sizeof(T) * col, row, memcpy_kind);
+    checkCudaErrors(cudaMemset((void*) padded, 0, sizeof(T) * pad_col * pad_row));
+    checkCudaErrors(cudaMemcpy2D(padded, sizeof(T) * pad_col, source, sizeof(T) * col, sizeof(T) * col, row, memcpy_kind));
   }
-  check_cuda_error();
+
   return padded;
 }
 

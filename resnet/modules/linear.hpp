@@ -16,6 +16,7 @@ public:
   Linear(int in_features, int out_features);
   ~Linear();
   Tensor forward(const Tensor &x) override;
+  Tensor forward(Tensor &&x) override;
   void printModule(const std::string &prefix) override;
 
   void setWeight(const Tensor &new_weight);

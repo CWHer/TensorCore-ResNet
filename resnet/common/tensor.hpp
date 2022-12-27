@@ -24,6 +24,7 @@ public:
     std::vector<int32_t> shape;
     std::vector<int32_t> strides;
     Impl::DeviceType device;
+    bool initialized = true;
     float *data;
 
   public:
@@ -53,6 +54,7 @@ public:
   Tensor(std::shared_ptr<TensorStorage> storage);
   Tensor(const std::vector<int> &shape, Impl::DeviceType device = Impl::DeviceType::CPU, float *data = nullptr);
   Tensor(const Tensor &other);
+  Tensor(Tensor &&other) noexcept;
   void load(const std::string &file_path);
   // HACK: DO NOT support save
   // void save(const std::string &path) {}
@@ -70,6 +72,7 @@ public:
   Impl::DeviceType getDevice() const;
 
   Tensor &operator=(const Tensor &other);
+  Tensor &operator=(Tensor &&other) noexcept;
 
 public:
   friend std::ostream &operator<<(std::ostream &out, const Tensor &x);

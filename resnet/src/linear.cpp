@@ -69,6 +69,10 @@ Impl::Tensor functional::linear(const Tensor &input, const float_16 *weight, con
   return result;
 }
 
+Impl::Tensor Impl::Linear::forward(Impl::Tensor &&x) {
+  return std::move(forward(x));
+}
+
 Impl::Tensor Impl::Linear::forward(const Tensor &x) {
   if (weight_f16 == nullptr) {
     switch (x.getDevice()) {
@@ -80,7 +84,7 @@ Impl::Tensor Impl::Linear::forward(const Tensor &x) {
     prepare_linear_weight(weight.data_ptr(), weight_f16, out_features, in_features, x.getDevice());
   }
 
-#if DEBUG
+#ifndef DEBUG
   // x should be a 2D tensor
   auto x_shape = x.sizes();
 
@@ -96,7 +100,7 @@ Impl::Tensor Impl::Linear::forward(const Tensor &x) {
   }
 #endif
 
-  return functional::linear(x, weight_f16, bias);
+  return std::move(functional::linear(x, weight_f16, bias));
 }
 
 void Impl::Linear::printModule(const std::string &prefix) {
@@ -129,3 +133,4 @@ void Impl::Linear::setWeight(const Impl::Tensor &new_weight) {
 void Impl::Linear::setBias(const Impl::Tensor &new_bias) {
   bias = new_bias;
 }
+

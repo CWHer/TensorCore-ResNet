@@ -17,6 +17,10 @@ private:
 public:
   virtual Tensor forward(const Tensor &x) = 0;
 
+  virtual Tensor forward(Tensor&& x) {
+    return forward(x);
+  }
+
   virtual void printModule(const std::string &prefix) = 0;
 
   void addTensor(const std::string &name, Tensor& tensor) {
@@ -61,6 +65,12 @@ public:
     for (auto &named_module : module_list)
       result = named_module.module->forward(result);
     return result;
+  }
+
+  Tensor forward(Tensor&& x) override {
+    for (auto &named_module : module_list)
+      x = named_module.module->forward(std::move(x));
+    return x;
   }
 
   void to(Impl::DeviceType device) override {

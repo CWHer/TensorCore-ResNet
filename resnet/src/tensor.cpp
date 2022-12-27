@@ -53,6 +53,7 @@ Tensor::TensorStorage::TensorStorage(Tensor::TensorStorage &&other) noexcept
     : shape(std::move(other.shape)), n_dim(other.n_dim), strides(std::move(other.strides)),
       total_size(other.total_size), data(other.data), device(other.device) {
   other.data = nullptr;
+  other.initialized = false;
 }
 
 Tensor::TensorStorage::~TensorStorage() {
@@ -65,6 +66,7 @@ Tensor::TensorStorage::~TensorStorage() {
     default:checkCppErrorsMsg(true, "Unknown device type");
     }
   }
+  initialized = false;
 }
 
 void Tensor::TensorStorage::load(const std::string &file_path) {
@@ -239,6 +241,9 @@ Tensor::Tensor(const Tensor &other) {
   Tensor::TensorStorage other_storage = *other.storage;
   storage = std::make_shared<TensorStorage>(std::move(other_storage));
 }
+Tensor::Tensor(Tensor &&other) noexcept {
+    storage = std::move(other.storage);
+}
 Tensor &Tensor::operator=(const Tensor &other) {
   if (this == &other)
     return *this;
@@ -246,6 +251,18 @@ Tensor &Tensor::operator=(const Tensor &other) {
   new(this) Tensor(other);
   return *this;
 }
+
+Tensor &Tensor::operator=(Tensor &&other) noexcept {
+  if (this == &other)
+    return *this;
+  if (this->storage.get() == other.storage.get())
+    return *this;
+  this->~Tensor();
+  new(this) Tensor(std::move(other));
+  return *this;
+}
+
 void Tensor::reshape(const std::vector<int> &shape) {
   storage->reshape(shape);
 }
+

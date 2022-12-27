@@ -13,28 +13,25 @@ Impl::BatchNorm2d::BatchNorm2d(int num_features, double eps, double momentum, bo
   addTensor("running_var", running_var);   // [num_features]
 }
 
-Impl::Tensor Impl::BatchNorm2d::forward(const Tensor &x) {
-  checkCppErrorsMsg(x.sizes().size() != 4, "BatchNorm2d only support 4D input");
-  checkCppErrorsMsg(x.sizes()[1] != num_features, "BatchNorm2d input channel size mismatch");
 
-  Tensor result = x;
+Impl::Tensor Impl::BatchNorm2d::forward(Impl::Tensor &&x) {
   // If CPU
   auto x_device = x.getDevice();
   // HACK: to support CPU input based batchnorm
   // HUGE OVERHEAD
   if (x_device == DeviceType::CPU) {
-    result.to(Impl::DeviceType::CUDA);
+    x.to(Impl::DeviceType::CUDA);
     this->to(Impl::DeviceType::CUDA);
   }
 
   // NOTE: x is in NCHW format
   // NOTE: computation is done channel-wise
-  unsigned int batch_size = result.sizes()[0];
-  unsigned int num_channels = result.sizes()[1];
-  unsigned int height = result.sizes()[2];
-  unsigned int width = result.sizes()[3];
+  unsigned int batch_size = x.sizes()[0];
+  unsigned int num_channels = x.sizes()[1];
+  unsigned int height = x.sizes()[2];
+  unsigned int width = x.sizes()[3];
 
-  float *input_data = result.data_ptr();
+  float *input_data = x.data_ptr();
   float *mean_data = running_mean.data_ptr();
   float *var_data = running_var.data_ptr();
   float *weight_data = weight.data_ptr();
@@ -44,10 +41,19 @@ Impl::Tensor Impl::BatchNorm2d::forward(const Tensor &x) {
                   eps, batch_size, num_channels, height, width);
   // When passed by value, the tensor is copied and can be safely modified
   if (x_device == DeviceType::CPU) {
-    result.to(Impl::DeviceType::CPU);
+    x.to(Impl::DeviceType::CPU);
     this->to(Impl::DeviceType::CPU);
   }
-  return result;
+  return std::move(x);
+}
+
+
+Impl::Tensor Impl::BatchNorm2d::forward(const Tensor &x) {
+  checkCppErrorsMsg(x.sizes().size() != 4, "BatchNorm2d only support 4D input");
+  checkCppErrorsMsg(x.sizes()[1] != num_features, "BatchNorm2d input channel size mismatch");
+
+  Tensor result = x;
+  return std::move(forward(std::move(result)));
 }
 
 void Impl::BatchNorm2d::printModule(const std::string &prefix) {

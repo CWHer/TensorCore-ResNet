@@ -31,7 +31,7 @@ TEST(tensor, basic) {
 TEST(tensor, load) {
   // NOTE: pretrained resnet18 model
   std::string filename = RESNET18_ROOT;
-  filename += "/conv1_weight.bin";
+  filename += "/resnet18_conv1_weight.bin";
   Tensor x;
   x.load(filename);
 

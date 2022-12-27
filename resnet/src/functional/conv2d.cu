@@ -14,7 +14,6 @@ static void check_cuda_error() {
   }
 }
 
-
 __global__ static void cuda_bias_extend(float *extended,
                                         const float *bias,
                                         int N,
@@ -34,11 +33,11 @@ __global__ static void cuda_bias_extend(float *extended,
 }
 
 void bias_extend(float *Result,
-                        const float *bias,
-                        int N,
-                        int out_channels,
-                        int conv_result_size,
-                        Impl::DeviceType device_type) {
+                 const float *bias,
+                 int N,
+                 int out_channels,
+                 int conv_result_size,
+                 Impl::DeviceType device_type) {
   switch (device_type) {
   case Impl::DeviceType::CPU: {
     for (int i = 0; i < N; ++i) {
@@ -123,20 +122,58 @@ void conv2d(const float *input,
 
   float *bias_expanded;
 
-  if (device_type == Impl::DeviceType::CUDA) {
-    auto im2col_result = create_im2col_result_store_device(N, C, H, W, kernel_size, kernel_size, stride, padding);
-    im2col(input, im2col_result.get(), N, C, H, W, kernel_size, kernel_size, stride, padding, device_type);
-    gemm_batched_B(weight,
-                   im2col_result.get(),
-                   output,
-                   out_channels,
-                   conv_result_size,
-                   expanded_kernel_width,
-                   N,
-                   GEMM::Major::row_major,
-                   device_type);
+  int batched_n = 128;
 
-    cudaMalloc(&bias_expanded, N * out_channels * conv_result_size * sizeof(float));
+  if (device_type == Impl::DeviceType::CUDA) {
+    auto total_batch_size = (N + batched_n - 1) / batched_n;
+    if (total_batch_size == 1) {
+      auto im2col_result = create_im2col_result_store_device(N, C, H, W, kernel_size, kernel_size, stride, padding);
+      im2col(input, im2col_result.get(), N, C, H, W, kernel_size, kernel_size, stride, padding, device_type);
+      gemm_batched_B(weight,
+                     im2col_result.get(),
+                     output,
+                     out_channels,
+                     conv_result_size,
+                     expanded_kernel_width,
+                     N,
+                     GEMM::Major::row_major,
+                     device_type);
+    } else {
+      auto im2col_result =
+          create_im2col_result_store_device(batched_n, C, H, W, kernel_size, kernel_size, stride, padding);
+      for (int i = 0; i < total_batch_size; ++i) {
+        auto batch_size = std::min(batched_n, N - i * batched_n);
+        if (batch_size == 0) {
+          break;
+        }
+        if (batch_size != batched_n) {
+          im2col_result =
+              create_im2col_result_store_device(batch_size, C, H, W, kernel_size, kernel_size, stride, padding);
+        }
+        im2col(input + i * batched_n * C * H * W,
+               im2col_result.get(),
+               batch_size,
+               C,
+               H,
+               W,
+               kernel_size,
+               kernel_size,
+               stride,
+               padding,
+               device_type);
+        gemm_batched_B(weight,
+                       im2col_result.get(),
+                       output + i * batched_n * out_channels * conv_result_size,
+                       out_channels,
+                       conv_result_size,
+                       expanded_kernel_width,
+                       batch_size,
+                       GEMM::Major::row_major,
+                       device_type);
+      }
+    }
+
+    cudaMalloc(&bias_expanded, out_channels * conv_result_size * sizeof(float));
   } else {
     auto im2col_result = create_im2col_result_store_host(N, C, H, W, kernel_size, kernel_size, stride, padding);
     // After im2col, im2col_result is of shape (N, C * kernel_size * kernel_size, H_out * W_out)
@@ -157,12 +194,14 @@ void conv2d(const float *input,
                    GEMM::Major::row_major,
                    device_type);
 
-    bias_expanded = new float[N * out_channels * conv_result_size];
+    bias_expanded = new float[out_channels * conv_result_size];
   }
 
-  bias_extend(bias_expanded, bias, N, out_channels, conv_result_size, device_type);
+  bias_extend(bias_expanded, bias, 1, out_channels, conv_result_size, device_type);
 
-  add_(output, bias_expanded, N * out_channels * conv_result_size, device_type);
+  for (int i = 0; i < N; ++i) {
+    add_(output + i * out_channels * conv_result_size, bias_expanded, out_channels * conv_result_size, device_type);
+  }
 
   if (device_type == Impl::DeviceType::CUDA) {
     cudaFree(bias_expanded);

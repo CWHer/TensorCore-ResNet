@@ -11,4 +11,5 @@ set(TEST_SOURCE
     tests/tensor_conv2d.cpp
     tests/test_pooling.cpp
     tests/linear.cpp
+    tests/resnet.cpp
 )

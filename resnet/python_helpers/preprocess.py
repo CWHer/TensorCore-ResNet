@@ -147,7 +147,7 @@ def write_test_pooling_files(file_root):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--batch-size", type=int, default=4)
+    parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--num-workers", type=int, default=1)
     parser.add_argument("--dataset-dir", type=str, default="dataset")
     parser.add_argument("--tensor-output-dir", type=str, default="dataset_tensor")
@@ -193,8 +193,8 @@ if __name__ == "__main__":
             writeTensor(images, os.path.join(output_dir, f"images_{i:04d}.bin"))
             image_device = images.to(device)
             outputs = model(image_device)
-            _, predicted = torch.max(outputs.data, 1)
-            predicted_label = predicted.cpu()
+            #_, predicted = torch.max(outputs.data, 1)
+            predicted_label = outputs.cpu().detach()
             writeTensor(predicted_label, os.path.join(output_dir, f"labels_{i:04d}.bin"))
             total += labels.size(0)
             # Don't compute the accuracy here. We only check if the implemented result
@@ -203,7 +203,7 @@ if __name__ == "__main__":
 
             if i < 3:
                 # We need to store the first 3 batches to text to test whether loading is correct.
-                val_img_filename = os.path.join(output_dir, f"validation_{i:04d}_image.txt")
+                val_img_filename = os.path.join(args.test_data_dir, f"validation_{i:04d}_image.txt")
                 with open(val_img_filename, "w") as f:
                     # Write shape of the tensor.
                     shape = images.shape
@@ -214,13 +214,13 @@ if __name__ == "__main__":
                     for j in range(size):
                         f.write(f"{flattened_images[j]} ")
 
-                val_label_filename = os.path.join(output_dir, f"validation_{i:04d}_label.txt")
+                val_label_filename = os.path.join(args.test_data_dir, f"validation_{i:04d}_label.txt")
                 with open(val_label_filename, "w") as f:
                     # Write shape of the tensor.
-                    shape = labels.shape
+                    shape = predicted_label.shape
                     f.write("{} {} ".format(len(shape), " ".join([str(s) for s in shape])))
                     # Write flattened tensor to text file.
-                    flattened_labels = labels.flatten()
+                    flattened_labels = predicted_label.flatten()
                     size = flattened_labels.size(0)
                     for j in range(size):
                         f.write(f"{flattened_labels[j]} ")

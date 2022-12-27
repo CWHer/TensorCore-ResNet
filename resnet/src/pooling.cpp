@@ -59,10 +59,14 @@ Impl::Tensor Impl::MaxPool2d::forward(const Impl::Tensor &x) {
 
   return output;
 }
+Impl::Tensor Impl::MaxPool2d::forward(Impl::Tensor &&x) {
+  return forward(x);
+}
 
 void Impl::MaxPool2d::printModule(const std::string &prefix) {
   std::cout << prefix << ":MaxPool2d" << std::endl;
 }
+
 
 Impl::AvgPool2d::AvgPool2d(int kernel_size, int stride, int padding)
     : kernel_size(kernel_size), stride(stride), padding(padding) {
@@ -120,7 +124,10 @@ Impl::Tensor Impl::AvgPool2d::forward(const Impl::Tensor &x) {
 
   return output;
 }
-
+Impl::Tensor Impl::AvgPool2d::forward(Impl::Tensor &&x) {
+  return forward(x);
+}
 void Impl::AvgPool2d::printModule(const std::string &prefix) {
   std::cout << prefix << ":AvgPool2d" << std::endl;
 }
+
