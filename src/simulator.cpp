@@ -28,14 +28,16 @@ namespace Sim
         // 9.7.8.8. Data Movement and Conversion Instructions: ld
 
         printCppError(n_bits % 8 != 0 || n_bits % 32 != 0,
-                      "Global memory is currently byte-addressable, and each register is 32-bit wide",
+                      "Global memory is currently byte-addressable, \
+                       and each register is 32-bit wide",
                       __FILE__, __LINE__);
         for (const auto &thread_num : warp)
         {
             // HACK: 64-bit address
             u64 addr = imm + reg_file.read(thread_num, Ra) +
                        ((u64)reg_file.read(thread_num, Ra + 1) << 32);
-            std::vector<u8> values = global_memory.read(reinterpret_cast<void *>(addr), n_bits / 8);
+            std::vector<u8> values = global_memory.read(
+                reinterpret_cast<void *>(addr), n_bits / 8);
             for (int i = 0; i < n_bits / 32; i++)
             {
                 u32 value = 0;
@@ -50,7 +52,8 @@ namespace Sim
                                  u32 n_bits, u32 Rd, u32 Ra, u64 imm)
     {
         printCppError(n_bits % 8 != 0 || n_bits % 32 != 0,
-                      "Global memory is currently byte-addressable, and each register is 32-bit wide",
+                      "Global memory is currently byte-addressable, \
+                       and each register is 32-bit wide",
                       __FILE__, __LINE__);
         for (const auto &thread_num : warp)
         {
@@ -75,13 +78,16 @@ namespace Sim
         //  and it only describes the behavior of threadgroup not thread.
         // Thus, we would like to implement this instruction in threadgroup level.
         // (p.s., threadgroup is a group of four consecutive threads in a warp)
-        // (p.s., in HMMA instruction a thread may read other threads' register)
+        // (p.s., in HMMA instruction, a thread may read other threads' register)
 
-        for (int t = 0; t < WARP_SIZE; t += THREAD_PER_GROUP)
+        for (u32 t = 0; t < WARP_SIZE; t += THREAD_PER_GROUP)
         {
-            std::vector<u32> thread_nums;
-            for (int i = 0; i < THREAD_PER_GROUP; i++)
+            std::vector<u32> thread_nums; // X
+            for (u32 i = 0; i < THREAD_PER_GROUP; i++)
                 thread_nums.push_back(warp[t + i]);
+            std::vector<u32> octet_thread_nums; // X + 4
+            for (u32 i = 0; i < THREAD_PER_GROUP; i++)
+                octet_thread_nums.push_back(warp[(t + WARP_SIZE / 2 + i) % WARP_SIZE]);
 
             std::array<f16, 2 * 4> a;
             std::array<f16, 4 * 4> b;
@@ -91,43 +97,218 @@ namespace Sim
                 auto t = loadReg(thread_nums[i], Ra);
                 std::copy(t.begin(), t.end(), a.begin() + i * 4);
             }
+            auto target_thread_nums = t < WARP_SIZE / 2
+                                          ? thread_nums
+                                          : octet_thread_nums;
             for (int i = 0; i < 4; ++i)
             {
-                auto t = loadReg(thread_nums[i], Rb);
+                auto t = loadReg(target_thread_nums[i], Rb);
                 std::copy(t.begin(), t.end(), b.begin() + i * 4);
             }
-            for (int i = 0; i < 4; ++i)
+            //  0 0 2 2
+            //  1 1 3 3
+            for (int i = 0; i < 2; ++i)
                 for (int j = 0; j < 2; ++j)
-                    c[i * 2 + j] = reg_file.read(thread_nums[i], Rc + j);
+                {
+                    c[i * 4 + j * 2] = __unsigned2float(
+                        reg_file.read(thread_nums[i + j * 2], Rd));
+                    c[i * 4 + j * 2 + 1] = __unsigned2float(
+                        reg_file.read(thread_nums[i + j * 2], Rd + 1));
+                }
 
+            // C = A * B.T + C
             for (int i = 0; i < 2; ++i)
                 for (int j = 0; j < 4; ++j)
                 {
                     f32 sum = 0;
                     for (int k = 0; k < 4; ++k)
-                        sum += a[i * 4 + k] * b[k * 4 + j];
+                        sum += a[i * 4 + k] * b[k + 4 * j];
                     c[i * 4 + j] += sum;
                 }
 
-            for (int i = 0; i < 4; ++i)
+            for (int i = 0; i < 2; ++i)
                 for (int j = 0; j < 2; ++j)
-                    reg_file.write(thread_nums[i], Rd + j, c[i * 2 + j]);
+                {
+                    reg_file.write(thread_nums[i + j * 2], Rd,
+                                   FP32(c[i * 4 + j * 2]).u);
+                    reg_file.write(thread_nums[i + j * 2], Rd + 1,
+                                   FP32(c[i * 4 + j * 2 + 1]).u);
+                }
         }
     }
 
     void GPUSimulator::HMMA_INSTR_STEP1(const GPUSimulator::ThreadWarp &warp,
                                         u32 Rd, u32 Ra, u32 Rb, u32 Rc)
     {
+        for (u32 t = 0; t < WARP_SIZE; t += THREAD_PER_GROUP)
+        {
+            std::vector<u32> thread_nums; // X
+            for (u32 i = 0; i < THREAD_PER_GROUP; i++)
+                thread_nums.push_back(warp[t + i]);
+            std::vector<u32> octet_thread_nums; // X + 4
+            for (u32 i = 0; i < THREAD_PER_GROUP; i++)
+                octet_thread_nums.push_back(warp[(t + WARP_SIZE / 2 + i) % WARP_SIZE]);
+
+            std::array<f16, 2 * 4> a;
+            std::array<f16, 4 * 4> b;
+            std::array<f32, 2 * 4> c;
+            for (int i = 0; i < 2; ++i)
+            {
+                auto t = loadReg(thread_nums[i + 2], Ra);
+                std::copy(t.begin(), t.end(), a.begin() + i * 4);
+            }
+            auto target_thread_nums = t < WARP_SIZE / 2
+                                          ? thread_nums
+                                          : octet_thread_nums;
+            for (int i = 0; i < 4; ++i)
+            {
+                auto t = loadReg(target_thread_nums[i], Rb);
+                std::copy(t.begin(), t.end(), b.begin() + i * 4);
+            }
+            for (int i = 0; i < 2; ++i)
+                for (int j = 0; j < 2; ++j)
+                {
+                    c[i * 4 + j * 2] = __unsigned2float(
+                        reg_file.read(thread_nums[i + j * 2], Rd));
+                    c[i * 4 + j * 2 + 1] = __unsigned2float(
+                        reg_file.read(thread_nums[i + j * 2], Rd + 1));
+                }
+
+            // C = A * B.T + C
+            for (int i = 0; i < 2; ++i)
+                for (int j = 0; j < 4; ++j)
+                {
+                    f32 sum = 0;
+                    for (int k = 0; k < 4; ++k)
+                        sum += a[i * 4 + k] * b[k + 4 * j];
+                    c[i * 4 + j] += sum;
+                }
+
+            for (int i = 0; i < 2; ++i)
+                for (int j = 0; j < 2; ++j)
+                {
+                    reg_file.write(thread_nums[i + j * 2], Rd,
+                                   FP32(c[i * 4 + j * 2]).u);
+                    reg_file.write(thread_nums[i + j * 2], Rd + 1,
+                                   FP32(c[i * 4 + j * 2 + 1]).u);
+                }
+        }
     }
 
     void GPUSimulator::HMMA_INSTR_STEP2(const GPUSimulator::ThreadWarp &warp,
                                         u32 Rd, u32 Ra, u32 Rb, u32 Rc)
     {
+        for (u32 t = 0; t < WARP_SIZE; t += THREAD_PER_GROUP)
+        {
+            std::vector<u32> thread_nums; // X
+            for (u32 i = 0; i < THREAD_PER_GROUP; i++)
+                thread_nums.push_back(warp[t + i]);
+            std::vector<u32> octet_thread_nums; // X + 4
+            for (u32 i = 0; i < THREAD_PER_GROUP; i++)
+                octet_thread_nums.push_back(warp[(t + WARP_SIZE / 2 + i) % WARP_SIZE]);
+
+            std::array<f16, 2 * 4> a;
+            std::array<f16, 4 * 4> b;
+            std::array<f32, 2 * 4> c;
+            for (int i = 0; i < 2; ++i)
+            {
+                auto t = loadReg(thread_nums[i], Ra);
+                std::copy(t.begin(), t.end(), a.begin() + i * 4);
+            }
+            auto target_thread_nums = t >= WARP_SIZE / 2
+                                          ? thread_nums
+                                          : octet_thread_nums;
+            for (int i = 0; i < 4; ++i)
+            {
+                auto t = loadReg(target_thread_nums[i], Rb);
+                std::copy(t.begin(), t.end(), b.begin() + i * 4);
+            }
+            for (int i = 0; i < 2; ++i)
+                for (int j = 0; j < 2; ++j)
+                {
+                    c[i * 4 + j * 2] = __unsigned2float(
+                        reg_file.read(thread_nums[i + j * 2], Rd));
+                    c[i * 4 + j * 2 + 1] = __unsigned2float(
+                        reg_file.read(thread_nums[i + j * 2], Rd + 1));
+                }
+
+            // C = A * B.T + C
+            for (int i = 0; i < 2; ++i)
+                for (int j = 0; j < 4; ++j)
+                {
+                    f32 sum = 0;
+                    for (int k = 0; k < 4; ++k)
+                        sum += a[i * 4 + k] * b[k + 4 * j];
+                    c[i * 4 + j] += sum;
+                }
+
+            for (int i = 0; i < 2; ++i)
+                for (int j = 0; j < 2; ++j)
+                {
+                    reg_file.write(thread_nums[i + j * 2], Rd,
+                                   FP32(c[i * 4 + j * 2]).u);
+                    reg_file.write(thread_nums[i + j * 2], Rd + 1,
+                                   FP32(c[i * 4 + j * 2 + 1]).u);
+                }
+        }
     }
 
     void GPUSimulator::HMMA_INSTR_STEP3(const GPUSimulator::ThreadWarp &warp,
                                         u32 Rd, u32 Ra, u32 Rb, u32 Rc)
     {
+        for (u32 t = 0; t < WARP_SIZE; t += THREAD_PER_GROUP)
+        {
+            std::vector<u32> thread_nums; // X
+            for (u32 i = 0; i < THREAD_PER_GROUP; i++)
+                thread_nums.push_back(warp[t + i]);
+            std::vector<u32> octet_thread_nums; // X + 4
+            for (u32 i = 0; i < THREAD_PER_GROUP; i++)
+                octet_thread_nums.push_back(warp[(t + WARP_SIZE / 2 + i) % WARP_SIZE]);
+
+            std::array<f16, 2 * 4> a;
+            std::array<f16, 4 * 4> b;
+            std::array<f32, 2 * 4> c;
+            for (int i = 0; i < 2; ++i)
+            {
+                auto t = loadReg(thread_nums[i + 2], Ra);
+                std::copy(t.begin(), t.end(), a.begin() + i * 4);
+            }
+            auto target_thread_nums = t >= WARP_SIZE / 2
+                                          ? thread_nums
+                                          : octet_thread_nums;
+            for (int i = 0; i < 4; ++i)
+            {
+                auto t = loadReg(target_thread_nums[i], Rb);
+                std::copy(t.begin(), t.end(), b.begin() + i * 4);
+            }
+            for (int i = 0; i < 2; ++i)
+                for (int j = 0; j < 2; ++j)
+                {
+                    c[i * 4 + j * 2] = __unsigned2float(
+                        reg_file.read(thread_nums[i + j * 2], Rd));
+                    c[i * 4 + j * 2 + 1] = __unsigned2float(
+                        reg_file.read(thread_nums[i + j * 2], Rd + 1));
+                }
+
+            // C = A * B.T + C
+            for (int i = 0; i < 2; ++i)
+                for (int j = 0; j < 4; ++j)
+                {
+                    f32 sum = 0;
+                    for (int k = 0; k < 4; ++k)
+                        sum += a[i * 4 + k] * b[k + 4 * j];
+                    c[i * 4 + j] += sum;
+                }
+
+            for (int i = 0; i < 2; ++i)
+                for (int j = 0; j < 2; ++j)
+                {
+                    reg_file.write(thread_nums[i + j * 2], Rd,
+                                   FP32(c[i * 4 + j * 2]).u);
+                    reg_file.write(thread_nums[i + j * 2], Rd + 1,
+                                   FP32(c[i * 4 + j * 2 + 1]).u);
+                }
+        }
     }
 
     void GPUSimulator::S2R_INSTR(const GPUSimulator::ThreadWarp &warp, u32 Rd, u32 Sb)
@@ -139,8 +320,8 @@ namespace Sim
         }
     }
 
-    void GPUSimulator::IMAD_INSTR(const GPUSimulator::ThreadWarp &warp, bool wide,
-                                  u32 Rd, u64 Ra, u64 Sb, u64 Sc, u32 options)
+    void GPUSimulator::IMAD_INSTR(const GPUSimulator::ThreadWarp &warp,
+                                  bool wide, u32 Rd, u64 Ra, u64 Sb, u64 Sc, u32 options)
     {
         // 9.7.1.4. Integer Arithmetic Instructions: mad
         // https://stackoverflow.com/questions/59777333/combined-format-of-sass-instructions
@@ -149,14 +330,14 @@ namespace Sim
         //  e.g., 0b110 means Ra and Sb are immediate values
         for (const auto &thread_num : warp)
         {
-            Sc = !(options & 0x1) ? reg_file.read(thread_num, Sc) +
-                                        wide * ((u64)reg_file.read(thread_num, Sc + 1) << 32)
-                                  : Sc;
-            Sb = !(options & 0x2) ? reg_file.read(thread_num, Sb) : Sb;
-            Ra = !(options & 0x4) ? reg_file.read(thread_num, Ra) : Ra;
+            u64 c = !(options & 0x1) ? reg_file.read(thread_num, Sc) +
+                                           wide * ((u64)reg_file.read(thread_num, Sc + 1) << 32)
+                                     : Sc;
+            u64 b = !(options & 0x2) ? reg_file.read(thread_num, Sb) : Sb;
+            u64 a = !(options & 0x4) ? reg_file.read(thread_num, Ra) : Ra;
 
             // clang-format off
-            u64 value = Ra * Sb + Sc;
+            u64 value = a * b + c;
             reg_file.write(thread_num, Rd, value & 0xffffffff);
             if (wide) reg_file.write(thread_num, Rd + 1, value >> 32);
             // clang-format on
@@ -172,19 +353,19 @@ namespace Sim
         //  e.g., 0b110 means Ra and Sb are immediate values
         for (const auto &thread_num : warp)
         {
-            Sc = !(options & 0x1) ? reg_file.read(thread_num, Sc) : Sc;
-            Sb = !(options & 0x2) ? reg_file.read(thread_num, Sb) : Sb;
-            Ra = !(options & 0x4) ? reg_file.read(thread_num, Ra) : Ra;
+            u64 c = !(options & 0x1) ? reg_file.read(thread_num, Sc) : Sc;
+            u64 b = !(options & 0x2) ? reg_file.read(thread_num, Sb) : Sb;
+            u64 a = !(options & 0x4) ? reg_file.read(thread_num, Ra) : Ra;
             // clang-format off
             u32 result = 0;
-            if (imm & 0x01) result |= (~Ra) & (~Sb) & (~Sc);
-            if (imm & 0x02) result |= (~Ra) & (~Sb) & (Sc);
-            if (imm & 0x04) result |= (~Ra) & (Sb) & (~Sc);
-            if (imm & 0x08) result |= (~Ra) & (Sb) & (Sc);
-            if (imm & 0x10) result |= (Ra) & (~Sb) & (~Sc);
-            if (imm & 0x20) result |= (Ra) & (~Sb) & (Sc);
-            if (imm & 0x40) result |= (Ra) & (Sb) & (~Sc);
-            if (imm & 0x80) result |= (Ra) & (Sb) & (Sc);
+            if (imm & 0x01) result |= ~a & ~b & ~c;
+            if (imm & 0x02) result |= ~a & ~b & c;
+            if (imm & 0x04) result |= ~a & b & ~c;
+            if (imm & 0x08) result |= ~a & b & c;
+            if (imm & 0x10) result |= a & ~b & ~c;
+            if (imm & 0x20) result |= a & ~b & c;
+            if (imm & 0x40) result |= a & b & ~c;
+            if (imm & 0x80) result |= a & b & c;
             reg_file.write(thread_num, Rd, result);
             // clang-format on
         }
@@ -205,20 +386,25 @@ namespace Sim
         }
     }
 
-    // void GPUSimulator::LEA_INSTR(const GPUSimulator::ThreadWarp &warp,
-    //                              bool hi, bool x, u32 Rd, u32 Ra, u32 Sb, u32 Sc, u32 imm, u32 Pd0, u32 Ps0)
-    // {
-    //     for (const auto &thread_num : warp)
-    //     {
-    //         u64 value = reg_file.read(thread_num, Ra) +
-    //                     ((u64)reg_file.read(thread_num, Sc) << 32);
+    void GPUSimulator::LEA_INSTR(const GPUSimulator::ThreadWarp &warp,
+                                 bool hi, bool x, u32 Rd, u32 Ra, u32 Sb, u32 Sc,
+                                 u32 options, u32 imm, u32 Pd0, u32 Ps0)
+    {
+        // options: [Ra, Sb, Sc]
+        //  e.g., 0b110 means Ra and Sb are immediate values
+        for (const auto &thread_num : warp)
+        {
+            u32 c = !(options & 0x1) ? reg_file.read(thread_num, Sc) : Sc;
+            u32 b = !(options & 0x2) ? reg_file.read(thread_num, Sb) : Sb;
+            u32 a = !(options & 0x4) ? reg_file.read(thread_num, Ra) : Ra;
 
-    //         value = hi ? value >> (32 - imm) : value << imm;
-    //         value += x * preg_file.read(thread_num, Ps0);
-    //         preg_file.write(thread_num, Pd0, (value >> 32) & 0x1);
-    //         reg_file.write(thread_num, Rd, value & 0xffffffff);
-    //     }
-    // }
+            u64 value = a + ((u64)c << 32);
+            value = hi ? value >> (32 - imm) : value << imm;
+            value += b + x * preg_file.read(thread_num, Ps0);
+            preg_file.write(thread_num, Pd0, (value >> 32) & 0x1);
+            reg_file.write(thread_num, Rd, value & 0xffffffff);
+        }
+    }
 
     void GPUSimulator::EXIT_INSTR(const GPUSimulator::ThreadWarp &warp)
     {
