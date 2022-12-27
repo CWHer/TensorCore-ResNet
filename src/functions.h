@@ -12,9 +12,9 @@ namespace Sim
 
     void device_gemm(GPUSimulator &sim,
                      const GPUSimulator::ThreadWarp &warp,
-                     const f32 *a, const f32 *b, f32 *c, int m, int n, int k);
+                     const f32 *a, const f32 *b, f32 *c, u32 m, u32 n, u32 k);
 
     void host_gemm(const f32 *a, const f32 *b, f32 *c,
-                   int m, int n, int k, GPUSimulator &sim);
+                   u32 m, u32 n, u32 k, GPUSimulator &sim);
 
 }

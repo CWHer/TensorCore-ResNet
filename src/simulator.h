@@ -58,7 +58,8 @@ namespace Sim
         void IMAD_INSTR(const GPUSimulator::ThreadWarp &warp, bool wide, u32 Rd, u64 Ra, u64 Sb, u64 Sc, u32 options);
         void LOP3_INSTR(const GPUSimulator::ThreadWarp &warp, u32 Rd, u64 Ra, u64 Sb, u64 Sc, u32 imm, u32 options);
         void SHF_INSTR(const GPUSimulator::ThreadWarp &warp, bool left, u32 Rd, u32 Ra, u32 Sb, u32 Sc);
-        void LEA_INSTR();
+        void LEA_INSTR(const GPUSimulator::ThreadWarp &warp, bool hi, bool x,
+                       u32 Rd, u32 Ra, u32 Sb, u32 Sc, u32 options, u32 imm, u32 Pd0, u32 Ps0);
         void EXIT_INSTR(const GPUSimulator::ThreadWarp &warp);
 
         // Launch kernel
