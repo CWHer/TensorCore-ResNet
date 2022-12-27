@@ -107,6 +107,13 @@ namespace Sim
         return y.f;
     }
 
+    f32 __unsigned2float(u32 x)
+    {
+        FP32 y;
+        y.u = x;
+        return y.f;
+    }
+
     f32 operator*(const f16 &lhs, const f16 &rhs)
     {
         return __half2float(lhs) * __half2float(rhs);

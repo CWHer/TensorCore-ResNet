@@ -54,6 +54,8 @@ namespace Sim
 
     f32 __half2float(f16 x);
 
+    f32 __unsigned2float(u32 x);
+
     f32 operator*(const f16 &lhs, const f16 &rhs);
 
 }
