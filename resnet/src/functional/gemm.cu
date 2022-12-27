@@ -107,8 +107,6 @@ template<int block_col_warps, int block_row_warps> void gemm_naive_caller(const 
   dim3 block(block_row_warps * warp_size, block_col_warps);
 
   gemm_naive_kernel<block_col_warps, block_row_warps><<<grid, block, 0, stream>>>(A, B, Result, M, N, K);
-
-  check_cuda_error();
 }
 
 template<typename T, cudaMemcpyKind memcpy_kind, bool require_copy> static T *gemm_padding_col_major(const T *source,
@@ -122,14 +120,19 @@ template<typename T, cudaMemcpyKind memcpy_kind, bool require_copy> static T *ge
     return (T *) source;
 
   T *padded;
-  cudaMallocAsync(&padded, sizeof(T) * pad_col * pad_row, stream);
+  checkCudaErrors(cudaMallocAsyncIfAvailable(&padded, sizeof(T) * pad_col * pad_row, stream));
 
   if (require_copy) {
-    cudaMemsetAsync((void *) padded, 0, sizeof(T) * pad_col * pad_row, stream);
-    cudaMemcpy2DAsync(padded, sizeof(T) * pad_col, source, sizeof(T) * col, sizeof(T) * col, row, memcpy_kind, stream);
+    checkCudaErrors(cudaMemsetAsync((void *) padded, 0, sizeof(T) * pad_col * pad_row, stream));
+    checkCudaErrors(cudaMemcpy2DAsync(padded,
+                                      sizeof(T) * pad_col,
+                                      source,
+                                      sizeof(T) * col,
+                                      sizeof(T) * col,
+                                      row,
+                                      memcpy_kind,
+                                      stream));
   }
-
-  check_cuda_error();
 
   return padded;
 }
@@ -146,11 +149,17 @@ template<typename T, cudaMemcpyKind memcpy_kind> static void gemm_unpad_col_majo
   }
 
   if ((col == pad_col) && (row == pad_row)) {
-    cudaMemcpyAsync(source, padded, sizeof(T) * col * row, memcpy_kind, stream);
+    checkCudaErrors(cudaMemcpyAsync(source, padded, sizeof(T) * col * row, memcpy_kind, stream));
   } else {
-    cudaMemcpy2DAsync(source, sizeof(T) * col, padded, sizeof(T) * pad_col, sizeof(T) * col, row, memcpy_kind, stream);
+    checkCudaErrors(cudaMemcpy2DAsync(source,
+                                      sizeof(T) * col,
+                                      padded,
+                                      sizeof(T) * pad_col,
+                                      sizeof(T) * col,
+                                      row,
+                                      memcpy_kind,
+                                      stream));
   }
-  check_cuda_error();
 }
 
 void gemm_device_memory(const float_16 *A,
@@ -178,19 +187,17 @@ void gemm_device_memory(const float_16 *A,
 
   // Fixme: this template parameter is adjustable
   gemm_naive_caller<4, 4>(padded_A, padded_B, padded_C, padded_M, padded_N, K, stream);
-  check_cuda_error();
 
   if (padded_A != A)
-    cudaFreeAsync(padded_A, stream);
+    checkCudaErrors(cudaFreeAsyncIfAvailable(padded_A, stream));
 
   if (padded_B != B)
-    cudaFreeAsync(padded_B, stream);
+    checkCudaErrors(cudaFreeAsyncIfAvailable(padded_B, stream));
 
-  check_cuda_error();
 
   if (padded_C != Result) {
     gemm_unpad_col_major<float_32, cudaMemcpyDeviceToDevice>(Result, padded_C, N, M, padded_N, padded_M, stream);
-    cudaFreeAsync(padded_C, stream);
+    checkCudaErrors(cudaFreeAsyncIfAvailable(padded_C, stream));
   }
 }
 
@@ -218,15 +225,12 @@ void gemm_host_memory(const float_16 *A,
 
   // Fixme: this template parameter is adjustable
   gemm_device_memory(padded_A, padded_B, padded_C, padded_M, padded_N, K, stream);
-  check_cuda_error();
 
-  cudaFree(padded_A);
-  cudaFree(padded_B);
-  check_cuda_error();
+  checkCudaErrors(cudaFree(padded_A));
+  checkCudaErrors(cudaFree(padded_B));
 
   gemm_unpad_col_major<float_32, cudaMemcpyDeviceToHost>(Result, padded_C, N, M, padded_N, padded_M, stream);
-  cudaFree(padded_C);
-  check_cuda_error();
+  checkCudaErrors(cudaFree(padded_C));
 }
 
 void gemm_stream(const float_16 *A,

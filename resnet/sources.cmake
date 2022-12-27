@@ -23,3 +23,25 @@ set(SOURCE_FILES
         src/resnet.cpp
         src/functional/linear.cu
 )
+
+# Check cuda mallocAsync compatibility
+try_run(RUN_RESULT COMPILE_RESULT
+        ${CMAKE_CURRENT_BINARY_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/has_malloc_async.cpp
+        CMAKE_FLAGS
+            -DINCLUDE_DIRECTORIES:STRING=${CUDA_INCLUDE_DIRS}
+            -DLINK_LIBRARIES:STRING=${CUDA_CUDART_LIBRARY}
+        COMPILE_OUTPUT_VARIABLE COMPILE_OUTPUT)
+
+
+if (COMPILE_RESULT AND NOT RUN_RESULT)
+    message(STATUS "CUDA Stream Ordered Memory Allocator is supported with this driver version")
+    set(CUDA_MALLOC_ASYNC 1)
+else()
+    message(STATUS "CUDA Stream Ordered Memory Allocator is not supported with this driver version")
+    set(CUDA_MALLOC_ASYNC 0)
+endif()
+
+if (CUDA_MALLOC_ASYNC)
+    add_definitions(-DCUDA_MALLOC_ASYNC)
+endif()
