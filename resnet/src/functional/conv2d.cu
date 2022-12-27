@@ -199,8 +199,23 @@ void conv2d(const float *input,
 
   bias_extend(bias_expanded, bias, 1, out_channels, conv_result_size, device_type);
 
+  constexpr int stream_num = 8;
+  cudaStream_t streams[stream_num];
+  for (int i = 0; i < stream_num; ++i) {
+    cudaStreamCreate(&streams[i]);
+  }
+
   for (int i = 0; i < N; ++i) {
-    add_(output + i * out_channels * conv_result_size, bias_expanded, out_channels * conv_result_size, device_type);
+    add_(output + i * out_channels * conv_result_size,
+         bias_expanded,
+         out_channels * conv_result_size,
+         device_type,
+         streams[i % stream_num]);
+  }
+
+  for (int i = 0; i < stream_num; ++i) {
+    cudaStreamSynchronize(streams[i]);
+    cudaStreamDestroy(streams[i]);
   }
 
   if (device_type == Impl::DeviceType::CUDA) {

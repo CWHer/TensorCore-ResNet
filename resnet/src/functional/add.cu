@@ -29,7 +29,7 @@ __global__ static void cuda_relu_(float *Result, int length) {
   }
 }
 
-void add_(float *Result, const float *adder, int length, Impl::DeviceType device_type) {
+void add_(float *Result, const float *adder, int length, Impl::DeviceType device_type, cudaStream_t stream) {
   switch (device_type) {
   case Impl::DeviceType::CPU: {
     for (int i = 0; i < length; ++i) {
@@ -37,7 +37,7 @@ void add_(float *Result, const float *adder, int length, Impl::DeviceType device
     }
   }
     break;
-  case Impl::DeviceType::CUDA:cuda_add_<<<KERNEL_LOOP_BLOCKS(length), KERNEL_LOOP_THREADS>>>(Result, adder, length);
+  case Impl::DeviceType::CUDA:cuda_add_<<<KERNEL_LOOP_BLOCKS(length), KERNEL_LOOP_THREADS, 0, stream>>>(Result, adder, length);
     break;
   }
 }

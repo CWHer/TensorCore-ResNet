@@ -110,18 +110,38 @@ static void im2col_device_memory(const float *input,
                                  int filter_width,
                                  int stride,
                                  int padding) {
-  auto result_size = im2col_result_size(N, C, H, W, filter_height, filter_width, stride, padding);
+  auto single_result_size = im2col_result_size(1, C, H, W, filter_height, filter_width, stride, padding);
   // Launch CUDA kernel
-  im2col_cuda_kernel<<<KERNEL_LOOP_BLOCKS(result_size), KERNEL_LOOP_THREADS>>>(input,
-                                                                               output,
-                                                                               N,
-                                                                               C,
-                                                                               H,
-                                                                               W,
-                                                                               filter_height,
-                                                                               filter_width,
-                                                                               stride,
-                                                                               padding);
+  constexpr unsigned long minibatch_size = 2;
+  constexpr int stream_num = 8;
+  unsigned long minibatches = (N + minibatch_size - 1) / minibatch_size;
+
+  cudaStream_t stream[stream_num];
+  for (int i = 0; i < stream_num; i++) {
+    cudaStreamCreate(&stream[i]);
+  }
+
+  for (unsigned long i = 0; i < minibatches; i++) {
+    int curr_minibatch_size = std::min(minibatch_size, N - i * minibatch_size);
+    int curr_result_size = curr_minibatch_size * single_result_size;
+
+    im2col_cuda_kernel<<<KERNEL_LOOP_BLOCKS(curr_result_size), KERNEL_LOOP_THREADS, 0, stream[i % stream_num]>>>(
+        input + i * minibatch_size * C * H * W,
+        output + i * minibatch_size * single_result_size,
+        curr_minibatch_size,
+        C,
+        H,
+        W,
+        filter_height,
+        filter_width,
+        stride,
+        padding);
+  }
+
+  for (int i = 0; i < stream_num; i++) {
+    cudaStreamSynchronize(stream[i]);
+    cudaStreamDestroy(stream[i]);
+  }
 }
 
 /**

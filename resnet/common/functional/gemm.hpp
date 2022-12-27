@@ -11,8 +11,6 @@ enum Major {
 
 }
 
-void gemm_host_memory(const float_16 *A, const float_16 *B, float_32 *Result, size_t M, size_t N, size_t K);
-void gemm_device_memory(const float_16 *A, const float_16 *B, float_32 *C, size_t M, size_t N, size_t K);
 void gemm(const float_16 *A,
           const float_16 *B,
           float_32 *C,
