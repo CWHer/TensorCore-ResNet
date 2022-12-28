@@ -118,8 +118,8 @@ namespace Sim
                     a_frag[i][j] = row + i < n && t * N_WMMA + j < k
                                        ? __float2half(a[(row + i) * k + t * N_WMMA + j])
                                        : 0.0f;
-                    b_frag[i][j] = col + i < m && t * N_WMMA + j < k
-                                       ? __float2half(b[(col + i) * k + t * N_WMMA + j])
+                    b_frag[i][j] = t * N_WMMA + j < k && col + i < m
+                                       ? __float2half(b[(t * N_WMMA + j) * m + col + i])
                                        : 0.0f;
                 }
 
@@ -132,17 +132,17 @@ namespace Sim
         }
     }
 
-    // NOTE: C = A * B.T
+    // NOTE: C = A * B
     void hostGEMM(const f32 *a, const f32 *b, f32 *c,
                   u32 n, u32 m, u32 k, GPUSimulator &sim)
     {
         f32 *d_a, *d_b, *d_c;
         sim.cudaMalloc((void **)&d_a, n * k * sizeof(f32));
-        sim.cudaMalloc((void **)&d_b, m * k * sizeof(f32));
+        sim.cudaMalloc((void **)&d_b, k * m * sizeof(f32));
         sim.cudaMalloc((void **)&d_c, m * n * sizeof(f32));
 
         sim.cudaMemcpy(d_a, (void *)a, n * k * sizeof(f32), CUDAMemcpyType::MemcpyHostToDevice);
-        sim.cudaMemcpy(d_b, (void *)b, m * k * sizeof(f32), CUDAMemcpyType::MemcpyHostToDevice);
+        sim.cudaMemcpy(d_b, (void *)b, k * m * sizeof(f32), CUDAMemcpyType::MemcpyHostToDevice);
 
         static const u32 N_WMMA = 16;
         dim3 block_dim((m - 1) / N_WMMA + 1, (n - 1) / N_WMMA + 1, GPUSimulator::WARP_SIZE);
