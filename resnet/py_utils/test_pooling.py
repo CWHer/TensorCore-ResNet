@@ -1,9 +1,11 @@
+import os
+
 import torch
 import torch.nn as nn
 from utils import randomInt, randomTensor, writeTensor
 
 
-if __name__ == "__main__":
+def makePoolingTests(directory: str):
     seed = 0
     generator = randomInt(5, 25, seed=seed)
 
@@ -22,15 +24,15 @@ if __name__ == "__main__":
 
     x_tensor = randomTensor(
         (batch_size, num_features, height, width), generator)
-    writeTensor(x_tensor, "test_maxpool_x.bin")
+    writeTensor(x_tensor, os.path.join(directory, "test_maxpool_x.bin"))
 
     net = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
     net.eval()
     with torch.no_grad():
         y = net(x_tensor)
-    print(y)
-    writeTensor(y.detach(), "test_maxpool_y.bin")
+    # print(y)
+    writeTensor(y.detach(), os.path.join(directory, "test_maxpool_y.bin"))
 
     # AvgPool2d
     batch_size = 20
@@ -40,12 +42,12 @@ if __name__ == "__main__":
 
     x_tensor = randomTensor(
         (batch_size, num_features, height, width), generator)
-    writeTensor(x_tensor, "test_avgpool_x.bin")
+    writeTensor(x_tensor, os.path.join(directory, "test_avgpool_x.bin"))
 
     net = nn.AvgPool2d(kernel_size=5, stride=2, padding=2)
 
     net.eval()
     with torch.no_grad():
         y = net(x_tensor)
-    print(y)
-    writeTensor(y.detach(), "test_avgpool_y.bin")
+    # print(y)
+    writeTensor(y.detach(), os.path.join(directory, "test_avgpool_y.bin"))

@@ -1,9 +1,11 @@
+import os
+
 import torch
 import torch.nn as nn
 from utils import randomInt, randomTensor, writeTensor
 
 
-if __name__ == "__main__":
+def makeBatchNormTests(directory: str):
     seed = 0
     generator = randomInt(5, 25, seed=seed)
 
@@ -21,7 +23,7 @@ if __name__ == "__main__":
 
     x_tensor = randomTensor(
         (batch_size, num_features, height, width), generator)
-    writeTensor(x_tensor, "test_batchnorm_x.bin")
+    writeTensor(x_tensor, os.path.join(directory, "test_batchnorm_x.bin"))
 
     net = nn.BatchNorm2d(num_features=num_features)
     state_dict = net.state_dict()
@@ -30,11 +32,12 @@ if __name__ == "__main__":
             print("generate {}".format(name))
             new_tensor = randomTensor(tensor.shape, generator)
             state_dict[name] = new_tensor
-            writeTensor(new_tensor, "test_batchnorm_bn_{}.bin".format(name))
+            writeTensor(new_tensor, os.path.join(
+                directory, f"test_batchnorm_bn_{name}.bin"))
     net.load_state_dict(state_dict)
 
     net.eval()
     with torch.no_grad():
         y = net(x_tensor)
-    print(y)
-    writeTensor(y.detach(), "test_batchnorm_y.bin")
+    # print(y)
+    writeTensor(y.detach(), os.path.join(directory, "test_batchnorm_y.bin"))
