@@ -22,10 +22,7 @@ add_compile_options(
 )
 
 # ################################ Executables ##################################
-# TODO: add library support
 include(sources.cmake)
-
-# add_executable(main ${SOURCE_FILES} src/gemm.cpp)
 
 # ################################## Tests ######################################
 include(tests.cmake)
