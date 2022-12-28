@@ -35,6 +35,7 @@
 dataset*/
 .vscode/
 .history/
+__pycache__/
 
 # CMake files
 build*/
