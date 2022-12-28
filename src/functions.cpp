@@ -3,9 +3,10 @@
 namespace Sim
 {
 
-    void wmma_kernel(GPUSimulator &sim,
-                     const GPUSimulator::ThreadWarp &warp,
-                     f16 *a, f16 *b, f32 *c)
+    // NOTE: C = A * B.T
+    void wmmaKernel(GPUSimulator &sim,
+                    const GPUSimulator::ThreadWarp &warp,
+                    f16 *a, f16 *b, f32 *c)
     {
         sim.S2R_INSTR(warp, 2, SRegisterType::SR_LANEID);                            // S2R R2, SR_LANEID ;
         sim.IMAD_INSTR(warp, false, 12, 255, 255, 0x10, 0b001);                      // IMAD.MOV.U32 R12, RZ, RZ, 0x10 ;
@@ -75,9 +76,9 @@ namespace Sim
         sim.STG_INSTR(warp, 64, 12, 6, 0x90);                               // STG.E.64.SYS [R12+0x90], R6 ;
     };
 
-    void device_gemm(GPUSimulator &sim,
-                     const GPUSimulator::ThreadWarp &warp,
-                     const f32 *a, const f32 *b, f32 *c, u32 m, u32 n, u32 k)
+    void deviceGEMM(GPUSimulator &sim,
+                    const GPUSimulator::ThreadWarp &warp,
+                    const f32 *a, const f32 *b, f32 *c, u32 n, u32 m, u32 k)
     {
         u32 thread_num = warp.front();
         unit3 thread_idx;
@@ -97,47 +98,58 @@ namespace Sim
         }
 
         static const u32 N_WMMA = 16;
+        u32 row = thread_idx.y * N_WMMA;
+        u32 col = thread_idx.x * N_WMMA;
+        u32 n_step = (k - 1) / N_WMMA + 1;
 
         f16 a_frag[N_WMMA][N_WMMA], b_frag[N_WMMA][N_WMMA];
         f32 c_frag[N_WMMA][N_WMMA];
 
-        i32 row = thread_idx.y * N_WMMA;
-        i32 col = thread_idx.x * N_WMMA;
         for (u32 i = 0; i < N_WMMA; i++)
             for (u32 j = 0; j < N_WMMA; j++)
-            {
-                c_frag[i][j] = 0;
-                if (row + i < m && col + j < n)
+                if (row + i < n && col + j < m)
+                    c[(row + i) * m + col + j] = 0;
+
+        for (u32 t = 0; t < n_step; t++)
+        {
+            for (u32 i = 0; i < N_WMMA; i++)
+                for (u32 j = 0; j < N_WMMA; j++)
                 {
-                    a_frag[i][j] = __float2half(a[(row + i) * k + col + j]);
-                    b_frag[i][j] = __float2half(b[(row + i) * k + col + j]);
+                    a_frag[i][j] = row + i < n && t * N_WMMA + j < k
+                                       ? __float2half(a[(row + i) * k + t * N_WMMA + j])
+                                       : 0.0f;
+                    b_frag[i][j] = col + i < m && t * N_WMMA + j < k
+                                       ? __float2half(b[(col + i) * k + t * N_WMMA + j])
+                                       : 0.0f;
                 }
-            }
 
-        wmma_kernel(sim, warp, (f16 *)a_frag, (f16 *)b_frag, (f32 *)c_frag);
+            wmmaKernel(sim, warp, (f16 *)a_frag, (f16 *)b_frag, (f32 *)c_frag);
 
-        for (u32 i = 0; i < N_WMMA; i++)
-            for (u32 j = 0; j < N_WMMA; j++)
-                if (row + i < m && col + j < n)
-                    c[(row + i) * k + col + j] = c_frag[i][j];
+            for (u32 i = 0; i < N_WMMA; i++)
+                for (u32 j = 0; j < N_WMMA; j++)
+                    if (row + i < n && col + j < m)
+                        c[(row + i) * m + col + j] += c_frag[i][j];
+        }
     }
 
-    void host_gemm(const f32 *a, const f32 *b, f32 *c,
-                   u32 m, u32 n, u32 k, GPUSimulator &sim)
+    // NOTE: C = A * B.T
+    void hostGEMM(const f32 *a, const f32 *b, f32 *c,
+                  u32 n, u32 m, u32 k, GPUSimulator &sim)
     {
         f32 *d_a, *d_b, *d_c;
-        sim.cudaMalloc((void **)&d_a, m * k * sizeof(f32));
-        sim.cudaMalloc((void **)&d_b, k * n * sizeof(f32));
+        sim.cudaMalloc((void **)&d_a, n * k * sizeof(f32));
+        sim.cudaMalloc((void **)&d_b, m * k * sizeof(f32));
         sim.cudaMalloc((void **)&d_c, m * n * sizeof(f32));
 
-        sim.cudaMemcpy(d_a, (void *)a, m * k * sizeof(f32), CUDAMemcpyType::MemcpyHostToDevice);
-        sim.cudaMemcpy(d_b, (void *)b, k * n * sizeof(f32), CUDAMemcpyType::MemcpyHostToDevice);
+        sim.cudaMemcpy(d_a, (void *)a, n * k * sizeof(f32), CUDAMemcpyType::MemcpyHostToDevice);
+        sim.cudaMemcpy(d_b, (void *)b, m * k * sizeof(f32), CUDAMemcpyType::MemcpyHostToDevice);
 
         static const u32 N_WMMA = 16;
-        // TODO: padding
-        dim3 block_dim(1, 1, GPUSimulator::WARP_SIZE);
+        dim3 block_dim((m - 1) / N_WMMA + 1, (n - 1) / N_WMMA + 1, GPUSimulator::WARP_SIZE);
 
-        sim.launchKernel(block_dim, device_gemm, (f32 *)d_a, (f32 *)d_b, (f32 *)d_c, (u32)m, (u32)n, (u32)k);
+        sim.launchKernel(block_dim, deviceGEMM,
+                         (f32 *)d_a, (f32 *)d_b, (f32 *)d_c,
+                         (u32)n, (u32)m, (u32)k);
 
         sim.cudaMemcpy((void *)c, d_c, m * n * sizeof(f32), CUDAMemcpyType::MemcpyDeviceToHost);
         sim.cudaFree(d_a);
