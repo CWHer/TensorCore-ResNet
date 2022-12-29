@@ -39,11 +39,9 @@ int _main() {
 
     Tensor original_label = TensorOps::argmax(label, 1);
     Tensor predicted_result = TensorOps::argmax(result, 1);
-//    for (int j = 0; j < original_label.totalSize(); j++) {
-//      cout << "original label: " << original_label.data_ptr()[j] << ", predicted result: " << predicted_result.data_ptr()[j] << endl;
-//    }
 
-    num_correct += (int) TensorOps::sum_equal(original_label, predicted_result);
+    auto correct = TensorOps::sum_equal(original_label, predicted_result);
+    num_correct += correct;
     num_total += predicted_result.sizes()[0];
   }
 

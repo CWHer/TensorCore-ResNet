@@ -29,13 +29,13 @@ Impl::Tensor Impl::TensorOps::argmax(const Impl::Tensor &x, int dim) {
   return result;
 }
 
-float Impl::TensorOps::sum_equal(const Impl::Tensor &lhs, const Impl::Tensor &rhs) {
+int Impl::TensorOps::sum_equal(const Impl::Tensor &lhs, const Impl::Tensor &rhs) {
   checkCppErrorsMsg(lhs.sizes() != rhs.sizes(), "Tensor sizes are not equal");
   checkCppErrorsMsg(lhs.storage->device != Impl::DeviceType::CPU || rhs.storage->device != Impl::DeviceType::CPU,
                     "This operation is not supported on CUDA");
 
   static const float eps = 1e-3;
-  float num_elements = 0;
+  int num_elements = 0;
   for (int i = 0; i < lhs.storage->total_size; i++)
     num_elements += std::fabs(*(lhs.storage->data + i) - *(rhs.storage->data + i)) < eps;
   return num_elements;

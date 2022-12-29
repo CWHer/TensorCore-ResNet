@@ -16,13 +16,8 @@ message(STATUS "Dataset Path: ${DATASET_PATH}")
 message(STATUS "Change it by setting the DATASET_PATH variable.")
 
 # if dataset exists, then extract it.
-if (EXISTS "${DATASET_PATH}/imagenet.tar")
+if (EXISTS "${DATASET_PATH}/imagenet.tar.gz")
     message(STATUS "Dataset Exists.")
-    file(SHA1 "${DATASET_PATH}/imagenet.tar" imagenet.tar.sha1sum)
-    if (NOT imagenet.tar.sha1sum STREQUAL "1a4f979033b3609b6a5a502ba9a2384ea957360c")
-        message(FATAL_ERROR "The sha1sum of imagenet.tar is not correct.")
-        return()
-    endif ()
 else ()
     message(WARNING "Dataset does not exist. skipped.")
     return()
@@ -42,7 +37,7 @@ file(MAKE_DIRECTORY "${PROJECT_TEST_DATA_PATH}")
 
 # Extract the raw dataset.
 execute_process(COMMAND
-        tar xf ${DATASET_PATH}/imagenet.tar --strip-components=6
+        tar xf ${DATASET_PATH}/imagenet.tar.gz --strip-components=1
         WORKING_DIRECTORY "${PROJECT_DATASET_PATH}"
         RESULT_VARIABLE TAR_ERROR)
 if (TAR_ERROR)

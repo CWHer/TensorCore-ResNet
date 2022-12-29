@@ -30,6 +30,7 @@ def writeTensor(tensor: torch.Tensor, filename: str) -> None:
 
 
 def writeNetwork(network: torch.nn.Module, directory: str) -> None:
+    print("Creating network weight files")
     state_dict = network.state_dict()
     for name, tensor in state_dict.items():
         filename = os.path.join(directory, "resnet18_" + name.replace('.', '_') + ".bin")
@@ -44,7 +45,6 @@ class ImageDataset(torch.utils.data.Dataset):
         self.path = path
         self.image_names = os.listdir(path)
         self.transform = transform
-        print(self.image_names[:10])
 
     def __getitem__(self, index):
         image_name = self.image_names[index]
@@ -73,6 +73,7 @@ def randomTensor(shape: Iterable[int], generator) -> torch.Tensor:
 
 
 def write_test_batchnorm_files(file_root):
+    print("Creating BatchNorm test files")
     seed = 0
     generator = randomInt(5, 25, seed=seed)
 
@@ -103,6 +104,7 @@ def write_test_batchnorm_files(file_root):
     writeTensor(y, os.path.join(file_root, "test_batchnorm_y.bin"))
 
 def write_test_pooling_files(file_root):
+    print("Creating Pooling test files")
     seed = 0
     generator = randomInt(5, 25, seed=seed)
 
@@ -148,7 +150,7 @@ def write_test_pooling_files(file_root):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--batch-size", type=int, default=16)
-    parser.add_argument("--num-workers", type=int, default=1)
+    parser.add_argument("--num-workers", type=int, default=8)
     parser.add_argument("--dataset-dir", type=str, default="dataset")
     parser.add_argument("--tensor-output-dir", type=str, default="dataset_tensor")
     parser.add_argument("--network-output-dir", type=str, default="resnet18")
@@ -188,7 +190,9 @@ if __name__ == "__main__":
     write_test_batchnorm_files(args.test_data_dir)
     write_test_pooling_files(args.test_data_dir)
 
-    with torch.no_grad() and tqdm.tqdm(total=len(dataset)) as pbar:
+    print("Preprocessing image files for training")
+
+    with torch.no_grad() and tqdm.tqdm(total=len(dataset), desc="Processing Images") as pbar:
         for i, (images, labels) in enumerate(data_loader):
             writeTensor(images, os.path.join(output_dir, f"images_{i:04d}.bin"))
             image_device = images.to(device)

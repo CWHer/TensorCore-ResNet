@@ -15,6 +15,6 @@ public:
 
   static Tensor argmax(const Tensor &x, int dim);
 
-  static float sum_equal(const Tensor &lhs, const Tensor &rhs);
+  static int sum_equal(const Tensor &lhs, const Tensor &rhs);
 };
 }
