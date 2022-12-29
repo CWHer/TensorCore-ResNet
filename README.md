@@ -6,7 +6,7 @@
 
 2. We implement `fp16` type with proper rounding mechanism
 
-3. We simulate several SASS instructions, such as `LDT`, `HMMA_STEP`, `IMAD`, ……
+3. We simulate several SASS instructions, such as `LDG`, `HMMA_STEP`, `IMAD`, ……
 
 4. We use these simulated SASS instructions to compose a GEMM kernel using wmma API
 
