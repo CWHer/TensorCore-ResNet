@@ -90,12 +90,23 @@ include(dataset.cmake)
 
 # Build source files to a static library to avoid recompiling
 add_library(${PROJECT_NAME}_base STATIC ${SOURCE_FILES})
-
+add_library(${PROJECT_NAME}_gemm STATIC ${SOURCE_GEMM})
 add_library(${PROJECT_NAME}_simulator STATIC ${SIMULATOR_SOURCE_FILES})
+add_library(${PROJECT_NAME}_simulator_gemm STATIC ${SIMULATOR_GEMM})
+
 set_property(TARGET ${PROJECT_NAME}_simulator PROPERTY CXX_STANDARD 17)
+set_property(TARGET ${PROJECT_NAME}_simulator_gemm PROPERTY CXX_STANDARD 17)
+target_link_libraries(${PROJECT_NAME}_simulator_gemm ${PROJECT_NAME}_simulator)
 
 add_executable(main resnet_inference.cpp)
-target_link_libraries(main ${CUDA_EXTRA_LIB} ${PROJECT_NAME}_base)
+add_executable(main_simulator resnet_inference.cpp)
+target_compile_definitions(main_simulator PRIVATE SIMULATE)
+
+target_compile_definitions(main PRIVATE ${DATASET_DEFINITIONS})
+target_compile_definitions(main_simulator PRIVATE ${DATASET_DEFINITIONS})
+
+target_link_libraries(main ${CUDA_EXTRA_LIB} ${PROJECT_NAME}_base ${PROJECT_NAME}_gemm)
+target_link_libraries(main_simulator ${CUDA_EXTRA_LIB} ${PROJECT_NAME}_base ${PROJECT_NAME}_simulator_gemm)
 
 # ################################## Tests ######################################
 include(tests.cmake)
@@ -105,12 +116,12 @@ find_package(GTest)
 if (GTest_FOUND)
     message(STATUS "GTest Found, you can use ctest to run all tests.")
     enable_testing()
-    add_executable(gtest_exc ${TEST_SOURCE})
+    add_executable(gtest_main ${TEST_SOURCE})
+    target_compile_definitions(gtest_main PRIVATE ${DATASET_DEFINITIONS})
 
-    target_compile_definitions(gtest_exc PRIVATE ${TEST_ADDITIONAL_DEFINITIONS})
-
-    target_link_libraries(gtest_exc
+    target_link_libraries(gtest_main
             ${PROJECT_NAME}_base
+            ${PROJECT_NAME}_gemm
             GTest::gtest GTest::gtest_main
             ${TEST_ADDITIONAL_LIB}
             )
@@ -123,7 +134,7 @@ if (GTest_FOUND)
             Threads::Threads
             )
 
-    gtest_discover_tests(gtest_exc)
+    gtest_discover_tests(gtest_main)
     gtest_discover_tests(gtest_sim)
 else ()
     message(STATUS "If you installed GTest, you can use ctest to access tests.")

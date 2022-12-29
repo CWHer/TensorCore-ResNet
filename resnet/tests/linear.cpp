@@ -16,6 +16,7 @@ using namespace std;
 #define RANDOM_SEED std::random_device{}()
 #endif
 
+#if WITH_TORCH
 TEST(linear, functional) {
   auto batch = 16;
   auto input_size = 256;
@@ -71,7 +72,9 @@ TEST(linear, functional) {
   EXPECT_LE(output.totalSize() - close_count, output.totalSize() * tolerance) << "CUDA and CPU results are not close enough";
 
 }
+#endif
 
+#if WITH_TORCH
 TEST(linear, layer) {
   auto batch = 16;
   auto input_size = 256;
@@ -134,4 +137,4 @@ TEST(linear, layer) {
   EXPECT_LE(output.totalSize() - close_count, output.totalSize() * tolerance) << "CUDA and CPU results are not close enough";
 
 }
-
+#endif

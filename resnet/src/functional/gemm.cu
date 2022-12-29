@@ -93,13 +93,13 @@ template<int block_col_warps, int block_row_warps> static __global__ void gemm_n
   }
 }
 
-template<int block_col_warps, int block_row_warps> void gemm_naive_caller(const float_16 *A,
-                                                                          const float_16 *B,
-                                                                          float_32 *Result,
-                                                                          size_t M,
-                                                                          size_t N,
-                                                                          size_t K,
-                                                                          cudaStream_t &stream) {
+template<int block_col_warps, int block_row_warps> static void gemm_naive_caller(const float_16 *A,
+                                                                                 const float_16 *B,
+                                                                                 float_32 *Result,
+                                                                                 size_t M,
+                                                                                 size_t N,
+                                                                                 size_t K,
+                                                                                 cudaStream_t &stream) {
   constexpr int tile_m = block_row_warps * volta_m_factor;
   constexpr int tile_n = block_col_warps * volta_n_factor;
 
@@ -162,13 +162,13 @@ template<typename T, cudaMemcpyKind memcpy_kind> static void gemm_unpad_col_majo
   }
 }
 
-void gemm_device_memory(const float_16 *A,
-                        const float_16 *B,
-                        float_32 *Result,
-                        size_t M,
-                        size_t N,
-                        size_t K,
-                        cudaStream_t &stream) {
+static void gemm_device_memory(const float_16 *A,
+                               const float_16 *B,
+                               float_32 *Result,
+                               size_t M,
+                               size_t N,
+                               size_t K,
+                               cudaStream_t &stream) {
   float_16 *padded_A;
   float_16 *padded_B;
   float_32 *padded_C;
@@ -194,20 +194,19 @@ void gemm_device_memory(const float_16 *A,
   if (padded_B != B)
     checkCudaErrors(cudaFreeAsyncIfAvailable(padded_B, stream));
 
-
   if (padded_C != Result) {
     gemm_unpad_col_major<float_32, cudaMemcpyDeviceToDevice>(Result, padded_C, N, M, padded_N, padded_M, stream);
     checkCudaErrors(cudaFreeAsyncIfAvailable(padded_C, stream));
   }
 }
 
-void gemm_host_memory(const float_16 *A,
-                      const float_16 *B,
-                      float_32 *Result,
-                      size_t M,
-                      size_t N,
-                      size_t K,
-                      cudaStream_t &stream) {
+static void gemm_host_memory(const float_16 *A,
+                             const float_16 *B,
+                             float_32 *Result,
+                             size_t M,
+                             size_t N,
+                             size_t K,
+                             cudaStream_t &stream) {
   float_16 *padded_A;
   float_16 *padded_B;
   float_32 *padded_C;
@@ -262,94 +261,4 @@ void gemm_stream(const float_16 *A,
   }
 }
 
-void gemm(const float_16 *A,
-          const float_16 *B,
-          float_32 *C,
-          size_t M,
-          size_t N,
-          size_t K,
-          const GEMM::Major major,
-          const Impl::DeviceType device_type) {
-  cudaStream_t stream = nullptr;
-  return gemm_stream(A, B, C, M, N, K, major, device_type, stream);
-}
 
-void gemm_batched_B(const float_16 *A,
-                    const float_16 *B,
-                    float_32 *C,
-                    size_t M,
-                    size_t N,
-                    size_t K,
-                    size_t batch_size,
-                    GEMM::Major major,
-                    Impl::DeviceType device_type) {
-  if (major != GEMM::Major::row_major) {
-    // Batches does not support col-major
-    throw std::runtime_error("Batches does not support col-major");
-  }
-
-  constexpr int stream_count = 8;
-  cudaStream_t streams[stream_count];
-  for (auto & stream : streams) {
-    cudaStreamCreate(&stream);
-  }
-
-  for (int i = 0; i < batch_size; i++) {
-    auto B_ptr = B + i * K * N;
-    auto C_ptr = C + i * M * N;
-    gemm_stream(A, B_ptr, C_ptr, M, N, K, major, device_type, streams[i % stream_count]);
-  }
-
-  for (auto & stream : streams) {
-      cudaStreamSynchronize(stream);
-      cudaStreamDestroy(stream);
-  }
-}
-
-static __global__ void fp32_to_fp16_kernel(const float_32 *input, float_16 *output, size_t size) {
-  CUDA_KERNEL_LOOP(index, size) {
-    output[index] = __float2half(input[index]);
-  }
-  __syncthreads();
-}
-
-static __global__ void fp16_to_fp32_kernel(const float_16 *input, float_32 *output, size_t size) {
-  CUDA_KERNEL_LOOP(index, size) {
-    output[index] = __half2float(input[index]);
-  }
-  __syncthreads();
-}
-
-float_16 *fp32_array_to_fp16_array(const float_32 *fp32_array, size_t size, Impl::DeviceType device_type) {
-  float_16 *fp16_array;
-  switch (device_type) {
-  case Impl::DeviceType::CPU:fp16_array = new float_16[size];
-    for (int i = 0; i < size; i++) {
-      fp16_array[i] = float_16(fp32_array[i]);
-    }
-    break;
-  case Impl::DeviceType::CUDA:cudaMalloc(&fp16_array, size * sizeof(float_16));
-    fp32_to_fp16_kernel<<< KERNEL_LOOP_BLOCKS(size), KERNEL_LOOP_THREADS>>>(fp32_array, fp16_array, size);
-    check_cuda_error();
-    break;
-  }
-  return fp16_array;
-}
-
-float_32 *fp16_array_to_fp32_array(const float_16 *fp16_array, size_t size, Impl::DeviceType device_type) {
-  float_32 *fp32_array;
-  switch (device_type) {
-  case Impl::DeviceType::CPU:fp32_array = new float_32[size];
-    for (int i = 0; i < size; i++) {
-      fp32_array[i] = __half2float(fp16_array[i]);
-    }
-    break;
-  case Impl::DeviceType::CUDA:cudaMalloc(&fp32_array, size * sizeof(float_32));
-    fp16_to_fp32_kernel<<<KERNEL_LOOP_BLOCKS(size), KERNEL_LOOP_THREADS>>>(fp16_array, fp32_array, size);
-    check_cuda_error();
-
-    break;
-
-  }
-  return fp32_array;
-}

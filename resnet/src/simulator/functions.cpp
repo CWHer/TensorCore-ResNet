@@ -136,6 +136,7 @@ namespace Sim
     void hostGEMM(const f32 *a, const f32 *b, f32 *c,
                   u32 n, u32 m, u32 k, GPUSimulator &sim)
     {
+        std::cout << "Simulating GEMM(M="<< n <<", N=" << m << ", K=" << k <<") ..." << std::endl;
         f32 *d_a, *d_b, *d_c;
         sim.cudaMalloc((void **)&d_a, n * k * sizeof(f32));
         sim.cudaMalloc((void **)&d_b, k * m * sizeof(f32));

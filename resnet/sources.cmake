@@ -6,7 +6,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/modules)
 
 # Common source files **without** main function
 set(SOURCE_FILES
-        src/functional/gemm.cu
+        src/functional/gemm_helpers.cu
+        src/functional/fp16_array.cu
         src/functional/conv2d.cu
         src/functional/im2col.cu
         src/functional/add.cu
@@ -24,12 +25,20 @@ set(SOURCE_FILES
         src/functional/linear.cu
 )
 
+set(SOURCE_GEMM
+    src/functional/gemm.cu
+    )
+
 set(SIMULATOR_SOURCE_FILES
     src/simulator/half.cpp
     src/simulator/reg_file.cpp
     src/simulator/simulator.cpp
     src/simulator/functions.cpp
 )
+
+set(SIMULATOR_GEMM
+    src/simulator/gemm.cpp
+    )
 
 # Check cuda mallocAsync compatibility
 message(CHECK_START "Check CUDA Stream Ordered Memory Allocator")
@@ -46,6 +55,7 @@ try_run(RUN_RESULT COMPILE_RESULT
 if (COMPILE_RESULT AND NOT RUN_RESULT)
     message(CHECK_PASS "Supported")
     set(CUDA_MALLOC_ASYNC 1)
+    add_definitions(-DCUDA_MALLOC_ASYNC)
 else()
     message(CHECK_FAIL "Not Available")
     set(CUDA_MALLOC_ASYNC 0)

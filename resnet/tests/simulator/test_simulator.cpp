@@ -26,26 +26,10 @@ TEST(gpu_simulator, memory)
                    Sim::CUDAMemcpyType::MemcpyDeviceToHost);
     EXPECT_NEAR(h_ptr[50], 2.0f, eps);
 
-    int error_count = 0;
-    try
-    {
-        sim.cudaMemcpy(d_ptr, h_ptr, 100 * sizeof(float),
-                       Sim::CUDAMemcpyType::MemcpyDeviceToHost);
-    }
-    catch (Sim::FatalError &e)
-    {
-        error_count++;
-    }
-    try
-    {
-        sim.cudaMemcpy(h_ptr, d_ptr, 100 * sizeof(float),
-                       Sim::CUDAMemcpyType::MemcpyHostToDevice);
-    }
-    catch (Sim::FatalError &e)
-    {
-        error_count++;
-    }
-    EXPECT_EQ(error_count, 2);
+    EXPECT_THROW(sim.cudaMemcpy(d_ptr, h_ptr, 100 * sizeof(float),
+                              Sim::CUDAMemcpyType::MemcpyDeviceToHost), Sim::FatalError);
+    EXPECT_THROW(sim.cudaMemcpy(h_ptr, d_ptr, 100 * sizeof(float),
+                              Sim::CUDAMemcpyType::MemcpyHostToDevice), Sim::FatalError);
 
     sim.cudaFree(d_ptr);
     EXPECT_FALSE(mem.isAllocated(d_ptr));
@@ -84,16 +68,7 @@ TEST(gpu_simulator, launch_kernel)
                    Sim::CUDAMemcpyType::MemcpyDeviceToHost);
     sim.cudaFree(d_matrix);
 
-    int error_count = 0;
-    try
-    {
-        sim.launchKernel(block_dim, dummy_kernel, (float *)d_matrix);
-    }
-    catch (Sim::FatalError &e)
-    {
-        error_count++;
-    }
-    EXPECT_EQ(error_count, 1);
+    EXPECT_THROW(sim.launchKernel(block_dim, dummy_kernel, (float *)d_matrix), Sim::FatalError);
 
     const float eps = 1e-6f;
     for (int i = 0; i < 16; i++)
