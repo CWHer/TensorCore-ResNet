@@ -3,6 +3,9 @@
 #include "linear.hpp"
 #include "functional/linear.hpp"
 #include "functional/gemm.hpp"
+#include "mem_pool.h"
+
+using namespace Impl;
 
 Impl::Linear::Linear(int in_features, int out_features) : weight({out_features, in_features}), bias({out_features}),
                                                           in_features(in_features), out_features(out_features),
@@ -22,7 +25,7 @@ Impl::Tensor functional::linear(const Impl::Tensor &input, const Impl::Tensor &w
   switch (input.getDevice()) {
   case Impl::DeviceType::CPU:weight_f16 = new float_16[weight.totalSize()];
     break;
-  case Impl::DeviceType::CUDA:cudaMalloc(&weight_f16, weight.totalSize() * sizeof(float_16));
+  case Impl::DeviceType::CUDA:Impl::cudaPooledMalloc(&weight_f16, weight.totalSize() * sizeof(float_16));
     break;
   }
   prepare_linear_weight(weight.data_ptr(), weight_f16, weight_shape[0], weight_shape[1], weight.getDevice());
@@ -32,7 +35,7 @@ Impl::Tensor functional::linear(const Impl::Tensor &input, const Impl::Tensor &w
   switch (input.getDevice()) {
   case Impl::DeviceType::CPU:delete[] weight_f16;
     break;
-  case Impl::DeviceType::CUDA:cudaFree(weight_f16);
+  case Impl::DeviceType::CUDA:cudaPooledFree(weight_f16);
     break;
   }
   return result;
@@ -63,7 +66,7 @@ Impl::Tensor functional::linear(const Tensor &input, const float_16 *weight, con
   switch (input.getDevice()) {
   case Impl::DeviceType::CPU:delete[] input_fp16;
     break;
-  case Impl::DeviceType::CUDA:cudaFree(input_fp16);
+  case Impl::DeviceType::CUDA:cudaPooledFree(input_fp16);
     break;
   }
   return result;
@@ -78,7 +81,7 @@ Impl::Tensor Impl::Linear::forward(const Tensor &x) {
     switch (x.getDevice()) {
     case Impl::DeviceType::CPU:weight_f16 = new float_16[weight.totalSize()];
       break;
-    case Impl::DeviceType::CUDA:cudaMalloc(&weight_f16, weight.totalSize() * sizeof(float_16));
+    case Impl::DeviceType::CUDA:Impl::cudaPooledMalloc(&weight_f16, weight.totalSize() * sizeof(float_16));
       break;
     }
     prepare_linear_weight(weight.data_ptr(), weight_f16, out_features, in_features, x.getDevice());
@@ -112,7 +115,7 @@ Impl::Linear::~Linear() {
     switch (weight.getDevice()) {
     case DeviceType::CPU:delete[] weight_f16;
       break;
-    case DeviceType::CUDA:cudaFree(weight_f16);
+    case DeviceType::CUDA:cudaPooledFree(weight_f16);
       break;
     }
   }
@@ -122,7 +125,7 @@ void Impl::Linear::setWeight(const Impl::Tensor &new_weight) {
     switch (weight.getDevice()) {
     case DeviceType::CPU:delete[] weight_f16;
       break;
-    case DeviceType::CUDA:cudaFree(weight_f16);
+    case DeviceType::CUDA:cudaPooledFree(weight_f16);
       break;
     }
     weight_f16 = nullptr;

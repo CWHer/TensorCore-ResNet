@@ -5,6 +5,7 @@
 
 #include <gtest/gtest.h>
 #include "functional/gemm.hpp"
+#include "mem_pool.h"
 #include <random>
 
 #if WITH_CUBLAS
@@ -81,18 +82,18 @@ static void gemm_cuBLAS_reference(const float *A,
   switch (device_type) {
   case Impl::DeviceType::CPU: {
     float *DA, *DB, *DResult;
-    cudaMalloc(&DA, M * K * sizeof(float));
-    cudaMalloc(&DB, K * N * sizeof(float));
-    cudaMalloc(&DResult, M * N * sizeof(float));
+    Impl::cudaPooledMalloc(&DA, M * K * sizeof(float));
+    Impl::cudaPooledMalloc(&DB, K * N * sizeof(float));
+    Impl::cudaPooledMalloc(&DResult, M * N * sizeof(float));
     cudaMemcpy(DA, A, M * K * sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(DB, B, K * N * sizeof(float), cudaMemcpyHostToDevice);
 
     gemm_cuBLAS_reference(DA, DB, DResult, M, N, K, major, Impl::DeviceType::CUDA);
 
     cudaMemcpy(Result, DResult, M * N * sizeof(float), cudaMemcpyDeviceToHost);
-    cudaFree(DA);
-    cudaFree(DB);
-    cudaFree(DResult);
+    Impl::cudaPooledFree(DA);
+    Impl::cudaPooledFree(DB);
+    Impl::cudaPooledFree(DResult);
     return;
   }
     break;
@@ -171,18 +172,18 @@ static void func_test(size_t M,
     break;
   case Impl::DeviceType::CUDA: {
     float *DA, *DB, *DC;
-    cudaMalloc(&DA, M * K * sizeof(float));
-    cudaMalloc(&DB, K * N * sizeof(float));
-    cudaMalloc(&DC, M * N * sizeof(float));
+    Impl::cudaPooledMalloc(&DA, M * K * sizeof(float));
+    Impl::cudaPooledMalloc(&DB, K * N * sizeof(float));
+    Impl::cudaPooledMalloc(&DC, M * N * sizeof(float));
     cudaMemcpy(DA, A.get(), M * K * sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(DB, B.get(), K * N * sizeof(float), cudaMemcpyHostToDevice);
     func1(DA, DB, DC, M, N, K, major, device_type);
     cudaMemcpy(C_ref.get(), DC, M * N * sizeof(float), cudaMemcpyDeviceToHost);
     func2(DA, DB, DC, M, N, K, major, device_type);
     cudaMemcpy(C.get(), DC, M * N * sizeof(float), cudaMemcpyDeviceToHost);
-    cudaFree(DA);
-    cudaFree(DB);
-    cudaFree(DC);
+    Impl::cudaPooledFree(DA);
+    Impl::cudaPooledFree(DB);
+    Impl::cudaPooledFree(DC);
   }
     break;
   }
@@ -242,13 +243,13 @@ static void func_test(size_t M,
   case Impl::DeviceType::CUDA: {
     float *DA, *DB, *DC, *DC_ref;
     float_16 *DA_fp16, *DB_fp16;
-    cudaMalloc(&DA, M * K * sizeof(float));
-    cudaMalloc(&DB, K * N * sizeof(float));
-    cudaMalloc(&DA_fp16, M * K * sizeof(float_16));
-    cudaMalloc(&DB_fp16, K * N * sizeof(float_16));
+    Impl::cudaPooledMalloc(&DA, M * K * sizeof(float));
+    Impl::cudaPooledMalloc(&DB, K * N * sizeof(float));
+    Impl::cudaPooledMalloc(&DA_fp16, M * K * sizeof(float_16));
+    Impl::cudaPooledMalloc(&DB_fp16, K * N * sizeof(float_16));
 
-    cudaMalloc(&DC, M * N * sizeof(float));
-    cudaMalloc(&DC_ref, M * N * sizeof(float));
+    Impl::cudaPooledMalloc(&DC, M * N * sizeof(float));
+    Impl::cudaPooledMalloc(&DC_ref, M * N * sizeof(float));
 
     check_cuda_error();
 
@@ -263,18 +264,18 @@ static void func_test(size_t M,
 
     cudaMemcpy(C_ref.get(), DC_ref, M * N * sizeof(float), cudaMemcpyDeviceToHost);
     check_cuda_error();
-    cudaFree(DA);
-    cudaFree(DB);
-    cudaFree(DC_ref);
+    Impl::cudaPooledFree(DA);
+    Impl::cudaPooledFree(DB);
+    Impl::cudaPooledFree(DC_ref);
 
     check_cuda_error();
 
     gemm16(DA_fp16, DB_fp16, DC, M, N, K, major, device_type);
     cudaMemcpy(C.get(), DC, M * N * sizeof(float), cudaMemcpyDeviceToHost);
     check_cuda_error();
-    cudaFree(DA_fp16);
-    cudaFree(DB_fp16);
-    cudaFree(DC);
+    Impl::cudaPooledFree(DA_fp16);
+    Impl::cudaPooledFree(DB_fp16);
+    Impl::cudaPooledFree(DC);
 
     check_cuda_error();
   }

@@ -571,10 +571,10 @@ TEST(conv2d, basic_conv2d_conv2x_cuda) {
   float *input_d;
   float *output_d;
 
-  cudaMalloc(&weight_d, filter_channel * channel * filter_size * filter_size * sizeof(float_16));
-  cudaMalloc(&bias_d, filter_channel * sizeof(float));
-  cudaMalloc(&input_d, batch * channel * input_height * input_width * sizeof(float));
-  cudaMalloc(&output_d, output_size * sizeof(float));
+  Impl::cudaPooledMalloc(&weight_d, filter_channel * channel * filter_size * filter_size * sizeof(float_16));
+  Impl::cudaPooledMalloc(&bias_d, filter_channel * sizeof(float));
+  Impl::cudaPooledMalloc(&input_d, batch * channel * input_height * input_width * sizeof(float));
+  Impl::cudaPooledMalloc(&output_d, output_size * sizeof(float));
 
   cudaMemcpy(weight_d,
              weight.get(),
@@ -602,10 +602,10 @@ TEST(conv2d, basic_conv2d_conv2x_cuda) {
 
   cudaMemcpy(output.get(), output_d, output_size * sizeof(float), cudaMemcpyDeviceToHost);
 
-  cudaFree(output_d);
-  cudaFree(input_d);
-  cudaFree(bias_d);
-  cudaFree(weight_d);
+  Impl::cudaPooledFree(output_d);
+  Impl::cudaPooledFree(input_d);
+  Impl::cudaPooledFree(bias_d);
+  Impl::cudaPooledFree(weight_d);
 
   // Compare the results
   double max_diff_ratio = 0;

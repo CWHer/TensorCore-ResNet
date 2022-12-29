@@ -6,7 +6,9 @@
 #include "reg_file.h"
 #include "simulator.h"
 #include "functions.h"
+#include "mem_pool.h"
 
+using namespace Impl;
 
 void gemm_stream(const float_16 *A,
                  const float_16 *B,
@@ -46,8 +48,8 @@ void gemm_stream(const float_16 *A,
     cudaMemcpy(A_host, A_dev, M * K * sizeof(float), cudaMemcpyDeviceToHost);
     cudaMemcpy(B_host, B_dev, K * N * sizeof(float), cudaMemcpyDeviceToHost);
 
-    cudaFree(A_dev);
-    cudaFree(B_dev);
+    cudaPooledFree(A_dev);
+    cudaPooledFree(B_dev);
   }
 
 #pragma clang diagnostic push

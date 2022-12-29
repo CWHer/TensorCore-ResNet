@@ -7,6 +7,7 @@
 #include "functional/gemm.hpp"
 
 using namespace nvcuda;
+using namespace Impl;
 
 static void check_cuda_error() {
   cudaError_t err = cudaPeekAtLastError();
@@ -225,11 +226,11 @@ static void gemm_host_memory(const float_16 *A,
   // Fixme: this template parameter is adjustable
   gemm_device_memory(padded_A, padded_B, padded_C, padded_M, padded_N, K, stream);
 
-  checkCudaErrors(cudaFree(padded_A));
-  checkCudaErrors(cudaFree(padded_B));
+  checkCudaErrors(cudaPooledFree(padded_A));
+  checkCudaErrors(cudaPooledFree(padded_B));
 
   gemm_unpad_col_major<float_32, cudaMemcpyDeviceToHost>(Result, padded_C, N, M, padded_N, padded_M, stream);
-  checkCudaErrors(cudaFree(padded_C));
+  checkCudaErrors(cudaPooledFree(padded_C));
 }
 
 void gemm_stream(const float_16 *A,

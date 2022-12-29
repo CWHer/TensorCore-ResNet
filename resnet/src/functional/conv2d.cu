@@ -7,6 +7,10 @@
 #include "functional/macros.h"
 #include "functional/add.hpp"
 
+#include "common.h"
+
+using namespace Impl;
+
 static void check_cuda_error() {
   cudaError_t err = cudaPeekAtLastError();
   if (err != cudaSuccess) {
@@ -173,7 +177,7 @@ void conv2d(const float *input,
       }
     }
 
-    cudaMalloc(&bias_expanded, out_channels * conv_result_size * sizeof(float));
+    Impl::cudaPooledMalloc(&bias_expanded, out_channels * conv_result_size * sizeof(float));
   } else {
     auto im2col_result = create_im2col_result_store_host(N, C, H, W, kernel_size, kernel_size, stride, padding);
     // After im2col, im2col_result is of shape (N, C * kernel_size * kernel_size, H_out * W_out)
@@ -219,7 +223,7 @@ void conv2d(const float *input,
   }
 
   if (device_type == Impl::DeviceType::CUDA) {
-    cudaFree(bias_expanded);
+    cudaPooledFree(bias_expanded);
   } else {
     delete[] bias_expanded;
   }
@@ -257,14 +261,14 @@ void conv2d(const float *input,
   }
   case Impl::DeviceType::CUDA: {
     float_16 *weight_16;
-    cudaMalloc(&weight_16, weight_shape * sizeof(float_16));
+    Impl::cudaPooledMalloc(&weight_16, weight_shape * sizeof(float_16));
     float_16 *weight_16_ptr = weight_16;
     for (int i = 0; i < weight_shape; i++) {
       *weight_16_ptr = weight[i];
       weight_16_ptr++;
     }
     conv2d(input, output, weight_16, bias, N, C, H, W, out_channels, kernel_size, stride, padding, device_type);
-    cudaFree(weight_16);
+    cudaPooledFree(weight_16);
     break;
   }
   }

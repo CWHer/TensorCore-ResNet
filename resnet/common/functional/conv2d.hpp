@@ -5,6 +5,7 @@
 
 #include "common.h"
 #include <memory>
+#include "mem_pool.h"
 
 size_t im2col_result_size(int N, int C, int H, int W, int filter_height, int filter_width, int stride, int padding);
 
@@ -17,7 +18,7 @@ std::unique_ptr<float_16[]> create_im2col_result_store_host(int N,
                                                             int stride,
                                                             int padding);
 
-std::unique_ptr<float_16[], decltype(&cudaFree)> create_im2col_result_store_device(int N,
+std::unique_ptr<float_16[], decltype(&Impl::cudaPooledFree)> create_im2col_result_store_device(int N,
                                                                                    int C,
                                                                                    int H,
                                                                                    int W,

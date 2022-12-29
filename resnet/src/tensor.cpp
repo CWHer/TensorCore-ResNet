@@ -9,6 +9,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include "mem_pool.h"
 
 using namespace Impl;
 
@@ -26,7 +27,7 @@ Tensor::TensorStorage::TensorStorage(const std::vector<int> &shape, Impl::Device
     switch (device) {
     case Impl::DeviceType::CPU:data = new float[total_size];
       break;
-    case Impl::DeviceType::CUDA:checkCudaErrors(cudaMalloc(&data, total_size * sizeof(float)));
+    case Impl::DeviceType::CUDA:checkCudaErrors(cudaPooledMalloc(&data, total_size * sizeof(float)));
       break;
     default:checkCppErrorsMsg(true, "Unknown device type");
     }
@@ -42,7 +43,7 @@ Tensor::TensorStorage::TensorStorage(const Tensor::TensorStorage &other)
   case Impl::DeviceType::CPU:data = new float[total_size];
     std::copy(other.data, other.data + total_size, data);
     break;
-  case Impl::DeviceType::CUDA:checkCudaErrors(cudaMalloc(&data, total_size * sizeof(float)));
+  case Impl::DeviceType::CUDA:checkCudaErrors(cudaPooledMalloc(&data, total_size * sizeof(float)));
     checkCudaErrors(cudaMemcpy(data, other.data, total_size * sizeof(float), cudaMemcpyDeviceToDevice));
     break;
   default:checkCppErrorsMsg(true, "Unknown device type");
@@ -60,7 +61,7 @@ Tensor::TensorStorage::~TensorStorage() {
     switch (device) {
     case Impl::DeviceType::CPU:delete[] data;
       break;
-    case Impl::DeviceType::CUDA:checkCudaErrors(cudaFree(data));
+    case Impl::DeviceType::CUDA:checkCudaErrors(cudaPooledFree(data));
       break;
     default:checkCppErrorsMsg(true, "Unknown device type");
     }
@@ -157,10 +158,10 @@ void Tensor::TensorStorage::to(Impl::DeviceType device) {
   switch (device) {
   case Impl::DeviceType::CPU:data = new float[total_size];
     checkCudaErrors(cudaMemcpy(data, this->data, total_size * sizeof(float), cudaMemcpyDeviceToHost));
-    checkCudaErrors(cudaFree(this->data));
+    checkCudaErrors(cudaPooledFree(this->data));
     break;
 
-  case Impl::DeviceType::CUDA:checkCudaErrors(cudaMalloc(&data, total_size * sizeof(float)));
+  case Impl::DeviceType::CUDA:checkCudaErrors(cudaPooledMalloc(&data, total_size * sizeof(float)));
     checkCudaErrors(cudaMemcpy(data, this->data, total_size * sizeof(float), cudaMemcpyHostToDevice));
     delete[] this->data;
     break;

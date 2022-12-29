@@ -48,6 +48,11 @@ __global__ static void dimBatchNorm2dReluKernel(float *input_data, const float *
                                             unsigned int element_per_thread)
 {
   const auto channel = threadIdx.x;
+
+  if(channel > num_channels) {
+    return;
+  }
+
   const auto cur_mean = mean_data[channel];
   const auto cur_var = var_data[channel];
   const auto cur_weight = weight_data[channel];
@@ -57,6 +62,10 @@ __global__ static void dimBatchNorm2dReluKernel(float *input_data, const float *
   auto global_tid = blockIdx.x * blockDim.x + threadIdx.x;
   input_data = input_data + global_tid * element_per_thread;
   for (int i = 0; i < element_per_thread; i++){
+    if (i + global_tid * element_per_thread >= batch_size * num_channels * height * width) {
+      return;
+    }
+
     input_data[i] = ((input_data[i] - cur_mean) * r) * cur_weight + cur_bias;
     input_data[i] = input_data[i] > 0.0f ? input_data[i] : 0.0f;
   }

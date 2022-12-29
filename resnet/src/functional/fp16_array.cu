@@ -33,7 +33,7 @@ float_16 *fp32_array_to_fp16_array(const float_32 *fp32_array, size_t size, Impl
       fp16_array[i] = float_16(fp32_array[i]);
     }
     break;
-  case Impl::DeviceType::CUDA:cudaMalloc(&fp16_array, size * sizeof(float_16));
+  case Impl::DeviceType::CUDA:Impl::cudaPooledMalloc(&fp16_array, size * sizeof(float_16));
     fp32_to_fp16_kernel<<< KERNEL_LOOP_BLOCKS(size), KERNEL_LOOP_THREADS>>>(fp32_array, fp16_array, size);
     check_cuda_error();
     break;
@@ -49,7 +49,7 @@ float_32 *fp16_array_to_fp32_array(const float_16 *fp16_array, size_t size, Impl
       fp32_array[i] = __half2float(fp16_array[i]);
     }
     break;
-  case Impl::DeviceType::CUDA:cudaMalloc(&fp32_array, size * sizeof(float_32));
+  case Impl::DeviceType::CUDA:Impl::cudaPooledMalloc(&fp32_array, size * sizeof(float_32));
     fp16_to_fp32_kernel<<<KERNEL_LOOP_BLOCKS(size), KERNEL_LOOP_THREADS>>>(fp16_array, fp32_array, size);
     check_cuda_error();
 

@@ -3,6 +3,7 @@
 #include "functional/conv2d.hpp"
 #include "conv.hpp"
 #include "functional/gemm.hpp"
+#include "mem_pool.h"
 
 using namespace Impl;
 
@@ -57,7 +58,7 @@ void Conv2d::setWeight(const Tensor &new_weight) {
 
     case CPU:delete[] weight_f16;
       break;
-    case CUDA:cudaFree(weight_f16);
+    case CUDA:cudaPooledFree(weight_f16);
       break;
     }
 
@@ -76,7 +77,7 @@ Conv2d::~Conv2d() {
     switch (this->weight.getDevice()) {
     case CPU:delete[] weight_f16;
       break;
-    case CUDA:cudaFree(weight_f16);
+    case CUDA:cudaPooledFree(weight_f16);
       break;
     }
   }
@@ -135,7 +136,7 @@ Tensor functional::conv2d(const Tensor &input,
   switch (weight.getDevice()) {
   case Impl::DeviceType::CPU:delete[] weight_16;
     break;
-  case Impl::DeviceType::CUDA:cudaFree(weight_16);
+  case Impl::DeviceType::CUDA:cudaPooledFree(weight_16);
   }
 
   return result;

@@ -5,6 +5,9 @@
 #include "common.h"
 #include "functional/conv2d.hpp"
 #include "functional/macros.h"
+#include "mem_pool.h"
+
+using namespace Impl;
 
 /* @brief im2col result shape
  */
@@ -28,7 +31,7 @@ std::unique_ptr<float_16[]> create_im2col_result_store_host(int N,
   return std::make_unique<float_16[]>(im2col_size);
 }
 
-std::unique_ptr<float_16[], decltype(&cudaFree)> create_im2col_result_store_device(int N,
+std::unique_ptr<float_16[], decltype(&cudaPooledFree)> create_im2col_result_store_device(int N,
                                                                                    int C,
                                                                                    int H,
                                                                                    int W,
@@ -38,8 +41,8 @@ std::unique_ptr<float_16[], decltype(&cudaFree)> create_im2col_result_store_devi
                                                                                    int padding) {
   auto im2col_size = im2col_result_size(N, C, H, W, filter_height, filter_width, stride, padding);
   float_16 *ptr;
-  cudaMalloc(&ptr, im2col_size * sizeof(float_16));
-  return std::unique_ptr<float_16[], decltype(&cudaFree)>(ptr, &cudaFree);
+  Impl::cudaPooledMalloc(&ptr, im2col_size * sizeof(float_16));
+  return std::unique_ptr<float_16[], decltype(&cudaPooledFree)>(ptr, &cudaPooledFree);
 }
 
 __global__ static void im2col_cuda_kernel(const float *input,
@@ -159,20 +162,20 @@ static void im2col_host_memory(const float *input,
                                int padding) {
   // Copy input to device
   float *input_device;
-  cudaMalloc(&input_device, sizeof(float) * N * C * H * W);
+  Impl::cudaPooledMalloc(&input_device, sizeof(float) * N * C * H * W);
   cudaMemcpy(input_device, input, sizeof(float) * N * C * H * W, cudaMemcpyHostToDevice);
 
   auto result_size = im2col_result_size(N, C, H, W, filter_height, filter_width, stride, padding);
   float_16 *output_device;
-  cudaMalloc(&output_device, sizeof(float_16) * result_size);
+  Impl::cudaPooledMalloc(&output_device, sizeof(float_16) * result_size);
 
   im2col_device_memory(input_device, output_device, N, C, H, W, filter_height, filter_width, stride, padding);
 
   // Copy result back to host
   cudaMemcpy(output, output_device, sizeof(float_16) * result_size, cudaMemcpyDeviceToHost);
   // Free
-  cudaFree(input_device);
-  cudaFree(output_device);
+  Impl::cudaPooledFree(input_device);
+  Impl::cudaPooledFree(output_device);
 }
 
 /**

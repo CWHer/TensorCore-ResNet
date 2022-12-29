@@ -22,6 +22,7 @@ set(SOURCE_FILES
         src/batchnorm.cpp
         src/pooling.cpp
         src/resnet.cpp
+        src/mem_pool.cpp
         src/functional/linear.cu
 )
 
