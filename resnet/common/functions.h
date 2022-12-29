@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.h"
+#include "sim_common.h"
 #include "simulator.h"
 
 namespace Sim

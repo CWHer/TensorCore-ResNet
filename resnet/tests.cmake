@@ -13,3 +13,11 @@ set(TEST_SOURCE
     tests/linear.cpp
     tests/resnet.cpp
 )
+
+set(SIMULATOR_TEST_SOURCE
+    tests/simulator/test_device_memory.cpp
+    tests/simulator/test_half.cpp
+    tests/simulator/test_regfile.cpp
+    tests/simulator/test_functions.cpp
+    tests/simulator/test_simulator.cpp
+)

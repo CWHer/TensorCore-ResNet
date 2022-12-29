@@ -81,6 +81,8 @@ else ()
     set(TEST_ADDITIONAL_LIB ${TEST_ADDITIONAL_LIB} ${CUDA_EXTRA_LIB})
 endif ()
 
+find_package(Threads REQUIRED)
+
 
 # ################################ Executables ##################################
 include(sources.cmake)
@@ -88,6 +90,9 @@ include(dataset.cmake)
 
 # Build source files to a static library to avoid recompiling
 add_library(${PROJECT_NAME}_base STATIC ${SOURCE_FILES})
+
+add_library(${PROJECT_NAME}_simulator STATIC ${SIMULATOR_SOURCE_FILES})
+set_property(TARGET ${PROJECT_NAME}_simulator PROPERTY CXX_STANDARD 17)
 
 add_executable(main resnet_inference.cpp)
 target_link_libraries(main ${CUDA_EXTRA_LIB} ${PROJECT_NAME}_base)
@@ -110,7 +115,16 @@ if (GTest_FOUND)
             ${TEST_ADDITIONAL_LIB}
             )
 
+    add_executable(gtest_sim ${SIMULATOR_TEST_SOURCE})
+    set_property(TARGET gtest_sim PROPERTY CXX_STANDARD 17)
+    target_link_libraries(gtest_sim
+            ${PROJECT_NAME}_simulator
+            GTest::gtest GTest::gtest_main
+            Threads::Threads
+            )
+
     gtest_discover_tests(gtest_exc)
+    gtest_discover_tests(gtest_sim)
 else ()
     message(STATUS "If you installed GTest, you can use ctest to access tests.")
 endif ()

@@ -24,6 +24,13 @@ set(SOURCE_FILES
         src/functional/linear.cu
 )
 
+set(SIMULATOR_SOURCE_FILES
+    src/simulator/half.cpp
+    src/simulator/reg_file.cpp
+    src/simulator/simulator.cpp
+    src/simulator/functions.cpp
+)
+
 # Check cuda mallocAsync compatibility
 message(CHECK_START "Check CUDA Stream Ordered Memory Allocator")
 
