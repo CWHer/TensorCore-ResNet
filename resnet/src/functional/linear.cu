@@ -53,17 +53,17 @@ void linear(const float_16 *input,
 
   constexpr int stream_num = 8;
   cudaStream_t streams[stream_num];
-  for (int i = 0; i < stream_num; ++i) {
-    cudaStreamCreate(&streams[i]);
+  for (auto & stream : streams) {
+    cudaStreamCreate(&stream);
   }
 
   for (int batch = 0; batch < batch_size; ++batch) {
     add_(&output[batch * output_channel], bias, output_channel, device_type, streams[batch % stream_num]);
   }
 
-  for (int i = 0; i < stream_num; ++i) {
-    cudaStreamSynchronize(streams[i]);
-    cudaStreamDestroy(streams[i]);
+  for (auto & stream : streams) {
+    cudaStreamSynchronize(stream);
+    cudaStreamDestroy(stream);
   }
 }
 

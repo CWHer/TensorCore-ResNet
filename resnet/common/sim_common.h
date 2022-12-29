@@ -27,10 +27,10 @@ namespace Sim
     using u16 = uint16_t;
     using u32 = uint32_t;
     using u64 = uint64_t;
-    using i8 = int8_t;
-    using i16 = int16_t;
+    using i8 [[maybe_unused]] = int8_t;
+    using i16 [[maybe_unused]] = int16_t;
     using i32 = int32_t;
-    using i64 = int64_t;
+    using i64 [[maybe_unused]] = int64_t;
     using f32 = float;
     using f64 = double;
 
@@ -68,7 +68,8 @@ namespace Sim
         }
     }
 
-    class SimpleTimer
+
+    class [[maybe_unused]] SimpleTimer
     {
     private:
         struct TimingItem
@@ -85,15 +86,15 @@ namespace Sim
         std::unordered_map<std::string, TimingItem> timing_items;
 
     public:
-        SimpleTimer() {}
+        SimpleTimer() = default;
 
-        void start(const std::string &name)
+      [[maybe_unused]] void start(const std::string &name)
         {
             auto &timing_item = timing_items[name];
             timing_item.last_time = std::chrono::system_clock::now();
         }
 
-        void end(const std::string &name)
+      [[maybe_unused]] void end(const std::string &name)
         {
             auto &timing_item = timing_items[name];
             auto duration = std::chrono::system_clock::now() - timing_item.last_time;
@@ -101,7 +102,7 @@ namespace Sim
             timing_item.count++;
         }
 
-        void printStat(const std::string &name)
+      [[maybe_unused]] void printStat(const std::string &name)
         {
             auto &timing_item = timing_items[name];
             std::cout << "Timing: " << name << " = "

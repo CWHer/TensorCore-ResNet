@@ -109,7 +109,7 @@ namespace Sim
 
     f32 __unsigned2float(u32 x)
     {
-        FP32 y;
+        FP32 y{};
         y.u = x;
         return y.f;
     }

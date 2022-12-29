@@ -11,7 +11,7 @@ namespace Sim
     struct dim3
     {
         u32 x, y, z;
-        constexpr dim3(u32 x = 1,
+        constexpr explicit dim3(u32 x = 1,
                        u32 y = 1,
                        u32 z = 1)
             : x(x), y(y), z(z) {}
@@ -60,7 +60,7 @@ namespace Sim
         void SHF_INSTR(const GPUSimulator::ThreadWarp &warp, bool left, u32 Rd, u32 Ra, u32 Sb, u32 Sc);
         void LEA_INSTR(const GPUSimulator::ThreadWarp &warp, bool hi, bool x,
                        u32 Rd, u32 Ra, u32 Sb, u32 Sc, u32 options, u32 imm, u32 Pd0, u32 Ps0);
-        void EXIT_INSTR(const GPUSimulator::ThreadWarp &warp);
+        [[maybe_unused]] void EXIT_INSTR(const GPUSimulator::ThreadWarp &warp);
 
         // Launch kernel
         // NOTE: to simplify the simulator, we assume one SM is all-mighty
@@ -76,10 +76,14 @@ namespace Sim
                 printCppError(std::is_reference<Args>::value,
                               "DO NOT support reference type for kernel function arguments",
                               __FILE__, __LINE__);
+                // HACK: FIXME: disable -Wint-to-pointer-cast warning
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
                 if (std::is_pointer<Args>::value)
                     printCppError(!global_memory.isAllocated((void *)args),
                                   "Wrong address for kernel function arguments",
                                   __FILE__, __LINE__);
+#pragma GCC diagnostic pop
             }(), ...);
             // clang-format on
 

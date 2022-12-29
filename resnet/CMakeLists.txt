@@ -118,6 +118,7 @@ if (GTest_FOUND)
     enable_testing()
     add_executable(gtest_main ${TEST_SOURCE})
     target_compile_definitions(gtest_main PRIVATE ${DATASET_DEFINITIONS})
+    target_compile_definitions(gtest_main PRIVATE ${TEST_ADDITIONAL_DEFINITIONS})
 
     target_link_libraries(gtest_main
             ${PROJECT_NAME}_base

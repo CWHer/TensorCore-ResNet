@@ -28,14 +28,14 @@ __global__ static void dimBatchNorm2dKernel(float *input_data, const float *mean
                                      unsigned int height, unsigned int width,
                                      unsigned int element_per_thread)
 {
-    const int channel = threadIdx.x;
-    const float cur_mean = mean_data[channel];
-    const float cur_var = var_data[channel];
-    const float cur_weight = weight_data[channel];
-    const float cur_bias = bias_data[channel];
+    const auto channel = threadIdx.x;
+    const auto cur_mean = mean_data[channel];
+    const auto cur_var = var_data[channel];
+    const auto cur_weight = weight_data[channel];
+    const auto cur_bias = bias_data[channel];
     float r = 1.0f / sqrtf(cur_var + eps);
 
-    int global_tid = blockIdx.x * blockDim.x + threadIdx.x;
+    auto global_tid = blockIdx.x * blockDim.x + threadIdx.x;
     input_data = input_data + global_tid * element_per_thread;
     for (int i = 0; i < element_per_thread; i++)
         input_data[i] = ((input_data[i] - cur_mean) * r) * cur_weight + cur_bias;
@@ -47,14 +47,14 @@ __global__ static void dimBatchNorm2dReluKernel(float *input_data, const float *
                                             unsigned int height, unsigned int width,
                                             unsigned int element_per_thread)
 {
-  const int channel = threadIdx.x;
-  const float cur_mean = mean_data[channel];
-  const float cur_var = var_data[channel];
-  const float cur_weight = weight_data[channel];
-  const float cur_bias = bias_data[channel];
+  const auto channel = threadIdx.x;
+  const auto cur_mean = mean_data[channel];
+  const auto cur_var = var_data[channel];
+  const auto cur_weight = weight_data[channel];
+  const auto cur_bias = bias_data[channel];
   float r = 1.0f / sqrtf(cur_var + eps);
 
-  int global_tid = blockIdx.x * blockDim.x + threadIdx.x;
+  auto global_tid = blockIdx.x * blockDim.x + threadIdx.x;
   input_data = input_data + global_tid * element_per_thread;
   for (int i = 0; i < element_per_thread; i++){
     input_data[i] = ((input_data[i] - cur_mean) * r) * cur_weight + cur_bias;

@@ -2,7 +2,6 @@
 */
 #include <gtest/gtest.h>
 #include "functional/conv2d.hpp"
-#include "functional/gemm.hpp"
 #include <random>
 
 #ifndef RANDOM_SEED

@@ -4,7 +4,7 @@
 using namespace Impl;
 using namespace std;
 
-int main(int argc, char *argv[]) {
+int main() {
   // 1. load resnet18 model
   // 2. load image dataset
   // 3. inference

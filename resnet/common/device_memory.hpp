@@ -40,7 +40,7 @@ namespace Sim
         }
 
         // byte-level read
-        std::vector<u8> read(void *ptr, u64 size)
+        static std::vector<u8> read(void *ptr, u64 size)
         {
             // HACK: no check for ptr
             //  (e.g., int a[10][10] in kernel function, and this is not logged)
@@ -50,7 +50,7 @@ namespace Sim
         }
 
         // byte-level write
-        void write(void *ptr, const std::vector<u8> &data)
+        static void write(void *ptr, const std::vector<u8> &data)
         {
             std::copy((char *)data.data(), (char *)data.data() + data.size(), (char *)ptr);
         }

@@ -201,8 +201,8 @@ void conv2d(const float *input,
 
   constexpr int stream_num = 8;
   cudaStream_t streams[stream_num];
-  for (int i = 0; i < stream_num; ++i) {
-    cudaStreamCreate(&streams[i]);
+  for (auto & stream : streams) {
+    cudaStreamCreate(&stream);
   }
 
   for (int i = 0; i < N; ++i) {
@@ -213,9 +213,9 @@ void conv2d(const float *input,
          streams[i % stream_num]);
   }
 
-  for (int i = 0; i < stream_num; ++i) {
-    cudaStreamSynchronize(streams[i]);
-    cudaStreamDestroy(streams[i]);
+  for (auto & stream : streams) {
+    cudaStreamSynchronize(stream);
+    cudaStreamDestroy(stream);
   }
 
   if (device_type == Impl::DeviceType::CUDA) {

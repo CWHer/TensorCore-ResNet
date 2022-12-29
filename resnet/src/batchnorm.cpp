@@ -3,7 +3,7 @@
 #include "batchnorm.hpp"
 #include "functional/batchnorm.hpp"
 
-Impl::BatchNorm2d::BatchNorm2d(int num_features, double eps, double momentum, bool affine, bool track_running_stats)
+Impl::BatchNorm2d::BatchNorm2d(int num_features, float eps, [[gnu::unused]] float momentum, [[gnu::unused]] bool affine, [[gnu::unused]] bool track_running_stats)
     : num_features(num_features), eps(eps), weight({num_features}), bias({num_features}),
       running_mean({num_features}), running_var({num_features})
 {
@@ -14,10 +14,10 @@ Impl::BatchNorm2d::BatchNorm2d(int num_features, double eps, double momentum, bo
 }
 
 Impl::BatchNorm2dRelu::BatchNorm2dRelu(int num_features,
-                                       double eps,
-                                       double momentum,
-                                       bool affine,
-                                       bool track_running_stats)
+                                       float eps,
+                                       [[gnu::unused]] float momentum,
+                                       [[gnu::unused]] bool affine,
+                                       [[gnu::unused]] bool track_running_stats)
     : num_features(num_features), eps(eps), weight({num_features}), bias({num_features}), running_mean({num_features}),
       running_var({num_features}) {
   addTensor("weight", weight);             // [num_features]
@@ -39,10 +39,10 @@ Impl::Tensor Impl::BatchNorm2d::forward(Impl::Tensor &&x) {
 
   // NOTE: x is in NCHW format
   // NOTE: computation is done channel-wise
-  unsigned int batch_size = x.sizes()[0];
-  unsigned int num_channels = x.sizes()[1];
-  unsigned int height = x.sizes()[2];
-  unsigned int width = x.sizes()[3];
+  auto batch_size = x.sizes()[0];
+  auto num_channels = x.sizes()[1];
+  auto height = x.sizes()[2];
+  auto width = x.sizes()[3];
 
   float *input_data = x.data_ptr();
   float *mean_data = running_mean.data_ptr();
@@ -72,10 +72,10 @@ Impl::Tensor Impl::BatchNorm2dRelu::forward(Impl::Tensor &&x) {
 
   // NOTE: x is in NCHW format
   // NOTE: computation is done channel-wise
-  unsigned int batch_size = x.sizes()[0];
-  unsigned int num_channels = x.sizes()[1];
-  unsigned int height = x.sizes()[2];
-  unsigned int width = x.sizes()[3];
+  auto batch_size = x.sizes()[0];
+  auto num_channels = x.sizes()[1];
+  auto height = x.sizes()[2];
+  auto width = x.sizes()[3];
 
   float *input_data = x.data_ptr();
   float *mean_data = running_mean.data_ptr();

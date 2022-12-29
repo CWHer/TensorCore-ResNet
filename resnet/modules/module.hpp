@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 #include "common.h"
 #include "tensor.hpp"
 
@@ -49,7 +51,7 @@ private:
 
 public:
   void addModule(std::string name, std::shared_ptr<Module> module) {
-    module_list.emplace_back(NamedModule{name, module});
+    module_list.emplace_back(NamedModule{std::move(name), std::move(module)});
   }
 
   bool empty() { return module_list.empty(); }

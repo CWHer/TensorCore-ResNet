@@ -182,6 +182,7 @@ static void conv2d_torch(float *input,
 
  * @brief Convolutional layer forward propagation performed by invoke Python commands directly
  */
+[[maybe_unused]]
 static void conv2d_torch_python_script(float *input,
                                        float *output,
                                        float_16 *weight,

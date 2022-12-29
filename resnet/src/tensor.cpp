@@ -53,7 +53,6 @@ Tensor::TensorStorage::TensorStorage(Tensor::TensorStorage &&other) noexcept
     : shape(std::move(other.shape)), n_dim(other.n_dim), strides(std::move(other.strides)),
       total_size(other.total_size), data(other.data), device(other.device) {
   other.data = nullptr;
-  other.initialized = false;
 }
 
 Tensor::TensorStorage::~TensorStorage() {
@@ -66,7 +65,6 @@ Tensor::TensorStorage::~TensorStorage() {
     default:checkCppErrorsMsg(true, "Unknown device type");
     }
   }
-  initialized = false;
 }
 
 void Tensor::TensorStorage::load(const std::string &file_path) {

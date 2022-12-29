@@ -24,12 +24,11 @@ public:
     std::vector<int32_t> shape;
     std::vector<int32_t> strides;
     Impl::DeviceType device;
-    bool initialized = true;
     float *data;
 
   public:
     TensorStorage();
-    TensorStorage(const std::vector<int> &shape,
+    explicit TensorStorage(const std::vector<int> &shape,
                   Impl::DeviceType device = Impl::DeviceType::CPU,
                   float *data = nullptr);
     TensorStorage(const TensorStorage &other);
@@ -50,8 +49,8 @@ private:
 
 public:
   Tensor();
-  Tensor(std::shared_ptr<TensorStorage> storage);
-  Tensor(const std::vector<int> &shape, Impl::DeviceType device = Impl::DeviceType::CPU, float *data = nullptr);
+  explicit Tensor(std::shared_ptr<TensorStorage> storage);
+  explicit Tensor(const std::vector<int> &shape, Impl::DeviceType device = Impl::DeviceType::CPU, float *data = nullptr);
   Tensor(const Tensor &other);
   Tensor(Tensor &&other) noexcept;
   void load(const std::string &file_path);

@@ -21,7 +21,7 @@ public:
                         Impl::DeviceType device = Impl::DeviceType::CUDA,
                         unsigned int size = -1);
 
-  std::pair<Tensor, Tensor> load(const std::string &path, int index);
+  std::pair<Tensor, Tensor> load(const std::string &path, unsigned int index);
   std::pair<std::pair<Tensor, Tensor>, bool> next();
   unsigned int size() const;
 

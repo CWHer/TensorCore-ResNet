@@ -10,7 +10,7 @@ private:
     int kernel_size, stride, padding;
 
 public:
-    MaxPool2d(int kernel_size, int stride = 1, int padding = 0);
+    explicit MaxPool2d(int kernel_size, int stride = 1, int padding = 0);
 
     Tensor forward(const Tensor &x) override;
     Tensor forward(Tensor &&x) override;
@@ -24,7 +24,7 @@ private:
     int kernel_size, stride, padding;
 
 public:
-    AvgPool2d(int kernel_size, int stride = 1, int padding = 0);
+    explicit AvgPool2d(int kernel_size, int stride = 1, int padding = 0);
 
     Tensor forward(const Tensor &x) override;
     Tensor forward(Tensor &&x) override;

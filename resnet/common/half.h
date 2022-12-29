@@ -44,7 +44,7 @@ namespace Sim
         };
 
         FP16() = default;
-        FP16(u16 u) : u(u) {}
+        [[maybe_unused]] FP16(u16 u) : u(u) {}
     };
 
     using f16 = FP16;

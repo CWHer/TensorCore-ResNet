@@ -28,10 +28,6 @@ namespace Impl {
 enum DeviceType {
   CPU, CUDA, UNKNOWN
 };
-
-enum CastDType {
-  FP16, FP32
-};
 }
 
 template<typename T> void printCudaError(T result, char const *const msg, const char *const file, int const line) {
@@ -69,22 +65,22 @@ template<typename T> void printWarning(T result, char const *const msg, const ch
 #define checkWarning(result) printWarning((result), #result, __FILE__, __LINE__)
 #define checkWarningMsg(result, msg) printWarning((result), msg, __FILE__, __LINE__)
 
-class SimpleTimer {
+class [[maybe_unused]] SimpleTimer {
 private:
   bool is_logging;
   decltype(std::chrono::system_clock::now()) start_time;
-  std::chrono::duration<double, std::milli> duration;
+  std::chrono::duration<double, std::milli> duration{};
 
 public:
   SimpleTimer() : is_logging(false) {}
 
-  void start() {
+  [[maybe_unused]] void start() {
     is_logging = true;
     start_time = std::chrono::system_clock::now();
   }
 
   // return (ms)
-  double end() {
+  [[maybe_unused]] double end() {
     checkWarning(!is_logging);
     is_logging = false;
     duration = std::chrono::system_clock::now() - start_time;
@@ -92,6 +88,6 @@ public:
   }
 };
 
-int randomInt(int min, int max);
+[[maybe_unused]] int randomInt(int min, int max);
 
-float randomFloat(float min, float max);
+[[maybe_unused]] float randomFloat(float min, float max);

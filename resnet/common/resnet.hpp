@@ -52,7 +52,7 @@ private:
   std::shared_ptr<Linear> fc;
 
 public:
-  ResNet18(const std::string &model_path, std::vector<int> layers = {2, 2, 2, 2}, int64_t num_classes = 1000);
+  explicit ResNet18(const std::string &model_path, std::vector<int> layers = {2, 2, 2, 2}, int64_t num_classes = 1000);
 
   Tensor forward(const Tensor &x) override;
 

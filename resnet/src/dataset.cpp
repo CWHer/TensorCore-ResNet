@@ -36,7 +36,7 @@ ImageDataset::ImageDataset(std::string data_path, Impl::DeviceType device, unsig
 
 }
 
-pair<Tensor, Tensor> ImageDataset::load(const std::string &path, int index) {
+pair<Tensor, Tensor> ImageDataset::load(const std::string &path, unsigned int index) {
   // NOTE: HACK: use preprocess.py to generate the binary files
   // Load batched tensors
   string index_str = std::to_string(index);
