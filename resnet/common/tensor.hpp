@@ -40,7 +40,6 @@ public:
     std::shared_ptr<TensorStorage> clone();
     float index(const std::vector<int> &indices);
     void reshape(const std::vector<int> &shape);
-    [[deprecated("Use reshape")]]void view(const std::vector<int> &shape);
     void to(Impl::DeviceType device);
     friend std::ostream &operator<<(std::ostream &out, const std::shared_ptr<Tensor::TensorStorage> &x);
 
@@ -67,7 +66,6 @@ public:
   float index(const std::vector<int> &indices);
   std::vector<int> sizes() const;
   void reshape(const std::vector<int> &shape);
-  [[deprecated("Use reshape")]]void view(const std::vector<int> &shape);
   void to(Impl::DeviceType device);
   Impl::DeviceType getDevice() const;
 

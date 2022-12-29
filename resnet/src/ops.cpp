@@ -66,3 +66,7 @@ void Impl::TensorOps::add_(Impl::Tensor &x, const Impl::Tensor &y) {
 void Impl::TensorOps::relu_(Impl::Tensor &x) {
   ::relu_(x.data_ptr(), x.totalSize(), x.getDevice());
 }
+
+void Impl::TensorOps::add_relu_(Impl::Tensor &x, const Impl::Tensor &y) {
+  ::add_relu_(x.data_ptr(), y.data_ptr(), x.totalSize(), x.getDevice());
+}

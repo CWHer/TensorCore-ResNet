@@ -14,7 +14,11 @@ namespace Impl {
 class BasicBlock : public ModuleList {
 private:
   std::shared_ptr<Conv2d> conv1;
+#if DISABLE_FUSE
   std::shared_ptr<BatchNorm2d> bn1;
+#else
+  std::shared_ptr<BatchNorm2dRelu> bn1;
+#endif
   std::shared_ptr<Conv2d> conv2;
   std::shared_ptr<BatchNorm2d> bn2;
   std::shared_ptr<ModuleList> downsample;
@@ -34,7 +38,11 @@ class ResNet18 : public ModuleList {
 private:
   int64_t inplanes = 64;
   std::shared_ptr<Conv2d> conv1;
+#if DISABLE_FUSE
   std::shared_ptr<BatchNorm2d> bn1;
+#else
+  std::shared_ptr<BatchNorm2dRelu> bn1;
+#endif
   std::shared_ptr<MaxPool2d> maxpool;
   std::shared_ptr<ModuleList> layer1;
   std::shared_ptr<ModuleList> layer2;

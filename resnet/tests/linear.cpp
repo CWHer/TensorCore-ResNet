@@ -43,9 +43,10 @@ TEST(linear, functional) {
 
   auto output = functional::linear(input, weight, bias);
 
-  auto input_at_tensor = torch::from_blob(input.data_ptr(), {batch, input_size});
-  auto weight_at_tensor = torch::from_blob(weight.data_ptr(), {output_size, input_size});
-  auto bias_at_tensor = torch::from_blob(bias.data_ptr(), {output_size});
+  auto input_at_tensor = torch::from_blob(input.data_ptr(), {batch, input_size}, torch::kFloat32);
+  auto weight_at_tensor = torch::from_blob(weight.data_ptr(), {output_size, input_size}, torch::kFloat32);
+  auto bias_at_tensor = torch::from_blob(bias.data_ptr(), {output_size}, torch::kFloat32);
+  auto output_ref_at_tensor = torch::linear(input_at_tensor, weight_at_tensor, bias_at_tensor);
 
   input.to(Impl::DeviceType::CUDA);
   weight.to(Impl::DeviceType::CUDA);
@@ -55,19 +56,19 @@ TEST(linear, functional) {
   output_d.to(Impl::DeviceType::CPU);
 
   auto tolerance = 1.0e-1;
-  auto output_ref_at_tensor = torch::linear(input_at_tensor, weight_at_tensor, bias_at_tensor);
+
   auto output_at_tensor = torch::from_blob(output.data_ptr(), {batch, output_size});
   auto output_d_at_tensor = torch::from_blob(output_d.data_ptr(), {batch, output_size});
 
-  auto close = torch::isclose(output_ref_at_tensor, output_at_tensor, 1e0, 1e-1);
+  auto close = torch::isclose(output_ref_at_tensor, output_at_tensor, 1e0, 5e-1);
   auto close_count = close.sum().item<int64_t>();
 
-  ASSERT_LE(output.totalSize() - close_count, output.totalSize() * tolerance);
+  EXPECT_LE(output.totalSize() - close_count, output.totalSize() * tolerance) << "Reference and output are not close enough";
 
-  close = torch::isclose(output_at_tensor, output_d_at_tensor, 1e0, 1e-1);
+  close = torch::isclose(output_at_tensor, output_d_at_tensor, 1e0, 5e-1);
   close_count = close.sum().item<int64_t>();
 
-  ASSERT_LE(output.totalSize() - close_count, output.totalSize() * tolerance);
+  EXPECT_LE(output.totalSize() - close_count, output.totalSize() * tolerance) << "CUDA and CPU results are not close enough";
 
 }
 
@@ -102,9 +103,10 @@ TEST(linear, layer) {
 
   auto output = layer.forward(input);
 
-  auto input_at_tensor = torch::from_blob(input.data_ptr(), {batch, input_size});
-  auto weight_at_tensor = torch::from_blob(weight.data_ptr(), {output_size, input_size});
-  auto bias_at_tensor = torch::from_blob(bias.data_ptr(), {output_size});
+  auto input_at_tensor = torch::from_blob(input.data_ptr(), {batch, input_size}, torch::kFloat32);
+  auto weight_at_tensor = torch::from_blob(weight.data_ptr(), {output_size, input_size}, torch::kFloat32);
+  auto bias_at_tensor = torch::from_blob(bias.data_ptr(), {output_size}, torch::kFloat32);
+  auto output_ref_at_tensor = torch::linear(input_at_tensor, weight_at_tensor, bias_at_tensor);
 
   input.to(Impl::DeviceType::CUDA);
   weight.to(Impl::DeviceType::CUDA);
@@ -118,19 +120,18 @@ TEST(linear, layer) {
   output_d.to(Impl::DeviceType::CPU);
 
   auto tolerance = 1.0e-1;
-  auto output_ref_at_tensor = torch::linear(input_at_tensor, weight_at_tensor, bias_at_tensor);
   auto output_at_tensor = torch::from_blob(output.data_ptr(), {batch, output_size});
   auto output_d_at_tensor = torch::from_blob(output_d.data_ptr(), {batch, output_size});
 
-  auto close = torch::isclose(output_ref_at_tensor, output_at_tensor, 1e0, 1e-1);
+  auto close = torch::isclose(output_ref_at_tensor, output_at_tensor, 1e0, 5e-1);
   auto close_count = close.sum().item<int64_t>();
 
-  ASSERT_LE(output.totalSize() - close_count, output.totalSize() * tolerance);
+  EXPECT_LE(output.totalSize() - close_count, output.totalSize() * tolerance) << "Reference and output are not close enough";
 
-  close = torch::isclose(output_at_tensor, output_d_at_tensor, 1e0, 1e-1);
+  close = torch::isclose(output_at_tensor, output_d_at_tensor, 1e0, 5e-1);
   close_count = close.sum().item<int64_t>();
 
-  ASSERT_LE(output.totalSize() - close_count, output.totalSize() * tolerance);
+  EXPECT_LE(output.totalSize() - close_count, output.totalSize() * tolerance) << "CUDA and CPU results are not close enough";
 
 }
 

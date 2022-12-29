@@ -25,9 +25,11 @@ set(SOURCE_FILES
 )
 
 # Check cuda mallocAsync compatibility
+message(CHECK_START "Check CUDA Stream Ordered Memory Allocator")
+
 try_run(RUN_RESULT COMPILE_RESULT
         ${CMAKE_CURRENT_BINARY_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/has_malloc_async.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/cmake/has_malloc_async.cpp
         CMAKE_FLAGS
             -DINCLUDE_DIRECTORIES:STRING=${CUDA_INCLUDE_DIRS}
             -DLINK_LIBRARIES:STRING=${CUDA_CUDART_LIBRARY}
@@ -35,13 +37,11 @@ try_run(RUN_RESULT COMPILE_RESULT
 
 
 if (COMPILE_RESULT AND NOT RUN_RESULT)
-    message(STATUS "CUDA Stream Ordered Memory Allocator is supported with this driver version")
+    message(CHECK_PASS "Supported")
     set(CUDA_MALLOC_ASYNC 1)
 else()
-    message(STATUS "CUDA Stream Ordered Memory Allocator is not supported with this driver version")
+    message(CHECK_FAIL "Not Available")
     set(CUDA_MALLOC_ASYNC 0)
 endif()
 
-if (CUDA_MALLOC_ASYNC)
-    add_definitions(-DCUDA_MALLOC_ASYNC)
-endif()
+

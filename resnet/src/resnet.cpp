@@ -7,7 +7,11 @@ using namespace Impl;
 
 BasicBlock::BasicBlock(int64_t inplanes, int64_t planes, int64_t stride, ModuleList downsample)
     : conv1(std::make_shared<Conv2d>(inplanes, planes, 3, stride, 1, 1)),
+#if DISABLE_FUSE
       bn1(std::make_shared<BatchNorm2d>(planes)),
+#else
+      bn1(std::make_shared<BatchNorm2dRelu>(planes)),
+#endif
       conv2(std::make_shared<Conv2d>(planes, planes, 3, 1, 1, 1)),
       bn2(std::make_shared<BatchNorm2d>(planes)),
       downsample(std::make_shared<ModuleList>(downsample)) {
@@ -20,21 +24,8 @@ BasicBlock::BasicBlock(int64_t inplanes, int64_t planes, int64_t stride, ModuleL
 }
 
 Tensor BasicBlock::forward(const Tensor &x) {
-  Tensor identity = x, result;
-
-  result = conv1->forward(x);
-  result = bn1->forward(result);
-  TensorOps::relu_(result);
-
-  result = conv2->forward(result);
-  result = bn2->forward(result);
-
-  if (!downsample->empty())
-    identity = downsample->forward(identity);
-
-  TensorOps::add_(result, identity);
-  TensorOps::relu_(result);
-
+  Tensor result = x;
+  result = forward(std::move(result));
   return result;
 }
 
@@ -42,8 +33,12 @@ Tensor BasicBlock::forward(Tensor &&x) {
   Tensor identity = x, result;
 
   result = conv1->forward(std::move(x));
+#if DISABLE_FUSE
   result = bn1->forward(std::move(result));
   TensorOps::relu_(result);
+#else
+  result = bn1->forward(std::move(result));
+#endif
 
   result = conv2->forward(std::move(result));
   result = bn2->forward(std::move(result));
@@ -51,15 +46,23 @@ Tensor BasicBlock::forward(Tensor &&x) {
   if (!downsample->empty())
     identity = downsample->forward(std::move(identity));
 
+#if DISABLE_FUSE
   TensorOps::add_(result, identity);
   TensorOps::relu_(result);
+#else
+  TensorOps::add_relu_(result, identity);
+#endif
 
   return result;
 }
 
 ResNet18::ResNet18(const std::string &model_path, std::vector<int> layers, int64_t num_classes)
     : conv1(std::make_shared<Conv2d>(3, inplanes, 7, 2, 3)),
+#if DISABLE_FUSE
       bn1(std::make_shared<BatchNorm2d>(inplanes)),
+#else
+      bn1(std::make_shared<BatchNorm2dRelu>(inplanes)),
+#endif
       maxpool(std::make_shared<MaxPool2d>(3, 2, 1)),
       layer1(std::make_shared<ModuleList>(makeLayer(64, layers[0]))),
       layer2(std::make_shared<ModuleList>(makeLayer(128, layers[1], 2))),
@@ -82,13 +85,17 @@ ResNet18::ResNet18(const std::string &model_path, std::vector<int> layers, int64
 
 Tensor ResNet18::forward(const Tensor &x) {
   Tensor result = x;
-  return forward(result);
+  return forward(std::move(result));
 }
 
 Tensor ResNet18::forward(Tensor &&x) {
   x = conv1->forward(std::move(x));
+#if DISABLE_FUSE
   x = bn1->forward(std::move(x));
   TensorOps::relu_(x);
+#else
+  x = bn1->forward(std::move(x));
+#endif
   x = maxpool->forward(std::move(x));
   x = layer1->forward(std::move(x));
   x = layer2->forward(std::move(x));

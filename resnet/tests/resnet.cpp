@@ -41,7 +41,7 @@ TEST(resnet, inference_all_dataset) {
       total_diff += diff / result.totalSize();
     }
 
-    ASSERT_LE(total_diff, 1e-1);
+    ASSERT_LE(total_diff, 1.5e-1);
   }
 }
 

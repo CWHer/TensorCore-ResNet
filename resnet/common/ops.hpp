@@ -11,6 +11,8 @@ public:
 
   static void add_(Tensor &x, const Tensor &y);
 
+  static void add_relu_(Tensor &x, const Tensor &y);
+
   static Tensor argmax(const Tensor &x, int dim);
 
   static float sum_equal(const Tensor &lhs, const Tensor &rhs);
