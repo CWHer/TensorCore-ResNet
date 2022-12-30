@@ -150,7 +150,7 @@ def write_test_pooling_files(file_root):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--batch-size", type=int, default=16)
-    parser.add_argument("--num-workers", type=int, default=8)
+    parser.add_argument("--num-workers", type=int, default=1)
     parser.add_argument("--dataset-dir", type=str, default="dataset")
     parser.add_argument("--tensor-output-dir", type=str, default="dataset_tensor")
     parser.add_argument("--network-output-dir", type=str, default="resnet18")

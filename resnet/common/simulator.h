@@ -69,22 +69,20 @@ namespace Sim
         void launchKernel(const dim3 &block_dim,
                           Fn &&kernel_func, Args &&...args)
         {
+          // HACK: GCC 7.5 is too old.
             // NOTE: memory validation
             // clang-format off
-            ([&]{
-                // HACK: FIXME: to avoid T *&x case
-                printCppError(std::is_reference<Args>::value,
-                              "DO NOT support reference type for kernel function arguments",
-                              __FILE__, __LINE__);
-                // HACK: FIXME: disable -Wint-to-pointer-cast warning
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
-                if (std::is_pointer<Args>::value)
-                    printCppError(!global_memory.isAllocated((void *)args),
-                                  "Wrong address for kernel function arguments",
-                                  __FILE__, __LINE__);
-#pragma GCC diagnostic pop
-            }(), ...);
+//            ([&]{
+//                // HACK: FIXME: to avoid T *&x case
+//                printCppError(std::is_reference<Args>::value,
+//                              "DO NOT support reference type for kernel function arguments",
+//                              __FILE__, __LINE__);
+//                // HACK: FIXME: disable -Wint-to-pointer-cast warning
+//                if (std::is_pointer<Args>::value)
+//                    printCppError(!global_memory.isAllocated((void *)args),
+//                                  "Wrong address for kernel function arguments",
+//                                  __FILE__, __LINE__);
+//            }(), ...);
             // clang-format on
 
             // TODO: move this to EXIT_INSTR
