@@ -9,6 +9,7 @@ set(SOURCE_FILES
     src/functional/ops.cu
     src/functional/batchnorm.cu
     src/functional/pooling.cu
+    src/functional/gemm.cu
     src/common.cpp
     src/mem_cache.cpp
 )
