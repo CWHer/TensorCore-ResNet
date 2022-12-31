@@ -43,6 +43,14 @@ set(SIMULATOR_GEMM
     )
 
 # Check cuda mallocAsync compatibility
+option(ENABLE_SOMA "Use CUDA Stream Ordered Memory Allocator" ON)
+
+if (NOT ENABLE_SOMA)
+    message(STATUS "CUDA Stream Ordered Memory Allocator is disabled")
+    message(STATUS "Set CMake option ENABLE_SOMA to ON to enable it")
+    return()
+endif()
+
 message(CHECK_START "Check CUDA Stream Ordered Memory Allocator")
 
 try_run(RUN_RESULT COMPILE_RESULT
