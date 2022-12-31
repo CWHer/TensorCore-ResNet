@@ -11,6 +11,7 @@ set(SOURCE_FILES
     src/functional/pooling.cu
     src/functional/gemm.cu
     src/functional/linear.cu
+    src/functional/im2col.cu
     src/common.cpp
     src/mem_cache.cpp
 )
