@@ -25,6 +25,7 @@ def makeBatchNormTests(directory: str):
 
     x_tensor = randomTensor(
         (batch_size, num_features, height, width), generator)
+    x_tensor[:batch_size // 2, :, :, :] -= 5
     writeTensor(x_tensor, os.path.join(directory, "test_batchnorm_x.bin"))
 
     net = nn.BatchNorm2d(num_features=num_features)
