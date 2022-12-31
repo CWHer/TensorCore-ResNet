@@ -46,6 +46,7 @@ include(preprocess.cmake)
 add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES})
 
 add_executable(main resnet_inference.cpp)
+target_compile_definitions(main PRIVATE ${MAIN_ADDITIONAL_DEFINITIONS})
 target_link_libraries(main ${CUDA_EXTRA_LIB} ${PROJECT_NAME})
 
 # ################################## Tests ######################################
