@@ -13,10 +13,14 @@ TEST(half, conversion)
     h = Sim::__float2half(f);
     EXPECT_NEAR(f, Sim::__half2float(h), f * eps);
 
+// HACK: when optimizing with -ffast-math, inf, nan, etc.
+// checks like isinf and isnan will not be available.
+#if not defined (__FAST_MATH__)
     // normalized value: overflow
     f = std::numeric_limits<float>::max();
     h = Sim::__float2half(f);
     EXPECT_TRUE(std::isinf(Sim::__half2float(h)));
+#endif
 
     // normalized value: underflow
     f = std::numeric_limits<float>::min();
@@ -33,6 +37,7 @@ TEST(half, conversion)
     h = Sim::__float2half(f);
     EXPECT_EQ(0, Sim::__half2float(h));
 
+#if not defined (__FAST_MATH__)
     // infinity
     f = std::numeric_limits<float>::infinity();
     h = Sim::__float2half(f);
@@ -42,6 +47,7 @@ TEST(half, conversion)
     f = std::numeric_limits<float>::quiet_NaN();
     h = Sim::__float2half(f);
     EXPECT_TRUE(std::isnan(Sim::__half2float(h)));
+#endif
 }
 
 TEST(half, operators)
