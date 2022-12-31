@@ -2,6 +2,7 @@
 
 // common includes
 #include <cuda_runtime.h>
+#include <cuda_fp16.h> // Volta architecture only allows FP16 to be multiplied.
 
 #include <string>
 #include <vector>
@@ -16,6 +17,10 @@
 #include <random>
 #include <deque>
 #include <unordered_map>
+
+// Type aliases
+typedef __half f16;
+typedef float f32;
 
 // utility functions
 enum DeviceType
