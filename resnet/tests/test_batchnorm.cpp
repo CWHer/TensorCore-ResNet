@@ -21,7 +21,7 @@ TEST(batchnorm, bn)
     x.load(file_dir + "/test_batchnorm_x.bin");
     x.to(DeviceType::CUDA);
 
-    bn.forward(x);
+    x = bn.forward(x);
 
     // load output & check correctness
     Tensor y;

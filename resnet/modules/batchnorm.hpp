@@ -48,12 +48,15 @@ public:
         float *weight_data = weight.data_ptr();
         float *bias_data = bias.data_ptr();
 
-        hostBatchNorm2d(input_data, mean_data, var_data, weight_data, bias_data,
+        Tensor output({batch_size, num_channels, height, width}, DeviceType::CUDA);
+        float *output_data = output.data_ptr();
+
+        hostBatchNorm2d(input_data, output_data,
+                        mean_data, var_data, weight_data, bias_data,
                         eps, batch_size, num_channels, height, width);
 
         timer.end("forward");
-        // HACK: FIXME: this module is currently inplace
-        return x;
+        return output;
     }
 
     void printModule(const std::string &prefix) override
