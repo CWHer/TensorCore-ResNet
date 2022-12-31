@@ -69,12 +69,11 @@ private:
     std::shared_ptr<ModuleList> layer2;
     std::shared_ptr<ModuleList> layer3;
     std::shared_ptr<ModuleList> layer4;
-    std::shared_ptr<AdaptiveAvgPool2d> avgpool;
+    std::shared_ptr<AvgPool2d> avgpool;
     std::shared_ptr<Linear> fc;
 
 public:
-    ResNet18(const std::string &model_path,
-             std::vector<int> layers = {2, 2, 2, 2},
+    ResNet18(std::vector<int> layers = {2, 2, 2, 2},
              int64_t num_classes = 1000)
         : conv1(std::make_shared<Conv2d>(3, inplanes, 7, 2, 3)),
           bn1(std::make_shared<BatchNorm2d>(inplanes)),
@@ -83,7 +82,7 @@ public:
           layer2(std::make_shared<ModuleList>(makeLayer(128, layers[1], 2))),
           layer3(std::make_shared<ModuleList>(makeLayer(256, layers[2], 2))),
           layer4(std::make_shared<ModuleList>(makeLayer(512, layers[3], 2))),
-          avgpool(std::make_shared<AdaptiveAvgPool2d>(1)),
+          avgpool(std::make_shared<AvgPool2d>(1)),
           fc(std::make_shared<Linear>(512 * BasicBlock::expansion, num_classes))
     {
         addModule("conv1", conv1);
@@ -143,17 +142,34 @@ private:
 
 int main()
 {
-    // 1. load resnet18 model
-    // 2. load image dataset
-    // 3. inference
+#ifdef RESNET18_ROOT
+    std::string model_dir = RESNET18_ROOT;
 
-    Tensor x({50, 3, 224, 224});
-    ResNet18 resnet18("path");
+    ResNet18 resnet18;
+    resnet18.loadWeights(model_dir + "/resnet18");
+    resnet18.to(DeviceType::CUDA);
     resnet18.printModule("resnet18");
     std::cout << std::endl;
 
+    Tensor x({50, 3, 224, 224});
+    x.to(DeviceType::CUDA);
     x = resnet18.forward(x);
     std::cout << x << std::endl;
+
+    Tensor y({16, 3, 224, 224}, DeviceType::CUDA);
+    SimpleTimer timer;
+    for (int i = 0; i < 100; i++)
+    {
+        timer.start("forward");
+        resnet18.forward(y);
+        timer.end("forward");
+    }
+    timer.printStat("forward");
+    resnet18.printStat("resnet18");
+
+#else
+    std::cout << "Please set RESNET18_ROOT to the directory of resnet18 model" << std::endl;
+#endif
 
     return 0;
 }
