@@ -6,23 +6,26 @@
 #include <gtest/gtest.h>
 #include "batchnorm.hpp"
 
+#ifdef TEST_DATA_ROOT
 TEST(batchnorm, bn)
 {
+    std::string file_dir = TEST_DATA_ROOT;
+
     // load module
     BatchNorm2d bn(3);
-    bn.loadWeights("test_batchnorm_bn");
+    bn.loadWeights(file_dir + "/test_batchnorm_bn");
     bn.to(DeviceType::CUDA);
 
     // load input
     Tensor x;
-    x.load("test_batchnorm_x.bin");
+    x.load(file_dir + "/test_batchnorm_x.bin");
     x.to(DeviceType::CUDA);
 
     bn.forward(x);
 
     // load output & check correctness
     Tensor y;
-    y.load("test_batchnorm_y.bin");
+    y.load(file_dir + "/test_batchnorm_y.bin");
 
     x.to(DeviceType::CPU);
     float *naive_res = x.data_ptr();
@@ -31,3 +34,4 @@ TEST(batchnorm, bn)
     for (int i = 0; i < N_TEST; i++)
         EXPECT_NEAR(naive_res[i], std_res[i], 1e-5);
 }
+#endif

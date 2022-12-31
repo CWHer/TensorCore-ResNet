@@ -25,10 +25,13 @@ TEST(tensor, basic)
     EXPECT_EQ(y.empty(), true);
 }
 
+#ifdef RESNET18_ROOT
 TEST(tensor, load)
 {
+    std::string file_dir = RESNET18_ROOT;
+
     // NOTE: pretrained resnet18 model
-    std::string filename = "conv1_weight.bin";
+    std::string filename = file_dir + "/resnet18_conv1_weight.bin";
     Tensor x;
     x.load(filename);
 
@@ -46,8 +49,10 @@ TEST(tensor, load)
 
 TEST(tensor, device)
 {
+    std::string file_dir = RESNET18_ROOT;
+
     // NOTE: pretrained resnet18 model
-    std::string filename = "conv1_weight.bin";
+    std::string filename = file_dir + "/resnet18_conv1_weight.bin";
     Tensor x;
     x.load(filename);
     EXPECT_EQ(x.getDevice(), DeviceType::CPU);
@@ -65,3 +70,4 @@ TEST(tensor, device)
     EXPECT_NEAR(y.index({0, 0, 0, 1}), value2, eps);
     EXPECT_NEAR(y.index({0, 0, 0, 2}), value3, eps);
 }
+#endif
