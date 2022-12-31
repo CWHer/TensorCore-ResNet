@@ -2,6 +2,9 @@
 */
 #include <mma.h>
 #include <cublas_v2.h>
+#include <cublasLt.h>
+#include <cuda_gl_interop.h>
+#include <cuda_runtime_api.h>
 #include "common.h"
 #include "functional/macros.h"
 #include "functional/gemm.hpp"
@@ -115,13 +118,15 @@ template<typename T, cudaMemcpyKind memcpy_kind, bool require_copy> static T *ge
                                                                                                      size_t col,
                                                                                                      size_t pad_row,
                                                                                                      size_t pad_col,
-                                                                                                     cudaStream_t &stream) {
+                                                                                                     cudaStream_t &stream,
+                                                                                                     T *padded = nullptr) {
   if ((col == pad_col) && (row == pad_row)
       && (memcpy_kind == cudaMemcpyHostToHost || memcpy_kind == cudaMemcpyDeviceToDevice))
     return (T *) source;
 
-  T *padded;
-  checkCudaErrors(cudaMallocAsyncIfAvailable(&padded, sizeof(T) * pad_col * pad_row, stream));
+  if (padded == nullptr) {
+    checkCudaErrors(cudaMallocAsyncIfAvailable(&padded, sizeof(T) * pad_col * pad_row, stream));
+  }
 
   if (require_copy) {
     checkCudaErrors(cudaMemsetAsync((void *) padded, 0, sizeof(T) * pad_col * pad_row, stream));
@@ -195,7 +200,7 @@ static void gemm_device_memory(const float_16 *A,
   }
 
 #if not CUDA_MALLOC_ASYNC
-    checkCudaErrors(cudaStreamSynchronize(stream));
+  checkCudaErrors(cudaStreamSynchronize(stream));
 #endif
 
   if (padded_A != A)
@@ -272,6 +277,141 @@ void gemm_stream(const float_16 *A,
       break;
     }
     break;
+  }
+}
+
+static void gemm_batched_B_async(const float_16 *A,
+                                 const float_16 *B,
+                                 float_32 *C,
+                                 size_t M,
+                                 size_t N,
+                                 size_t K,
+                                 size_t batch_size,
+                                 GEMM::Major major,
+                                 Impl::DeviceType device_type) {
+#if DEBUG
+  if (major != GEMM::Major::row_major) {
+    // Batches does not support col-major
+    throw std::runtime_error("Batches does not support col-major");
+  }
+#endif
+
+  constexpr int stream_count = 8;
+  cudaStream_t streams[stream_count];
+  for (auto &stream : streams) {
+    cudaStreamCreate(&stream);
+  }
+
+  for (int i = 0; i < batch_size; i++) {
+    auto B_ptr = B + i * K * N;
+    auto C_ptr = C + i * M * N;
+    gemm_stream(A, B_ptr, C_ptr, M, N, K, GEMM::Major::row_major, device_type, streams[i % stream_count]);
+  }
+
+  for (auto &stream : streams) {
+    // Only sync if we are using async memory allocation
+    // Otherwise, we are already synced in GEMM execution
+    cudaStreamSynchronize(stream);
+    cudaStreamDestroy(stream);
+  }
+}
+
+void gemm_batched_B(const float_16 *A,
+                    const float_16 *B,
+                    float_32 *C,
+                    size_t M,
+                    size_t N,
+                    size_t K,
+                    size_t batch_size,
+                    GEMM::Major major,
+                    Impl::DeviceType device_type) {
+#if DEBUG
+  if (major != GEMM::Major::row_major) {
+    // Batches does not support col-major
+    throw std::runtime_error("Batches does not support col-major");
+  }
+#endif
+
+  if (device_type == Impl::DeviceType::CPU) {
+    return gemm_batched_B_async(A, B, C, M, N, K, batch_size, major, device_type);
+  }
+
+#if CUDA_MALLOC_ASYNC
+  return gemm_batched_B_async(A, B, C, M, N, K, batch_size, major, device_type);
+#endif
+
+  constexpr int stream_count = 8;
+  cudaStream_t streams[stream_count];
+
+  float_16 *padded_A[batch_size];
+  float_16 *padded_B[batch_size];
+  float_32 *padded_C[batch_size];
+
+  // If M and N are not by 16, we need to pad them.
+  auto PaddedM = (N + (volta_m_factor - 1)) / volta_m_factor * volta_m_factor;
+  auto PaddedN = (M + (volta_n_factor - 1)) / volta_n_factor * volta_n_factor;
+
+  // Pre allocate memory for padded A, B, C in a stream execution
+  for (auto & stream : streams) {
+    cudaStreamCreate(&stream);
+  }
+
+  for (int i = 0; i < batch_size; i++) {
+    cudaPooledMalloc(&padded_A[i], sizeof(float_16) * PaddedM * K);
+    cudaPooledMalloc(&padded_B[i], sizeof(float_16) * K * PaddedN);
+    cudaPooledMalloc(&padded_C[i], sizeof(float_32) * PaddedM * PaddedN);
+  }
+
+  for (int i = 0; i < batch_size; i += stream_count) {
+    for (int j = 0; j < stream_count; j++) {
+      if (i + j >= batch_size)
+        break;
+      auto B_ptr = B + (i + j) * K * N;
+      auto C_ptr = C + (i + j) * M * N;
+      float_16 *PaddedA;
+      float_16 *PaddedB;
+      float_32 *PaddedC;
+
+      PaddedA = gemm_padding_col_major<float_16, cudaMemcpyDeviceToDevice, true>(B_ptr,
+                                                                                 K,
+                                                                                 N,
+                                                                                 K,
+                                                                                 PaddedM,
+                                                                                 streams[j],
+                                                                                 padded_A[i + j]);
+      PaddedB = gemm_padding_col_major<float_16, cudaMemcpyDeviceToDevice, true>(A,
+                                                                                 M,
+                                                                                 K,
+                                                                                 PaddedN,
+                                                                                 K,
+                                                                                 streams[j],
+                                                                                 padded_B[i + j]);
+      PaddedC = gemm_padding_col_major<float_32, cudaMemcpyDeviceToDevice, false>(C_ptr,
+                                                                                  M,
+                                                                                  N,
+                                                                                  PaddedN,
+                                                                                  PaddedM,
+                                                                                  streams[j],
+                                                                                  padded_C[i + j]);
+
+      // Fixme: this template parameter is adjustable
+      gemm_naive_caller<4, 4>(PaddedA, PaddedB, PaddedC, PaddedM, PaddedN, K, streams[j]);
+
+      if (PaddedC != C_ptr) {
+        gemm_unpad_col_major<float_32, cudaMemcpyDeviceToDevice>(C_ptr, PaddedC, M, N, PaddedN, PaddedM, streams[j]);
+      }
+    }
+  }
+
+  for (auto &stream : streams) {
+    cudaStreamSynchronize(stream);
+    cudaStreamDestroy(stream);
+  }
+
+  for (int i = 0; i < batch_size; i++) {
+    cudaPooledFree(padded_A[i]);
+    cudaPooledFree(padded_B[i]);
+    cudaPooledFree(padded_C[i]);
   }
 }
 
