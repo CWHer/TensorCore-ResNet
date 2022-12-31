@@ -17,14 +17,15 @@ cudaError_t cudaCacheMalloc(void **ptr, size_t size)
     }
     else
     {
-        return cudaMalloc(ptr, size);
+        auto err = cudaMalloc(ptr, size);
+        ptr_size[*ptr] = size;
+        return err;
     }
 }
 
 cudaError_t cudaCacheFree(void *ptr)
 {
-    size_t size;
-    checkCudaErrors(cudaMemGetInfo(nullptr, &size));
+    size_t size = ptr_size[ptr];
     mem_cache[size].push_back(ptr);
     return cudaSuccess;
 }
