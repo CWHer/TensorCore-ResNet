@@ -18,6 +18,8 @@ public:
 
     Tensor forward(Tensor x) override
     {
+        timer.start("forward");
+
         checkCppErrorsMsg(x.sizes().size() != 4, "MaxPool2d only support 4D tensor");
         checkCppErrorsMsg(x.getDevice() != DeviceType::CUDA, "MaxPool2d only support CUDA");
 
@@ -42,12 +44,19 @@ public:
                       output_data, output_height, output_width,
                       kernel_size, padding, stride);
 
+        timer.end("forward");
         return output;
     }
 
     void printModule(const std::string &prefix) override
     {
         std::cout << prefix << ":MaxPool2d" << std::endl;
+    }
+
+    void printStat(const std::string &prefix) override
+    {
+        printModule(prefix);
+        timer.printStat("forward");
     }
 };
 
@@ -64,6 +73,8 @@ public:
 
     Tensor forward(Tensor x) override
     {
+        timer.start("forward");
+
         checkCppErrorsMsg(x.sizes().size() != 4, "AvgPool2d only support 4D tensor");
         checkCppErrorsMsg(x.getDevice() != DeviceType::CUDA, "AvgPool2d only support CUDA");
         // FIXME: (or not) this is a shape (N, 128K, H, W) oriented implementation,
@@ -92,11 +103,18 @@ public:
                       output_data, output_height, output_width,
                       kernel_size, padding, stride);
 
+        timer.end("forward");
         return output;
     }
 
     void printModule(const std::string &prefix) override
     {
         std::cout << prefix << ":AvgPool2d" << std::endl;
+    }
+
+    void printStat(const std::string &prefix) override
+    {
+        printModule(prefix);
+        timer.printStat("forward");
     }
 };

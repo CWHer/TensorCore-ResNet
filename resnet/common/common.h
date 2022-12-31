@@ -14,6 +14,7 @@
 #include <cmath>
 #include <numeric>
 #include <random>
+#include <unordered_map>
 
 // utility functions
 enum DeviceType
@@ -72,26 +73,42 @@ void printWarning(T result, char const *const msg,
 class SimpleTimer
 {
 private:
-    bool is_logging;
-    decltype(std::chrono::system_clock::now()) start_time;
-    std::chrono::duration<double, std::milli> duration;
+    struct TimingItem
+    {
+        std::chrono::system_clock::time_point last_time;
+        std::chrono::duration<double, std::milli> total_duration;
+        uint64_t count;
+
+        TimingItem()
+            : last_time(std::chrono::system_clock::now()),
+              total_duration(0.0), count(0) {}
+    };
+
+    std::unordered_map<std::string, TimingItem> timing_items;
 
 public:
-    SimpleTimer() : is_logging(false) {}
+    SimpleTimer() {}
 
-    void start()
+    void start(const std::string &name)
     {
-        is_logging = true;
-        start_time = std::chrono::system_clock::now();
+        auto &timing_item = timing_items[name];
+        timing_item.last_time = std::chrono::system_clock::now();
     }
 
-    // return (ms)
-    double end()
+    void end(const std::string &name)
     {
-        checkWarning(!is_logging);
-        is_logging = false;
-        duration = std::chrono::system_clock::now() - start_time;
-        return duration.count();
+        auto &timing_item = timing_items[name];
+        auto duration = std::chrono::system_clock::now() - timing_item.last_time;
+        timing_item.total_duration += duration;
+        timing_item.count++;
+    }
+
+    void printStat(const std::string &name)
+    {
+        auto &timing_item = timing_items[name];
+        std::cout << "Timing: " << name << " = "
+                  << timing_item.total_duration.count() / timing_item.count
+                  << " ms" << std::endl;
     }
 };
 

@@ -27,6 +27,8 @@ public:
 
     Tensor forward(Tensor x) override
     {
+        timer.start("forward");
+
         checkCppErrorsMsg(x.sizes().size() != 4, "BatchNorm2d only support 4D input");
         checkCppErrorsMsg(x.sizes()[1] != num_features, "BatchNorm2d input channel size mismatch");
         checkCppErrorsMsg(x.getDevice() != DeviceType::CUDA ||
@@ -49,6 +51,7 @@ public:
         hostBatchNorm2d(input_data, mean_data, var_data, weight_data, bias_data,
                         eps, batch_size, num_channels, height, width);
 
+        timer.end("forward");
         // HACK: FIXME: this module is currently inplace
         return x;
     }
@@ -56,5 +59,11 @@ public:
     void printModule(const std::string &prefix) override
     {
         std::cout << prefix << ":BatchNorm2d" << std::endl;
+    }
+
+    void printStat(const std::string &prefix) override
+    {
+        printModule(prefix);
+        timer.printStat("forward");
     }
 };

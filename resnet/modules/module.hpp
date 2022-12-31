@@ -14,10 +14,15 @@ private:
 
     std::vector<NamedTensor> tensor_list;
 
+protected:
+    SimpleTimer timer;
+
 public:
     virtual Tensor forward(Tensor x) = 0;
 
     virtual void printModule(const std::string &prefix) = 0;
+
+    virtual void printStat(const std::string &prefix) {}
 
     void addTensor(const std::string &name, Tensor tensor)
     {
@@ -79,5 +84,11 @@ public:
     {
         for (auto &named_module : module_list)
             named_module.module->printModule(prefix + "_" + named_module.name);
+    }
+
+    void printStat(const std::string &prefix) override
+    {
+        for (auto &named_module : module_list)
+            named_module.module->printStat(prefix + "_" + named_module.name);
     }
 };

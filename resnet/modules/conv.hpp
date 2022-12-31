@@ -21,14 +21,26 @@ public:
 
     Tensor forward(Tensor x) override
     {
+        timer.start("forward");
+
         // TODO
         int out_height = (x.sizes()[2] + 2 * padding - dilation * (kernel_size - 1) - 1) / stride + 1;
         int out_width = (x.sizes()[3] + 2 * padding - dilation * (kernel_size - 1) - 1) / stride + 1;
-        return Tensor({x.sizes()[0], out_channels, out_height, out_width});
+
+        auto ret = Tensor({x.sizes()[0], out_channels, out_height, out_width}, DeviceType::CUDA);
+
+        timer.end("forward");
+        return ret;
     }
 
     void printModule(const std::string &prefix) override
     {
         std::cout << prefix << ":Conv2d" << std::endl;
+    }
+
+    void printStat(const std::string &prefix) override
+    {
+        printModule(prefix);
+        timer.printStat("forward");
     }
 };

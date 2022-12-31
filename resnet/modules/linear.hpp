@@ -20,12 +20,22 @@ public:
 
     Tensor forward(Tensor x) override
     {
+        timer.start("forward");
         // TODO
-        return Tensor({x.sizes()[0], weight.sizes()[0]});
+        auto ret = Tensor({x.sizes()[0], weight.sizes()[0]}, DeviceType::CUDA);
+
+        timer.end("forward");
+        return ret;
     }
 
     void printModule(const std::string &prefix) override
     {
         std::cout << prefix << ":Linear" << std::endl;
+    }
+
+    void printStat(const std::string &prefix) override
+    {
+        printModule(prefix);
+        timer.printStat("forward");
     }
 };
