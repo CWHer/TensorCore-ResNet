@@ -45,7 +45,11 @@ void gemm_batched_B(const float_16 *A,
   }
 
   for (auto & stream : streams) {
+#if CUDA_MALLOC_ASYNC
+    // Only sync if we are using async memory allocation
+    // Otherwise, we are already synced in GEMM execution
     cudaStreamSynchronize(stream);
+#endif
     cudaStreamDestroy(stream);
   }
 }

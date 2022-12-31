@@ -189,6 +189,15 @@ static void gemm_device_memory(const float_16 *A,
   // Fixme: this template parameter is adjustable
   gemm_naive_caller<4, 4>(padded_A, padded_B, padded_C, padded_M, padded_N, K, stream);
 
+  if (padded_C != Result) {
+    gemm_unpad_col_major<float_32, cudaMemcpyDeviceToDevice>(Result, padded_C, N, M, padded_N, padded_M, stream);
+
+  }
+
+#if not CUDA_MALLOC_ASYNC
+    checkCudaErrors(cudaStreamSynchronize(stream));
+#endif
+
   if (padded_A != A)
     checkCudaErrors(cudaFreeAsyncIfAvailable(padded_A, stream));
 
@@ -196,9 +205,9 @@ static void gemm_device_memory(const float_16 *A,
     checkCudaErrors(cudaFreeAsyncIfAvailable(padded_B, stream));
 
   if (padded_C != Result) {
-    gemm_unpad_col_major<float_32, cudaMemcpyDeviceToDevice>(Result, padded_C, N, M, padded_N, padded_M, stream);
     checkCudaErrors(cudaFreeAsyncIfAvailable(padded_C, stream));
   }
+
 }
 
 static void gemm_host_memory(const float_16 *A,
@@ -226,10 +235,14 @@ static void gemm_host_memory(const float_16 *A,
   // Fixme: this template parameter is adjustable
   gemm_device_memory(padded_A, padded_B, padded_C, padded_M, padded_N, K, stream);
 
+  gemm_unpad_col_major<float_32, cudaMemcpyDeviceToHost>(Result, padded_C, N, M, padded_N, padded_M, stream);
+
+#if not CUDA_MALLOC_ASYNC
+  checkCudaErrors(cudaStreamSynchronize(stream));
+#endif
+
   checkCudaErrors(cudaPooledFree(padded_A));
   checkCudaErrors(cudaPooledFree(padded_B));
-
-  gemm_unpad_col_major<float_32, cudaMemcpyDeviceToHost>(Result, padded_C, N, M, padded_N, padded_M, stream);
   checkCudaErrors(cudaPooledFree(padded_C));
 }
 
