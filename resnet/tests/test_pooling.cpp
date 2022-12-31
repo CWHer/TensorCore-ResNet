@@ -28,8 +28,7 @@ TEST(pooling, max_pool)
     x.to(DeviceType::CPU);
     float *naive_res = x.data_ptr();
     float *std_res = y.data_ptr();
-    const int N_TEST = 5000;
-    for (int i = 0; i < N_TEST; i++)
+    for (int i = 0; i < x.totalSize(); i++)
         EXPECT_NEAR(naive_res[i], std_res[i], 1e-5);
 }
 
@@ -54,8 +53,7 @@ TEST(pooling, avg_pool)
     x.to(DeviceType::CPU);
     float *naive_res = x.data_ptr();
     float *std_res = y.data_ptr();
-    const int N_TEST = 500;
-    for (int i = 0; i < N_TEST; i++)
+    for (int i = 0; i < x.totalSize(); i++)
         EXPECT_NEAR(naive_res[i], std_res[i], 1e-5);
 }
 #endif

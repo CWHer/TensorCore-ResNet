@@ -14,7 +14,10 @@ __global__ void deviceMaxPool2dKernel(float *input_data, int height, int width,
         for (int j = 0; j < block_size; j++)
             if (row + i < out_height && col + j < out_width)
             {
-                float value = -1e10;
+                // HACK: NOTE: Max-pooling uses implicit negative infinity padding,
+                //  not zero-padding as indicated in documentation
+                // https://github.com/pytorch/pytorch/issues/33384
+                float value = -MAXFLOAT;
                 for (int x = 0; x < kernel_size; ++x)
                     for (int y = 0; y < kernel_size; ++y)
                     {
