@@ -1,6 +1,7 @@
 /** @file mem_pool.cpp
 */
 #if not DISABLE_MEM_POOL
+#include <cuda.h>
 #include "common.h"
 #include "mem_pool.h"
 
@@ -8,6 +9,7 @@ using namespace Impl;
 using namespace std;
 
 static std::unordered_map<uint64_t, std::deque<void *>> mem_cache;
+static std::unordered_map<void*, uint64_t> mem_size;
 
 namespace Impl {
 
@@ -28,13 +30,17 @@ cudaError_t cudaPooledMalloc(void **devPtr, size_t size) {
   }
   else
   {
-    return cudaMalloc(devPtr, size);
+    auto ret = cudaMalloc(devPtr, size);
+    if (ret == cudaSuccess)
+    {
+      mem_size[*devPtr] = size;
+    }
+    return ret;
   }
 }
 
 cudaError_t cudaPooledFree(void *devPtr) {
-  size_t size;
-  checkCudaErrors(cudaMemGetInfo(nullptr, &size));
+  auto size = mem_size[devPtr];
   mem_cache[size].push_back(devPtr);
   return cudaSuccess;
 }
