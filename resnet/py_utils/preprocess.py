@@ -5,6 +5,7 @@ import torch
 import tqdm
 from PIL import Image
 from test_batchnorm import makeBatchNormTests
+from test_im2col import makeIm2colTests
 from test_linear import makeLinearTests
 from test_pooling import makePoolingTests
 from torch.utils.data import DataLoader
@@ -52,6 +53,7 @@ if __name__ == "__main__":
     makeLinearTests(args.test_data_dir)
     makeBatchNormTests(args.test_data_dir)
     makePoolingTests(args.test_data_dir)
+    makeIm2colTests(args.test_data_dir)
 
     # Check if pytorch supports cuda
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
