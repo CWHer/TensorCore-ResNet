@@ -45,12 +45,14 @@ file(MAKE_DIRECTORY "${PROJECT_DATASET_TENSOR_PATH}")
 file(MAKE_DIRECTORY "${PROJECT_NETWORK_WEIGHT_PATH}")
 file(MAKE_DIRECTORY "${PROJECT_TEST_DATA_PATH}")
 
+message(CHECK_START "Extracting the dataset")
 # Extract the raw dataset.
 execute_process(COMMAND
         tar xf ${DATASET_PATH}/imagenet.tar.gz --strip-components=1
         WORKING_DIRECTORY "${PROJECT_DATASET_PATH}"
         RESULT_VARIABLE TAR_ERROR)
 if (TAR_ERROR)
+    message(CHECK_FAIL "Failed")
     message(WARNING "Failed to extract the dataset: ${TAR_ERROR}")
 
     unset(PROJECT_HAS_DATASET)
@@ -60,8 +62,10 @@ if (TAR_ERROR)
     unset(PROJECT_TEST_DATA_PATH)
     return()
 endif ()
-message(STATUS "Dataset Extracted.")
 
+message(CHECK_PASS "Done")
+
+message(CHECK_START "Preprocessing the dataset and weight.")
 # Invoke preprocess.py
 execute_process(COMMAND
         python "${PROJECT_SOURCE_DIR}/src/python_helpers/preprocess.py"
@@ -70,18 +74,20 @@ execute_process(COMMAND
         "--network-output-dir=${PROJECT_NETWORK_WEIGHT_PATH}"
         RESULT_VARIABLE PREPROCESS_ERROR)
 if (PREPROCESS_ERROR)
+    message(CHECK_FAIL "Failed")
     message(WARNING "Failed to preprocess the dataset")
     unset(PROJECT_HAS_DATASET)
     unset(PROJECT_DATASET_PATH)
     unset(PROJECT_DATASET_TENSOR_PATH)
     unset(PROJECT_NETWORK_WEIGHT_PATH)
     unset(PROJECT_TEST_DATA_PATH)
+    return()
 else ()
-    message(STATUS "Dataset Preprocessed.")
+    message(CHECK_PASS "Done")
 endif ()
 
 if (PROJECT_HAS_DATASET)
-    message(STATUS "Generated dataset tensor Path: ${PROJECT_DATASET_PATH}")
+    message(STATUS "Generated dataset tensor path: ${PROJECT_DATASET_PATH}")
     set(DATASET_DEFINITIONS "${DATASET_DEFINITIONS};WITH_DATA")
     set(DATASET_DEFINITIONS "${DATASET_DEFINITIONS};DATASET_ROOT=\"${PROJECT_DATASET_TENSOR_PATH}\"")
     set(DATASET_DEFINITIONS "${DATASET_DEFINITIONS};RESNET18_ROOT=\"${PROJECT_NETWORK_WEIGHT_PATH}\"")

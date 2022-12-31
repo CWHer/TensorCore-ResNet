@@ -87,7 +87,7 @@ Impl::Tensor Impl::Linear::forward(const Tensor &x) {
     prepare_linear_weight(weight.data_ptr(), weight_f16, out_features, in_features, x.getDevice());
   }
 
-#ifndef DEBUG
+#if DEBUG
   // x should be a 2D tensor
   auto x_shape = x.sizes();
 

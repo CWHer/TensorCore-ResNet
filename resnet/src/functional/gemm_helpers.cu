@@ -25,10 +25,12 @@ void gemm_batched_B(const float_16 *A,
                     size_t batch_size,
                     GEMM::Major major,
                     Impl::DeviceType device_type) {
+#if DEBUG
   if (major != GEMM::Major::row_major) {
     // Batches does not support col-major
     throw std::runtime_error("Batches does not support col-major");
   }
+#endif
 
   constexpr int stream_count = 8;
   cudaStream_t streams[stream_count];

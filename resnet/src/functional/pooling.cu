@@ -88,8 +88,10 @@ void maxpool2d(const float *input_data,
     static const int N_THREADS = 16;
     dim3 grid_dim(batch_size * num_channels);
     dim3 block_dim(N_THREADS, N_THREADS);
+#if DEBUG
     checkCppErrorsMsg(height != width || out_height != out_width,
                       "Only square images are supported");
+#endif
     deviceMaxPool2dKernel<4><<<grid_dim, block_dim>>>(
         (float *)input_data, height, width, output_data, out_height, out_width,
         kernel_size, padding, stride);

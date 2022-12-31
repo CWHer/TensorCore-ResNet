@@ -17,9 +17,11 @@ Conv2d::Conv2d(int in_channels,
                bool bias)
     : in_channels(in_channels), out_channels(out_channels), kernel_size(kernel_size), stride(stride), padding(padding),
       dilation(dilation), groups(groups), weight_f16(nullptr) {
+#if DEBUG
   if (dilation != 1 || groups != 1) {
     throw std::runtime_error("Not implemented");
   }
+#endif
 
   weight = Tensor({out_channels, in_channels, kernel_size, kernel_size});
   // TODO: store the weight in float16 to increase the performance
@@ -101,9 +103,11 @@ Tensor functional::conv2d(const Tensor &input,
                           int groups) {
   auto shape_input = input.sizes();
 
+#if DEBUG
   if (shape_input.size() != 4) {
     throw std::runtime_error("Input must be 4D");
   }
+#endif
 
   auto minibatch = shape_input[0];
   auto in_channels = shape_input[1];
@@ -112,18 +116,23 @@ Tensor functional::conv2d(const Tensor &input,
 
   auto shape_weight = weight.sizes();
   auto out_channels = shape_weight[0];
-  auto weight_in_channels = shape_weight[1];
 
+#if DEBUG
+  auto weight_in_channels = shape_weight[1];
   if (in_channels != weight_in_channels) {
     throw std::runtime_error("in_channels != weight in_channels");
   }
+#endif
 
   auto kernel_height = shape_weight[2];
+
+#if DEBUG
   auto kernel_width = shape_weight[3];
 
   if (kernel_height != kernel_width) {
     throw std::runtime_error("kernel height != kernel width");
   }
+#endif
 
   auto shape_output =
       conv2d_result_shape(minibatch, in_channels, in_height, in_width, out_channels, kernel_height, stride, padding);
@@ -153,9 +162,11 @@ Tensor functional::conv2d(const Tensor &input,
                           int groups) {
   auto shape_input = input.sizes();
 
+#if DEBUG
   if (shape_input.size() != 4) {
     throw std::runtime_error("Input must be 4D");
   }
+#endif
 
   auto minibatch = shape_input[0];
   auto in_channels = shape_input[1];

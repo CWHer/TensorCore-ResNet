@@ -8,11 +8,13 @@ Impl::MaxPool2d::MaxPool2d(int kernel_size, int stride, int padding)
 }
 
 Impl::Tensor Impl::MaxPool2d::forward(const Impl::Tensor &x) {
+#if DEBUG
   checkCppErrorsMsg(x.sizes().size() != 4, "MaxPool2d only support 4D tensor");
   // FIXME: (or not) this is a shape (2N, 64, H, W) oriented implementation,
   //  we DO NOT guarantee the correctness of inputs with other shapes
   checkCppErrorsMsg(x.sizes()[0] % 2 != 0 || x.sizes()[1] != 64,
                     "MaxPool2d is shape oriented, only support 2N x 64 x H x W");
+#endif
 
   // NOTE: x is in NCHW format
   int batch_size = x.sizes()[0];
@@ -73,10 +75,12 @@ Impl::AvgPool2d::AvgPool2d(int kernel_size, int stride, int padding)
 }
 
 Impl::Tensor Impl::AvgPool2d::forward(const Impl::Tensor &x) {
+#if DEBUG
   checkCppErrorsMsg(x.sizes().size() != 4, "AvgPool2d only support 4D tensor");
   // FIXME: (or not) this is a shape (N, 128K, H, W) oriented implementation,
   //  we DO NOT guarantee the correctness of inputs with other shapes
   checkCppErrorsMsg(x.sizes()[1] % 128 != 0, "AvgPool2d is shape oriented, only support N x 128K x H x W");
+#endif
 
   // NOTE: x is in NCHW format
   int batch_size = x.sizes()[0];
