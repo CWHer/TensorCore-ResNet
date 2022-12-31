@@ -10,7 +10,7 @@ class Conv2d : public Module {
 private:
   Tensor weight, bias;
   float_16 *weight_f16;
-  [[gnu::unused]] int in_channels;
+  [[maybe_unused]] int in_channels;
   int out_channels, kernel_size, stride, padding, dilation, groups;
 
 public:

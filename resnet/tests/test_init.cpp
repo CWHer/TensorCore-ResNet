@@ -1,9 +1,10 @@
 /**
- * @file test/test_init.cu
+ * @file test/test_init.cpp
  * @brief Test file for basic initialization, including GTest, CUDA functionality.
  */
 
 #include <gtest/gtest.h>
+#include <cuda_runtime.h>
 
 /** @brief Test if GTest is working */
 TEST(init, test_init) {

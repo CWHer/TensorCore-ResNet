@@ -1,8 +1,16 @@
 ################################## Handle the dataset and extract them.  ###############################################
+option(GENERATE_DATASET "Generate dataset" ON)
+
 # Check if have correct Python
 
+if (NOT GENERATE_DATASET)
+    message(STATUS "Dataset generation is disabled")
+    message(STATUS "Set CMake option GENERATE_DATASET to ON to enable it")
+    return()
+endif()
+
 execute_process(COMMAND
-        python "${PROJECT_SOURCE_DIR}/python_helpers/test_dependencies.py"
+        python "${PROJECT_SOURCE_DIR}/src/python_helpers/test_dependencies.py"
         RESULT_VARIABLE PYTHON_ERROR)
 
 if (PYTHON_ERROR)
@@ -12,14 +20,16 @@ endif ()
 
 # Config the dataset path.
 set(DATASET_PATH "${PROJECT_SOURCE_DIR}/../dataset" CACHE PATH "The path of the dataset.")
-message(STATUS "Dataset Path: ${DATASET_PATH}")
-message(STATUS "Change it by setting the DATASET_PATH variable.")
+message(STATUS "Default dataset path: ${DATASET_PATH}")
+message(STATUS "Change it by setting the CMake DATASET_PATH variable.")
 
+message(CHECK_START "Check if dataset is present")
 # if dataset exists, then extract it.
 if (EXISTS "${DATASET_PATH}/imagenet.tar.gz")
-    message(STATUS "Dataset Exists.")
+    message(CHECK_PASS "found")
 else ()
-    message(WARNING "Dataset does not exist. skipped.")
+    message(CHECK_FAIL "Not found")
+    message(WARNING "Dataset not found. Check README.md for instructions.")
     return()
 endif ()
 
@@ -54,7 +64,7 @@ message(STATUS "Dataset Extracted.")
 
 # Invoke preprocess.py
 execute_process(COMMAND
-        python "${PROJECT_SOURCE_DIR}/python_helpers/preprocess.py"
+        python "${PROJECT_SOURCE_DIR}/src/python_helpers/preprocess.py"
         "--dataset-dir=${PROJECT_DATASET_PATH}"
         "--tensor-output-dir=${PROJECT_DATASET_TENSOR_PATH}"
         "--network-output-dir=${PROJECT_NETWORK_WEIGHT_PATH}"

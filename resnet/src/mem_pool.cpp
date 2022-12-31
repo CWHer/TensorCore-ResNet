@@ -11,7 +11,7 @@ using namespace std;
 
 // Total memory size: 2GB
 constexpr size_t max_mempool_size = 1024;
-// prealloc size: 2MB
+// preallocate size: 2MB
 constexpr size_t max_prealloc_size = 2 * 1024 * 1024;
 constexpr size_t gap_size = 1024;
 constexpr size_t total_size = max_mempool_size * (max_prealloc_size + gap_size);
@@ -27,8 +27,8 @@ namespace Impl {
 
 void init_mem_pool() {
   checkCudaErrors(cudaMalloc(&map_base, total_size));
-  if(map_base == nullptr) {
-    throw std::runtime_error("memory pool init failed");
+  if(unlikely(map_base == nullptr)) {
+    throw std::runtime_error("Memory pool init failed. Please check your GPU memory.");
   }
   void *ptr = map_base;
   for (int i = 0; i < max_mempool_size; i++) {
@@ -42,17 +42,22 @@ void init_mem_pool() {
 }
 
 void deinit_mem_pool() {
-  cudaFree(map_base);
+  auto result = cudaFree(map_base);
+  if (unlikely(result != cudaSuccess)) {
+      cerr << "Memory pool corrupted (cudaFree).";
+  }
+
   mem_pool.clear();
 
-  if (malloc_called != free_called) {
-    std::cout << "Memory pool might have memory leak: " << malloc_called << ":" << free_called << std::endl;
+  if (unlikely(malloc_called != free_called)) {
+    cerr << "Memory pool might have memory leak. " << std::endl;
   }
 }
 
 cudaError_t cudaPooledMalloc(void **devPtr, size_t size) {
-  if (map_base == nullptr) {
-    cout << "WARNING: Memory pool not initialized" << endl;
+  if (unlikely(map_base == nullptr)) {
+    cerr << "Warning: The memory pool is not initialized, probably because inside unit test calls." << endl
+         << "         The memory pool is initialized automatically." << endl;
     init_mem_pool();
   }
 
@@ -74,8 +79,8 @@ cudaError_t cudaPooledMalloc(void **devPtr, size_t size) {
 
 cudaError_t cudaPooledFree(void *devPtr) {
   if (mem_size.find(devPtr) != mem_size.end()) {
-    if (mem_size[devPtr] == -1) {
-      throw std::runtime_error("Memory pool double free");
+    if (unlikely(mem_size[devPtr] == -1)) {
+      throw std::runtime_error("Memory pool: double free");
     }
     mem_pool.push_back(devPtr);
     mem_size[devPtr] = -1;

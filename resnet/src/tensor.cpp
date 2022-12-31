@@ -29,7 +29,6 @@ Tensor::TensorStorage::TensorStorage(const std::vector<int> &shape, Impl::Device
       break;
     case Impl::DeviceType::CUDA:checkCudaErrors(cudaPooledMalloc(&data, total_size * sizeof(float)));
       break;
-    default:checkCppErrorsMsg(true, "Unknown device type");
     }
   }
 
@@ -46,7 +45,6 @@ Tensor::TensorStorage::TensorStorage(const Tensor::TensorStorage &other)
   case Impl::DeviceType::CUDA:checkCudaErrors(cudaPooledMalloc(&data, total_size * sizeof(float)));
     checkCudaErrors(cudaMemcpy(data, other.data, total_size * sizeof(float), cudaMemcpyDeviceToDevice));
     break;
-  default:checkCppErrorsMsg(true, "Unknown device type");
   }
 }
 
@@ -63,7 +61,6 @@ Tensor::TensorStorage::~TensorStorage() {
       break;
     case Impl::DeviceType::CUDA:checkCudaErrors(cudaPooledFree(data));
       break;
-    default:checkCppErrorsMsg(true, "Unknown device type");
     }
   }
 }
@@ -79,13 +76,13 @@ void Tensor::TensorStorage::load(const std::string &file_path) {
   auto file_size = file_stat.st_size;
 
   int fd = open(file_path.c_str(), O_RDONLY, 0);
-  if (fd == -1) {
+  if (unlikely(fd == -1)) {
     checkCppErrorsMsg(true, ("Cannot open file: " + file_path).c_str());
     return;
   }
 
   void *mmap_ptr = mmap(nullptr, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
-  if (mmap_ptr == MAP_FAILED) {
+  if (unlikely(mmap_ptr == MAP_FAILED)) {
     checkCppErrorsMsg(true, ("Cannot mmap file: " + file_path).c_str());
     return;
   }
@@ -126,7 +123,6 @@ std::shared_ptr<Tensor::TensorStorage> Tensor::TensorStorage::clone() {
                                                          total_size * sizeof(float),
                                                          cudaMemcpyDeviceToDevice));
     break;
-  default:checkCppErrorsMsg(true, "Unknown device type");
   }
   return cloned_tensor;
 }
@@ -144,9 +140,8 @@ float Tensor::TensorStorage::index(const std::vector<int> &indices) {
     checkCudaErrors(cudaMemcpy(h_data.get(), data + offset, sizeof(float), cudaMemcpyDeviceToHost));
     return *h_data;
   }
-  default:checkCppErrorsMsg(true, "Unknown device type");
-    return 0.0f;
   }
+  throw std::runtime_error("Invalid device type");
 }
 
 void Tensor::TensorStorage::to(Impl::DeviceType device) {
@@ -165,8 +160,6 @@ void Tensor::TensorStorage::to(Impl::DeviceType device) {
     checkCudaErrors(cudaMemcpy(data, this->data, total_size * sizeof(float), cudaMemcpyHostToDevice));
     delete[] this->data;
     break;
-
-  default:checkCppErrorsMsg(true, "Unknown device type");
   }
   this->data = data;
 }
@@ -186,7 +179,9 @@ void Tensor::TensorStorage::reshape(const std::vector<int> &shape) {
   strides.back() = 1;
   for (int i = n_dim - 1; i > 0; i--)
     strides[i - 1] = strides[i] * shape[i];
+#if DEBUG
   checkCppErrorsMsg(strides[0] * shape[0] != total_size, "Invalid shape");
+#endif
 }
 
 namespace Impl {
@@ -198,8 +193,8 @@ std::ostream &operator<<(std::ostream &out, const std::shared_ptr<Tensor::Tensor
     switch (device) {
     case Impl::DeviceType::CPU:return "CPU";
     case Impl::DeviceType::CUDA:return "CUDA";
-    default:return "Unknown";
     }
+    throw std::runtime_error("Invalid device type");
   };
   std::cout << deviceType(x->device) << ")" << std::endl;
   return out;

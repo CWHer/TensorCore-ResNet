@@ -7,6 +7,20 @@ project(tensorcore-resnet VERSION 0.0.1 LANGUAGES CXX CUDA)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# set the default build type to Release
+set(default_build_type "Release")
+
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
+    set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
+            STRING "Choose the type of build." FORCE)
+    # Set the possible values of build type for cmake-gui
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+            "Debug" "Release")
+endif()
+
+message(STATUS "Current build type is: ${CMAKE_BUILD_TYPE}.")
+
 # Optimization options
 add_compile_options(
 
@@ -105,38 +119,48 @@ target_compile_definitions(main_simulator PRIVATE SIMULATE)
 target_compile_definitions(main PRIVATE ${DATASET_DEFINITIONS})
 target_compile_definitions(main_simulator PRIVATE ${DATASET_DEFINITIONS})
 
-target_link_libraries(main ${CUDA_EXTRA_LIB} ${PROJECT_NAME}_base ${PROJECT_NAME}_gemm)
-target_link_libraries(main_simulator ${CUDA_EXTRA_LIB} ${PROJECT_NAME}_base ${PROJECT_NAME}_simulator_gemm)
+target_link_libraries(main
+        ${CUDA_EXTRA_LIB}
+        ${PROJECT_NAME}_base
+        ${PROJECT_NAME}_gemm)
+
+target_link_libraries(main_simulator
+        ${CUDA_EXTRA_LIB}
+        ${PROJECT_NAME}_base
+        ${PROJECT_NAME}_simulator_gemm)
+
+# ################################### Docs ######################################
+
+include(doxygen.cmake)
 
 # ################################## Tests ######################################
 include(tests.cmake)
 
+message(CHECK_START "Finding Google Test")
+
 find_package(GTest)
 
 if (GTest_FOUND)
+    message(CHECK_PASS "Found")
     message(STATUS "GTest Found, you can use ctest to run all tests.")
     enable_testing()
-    add_executable(gtest_main ${TEST_SOURCE})
+    add_executable(gtest_main ${TEST_SOURCE} ${SIMULATOR_TEST_SOURCE})
     target_compile_definitions(gtest_main PRIVATE ${DATASET_DEFINITIONS})
     target_compile_definitions(gtest_main PRIVATE ${TEST_ADDITIONAL_DEFINITIONS})
+
+    set_property(SOURCE ${SIMULATOR_TEST_SOURCE} PROPERTY CXX_STANDARD 17)
 
     target_link_libraries(gtest_main
             ${PROJECT_NAME}_base
             ${PROJECT_NAME}_gemm
-            GTest::gtest GTest::gtest_main
-            ${TEST_ADDITIONAL_LIB}
-            )
-
-    add_executable(gtest_sim ${SIMULATOR_TEST_SOURCE})
-    set_property(TARGET gtest_sim PROPERTY CXX_STANDARD 17)
-    target_link_libraries(gtest_sim
             ${PROJECT_NAME}_simulator
             GTest::gtest GTest::gtest_main
+            ${TEST_ADDITIONAL_LIB}
             Threads::Threads
             )
 
     gtest_discover_tests(gtest_main)
-    gtest_discover_tests(gtest_sim)
 else ()
+    message(CHECK_FAIL "Not Found")
     message(STATUS "If you installed GTest, you can use ctest to access tests.")
 endif ()

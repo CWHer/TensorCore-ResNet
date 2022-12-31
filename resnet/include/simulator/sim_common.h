@@ -1,6 +1,6 @@
 #pragma once
 
-// common includes
+// include includes
 #include <string>
 #include <vector>
 #include <iostream>

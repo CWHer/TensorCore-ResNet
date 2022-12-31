@@ -1,6 +1,7 @@
 # Include dirs
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/common)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/modules)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/modules)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/simulator)
 
 # ... Add more if you need them
 
@@ -17,11 +18,11 @@ set(SOURCE_FILES
         src/tensor.cpp
         src/dataset.cpp
         src/ops.cpp
-        src/conv.cpp
-        src/linear.cpp
-        src/batchnorm.cpp
-        src/pooling.cpp
-        src/resnet.cpp
+        src/modules/conv.cpp
+        src/modules/linear.cpp
+        src/modules/batchnorm.cpp
+        src/modules/pooling.cpp
+        src/modules/resnet.cpp
         src/mem_pool.cpp
         src/functional/linear.cu
 )
@@ -59,6 +60,7 @@ if (COMPILE_RESULT AND NOT RUN_RESULT)
     add_definitions(-DCUDA_MALLOC_ASYNC)
 else()
     message(CHECK_FAIL "Not Available")
+    message(STATUS "CUDA Stream Ordered Memory Allocator not available, try install a newer driver.")
     set(CUDA_MALLOC_ASYNC 0)
 endif()
 

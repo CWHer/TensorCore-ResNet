@@ -91,3 +91,6 @@ public:
 [[maybe_unused]] int randomInt(int min, int max);
 
 [[maybe_unused]] float randomFloat(float min, float max);
+
+#define likely(x)       __builtin_expect((x),1)
+#define unlikely(x)     __builtin_expect((x),0)

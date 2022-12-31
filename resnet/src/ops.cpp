@@ -3,7 +3,10 @@
 #include "ops.hpp"
 
 Impl::Tensor Impl::TensorOps::argmax(const Impl::Tensor &x, int dim) {
+#if DEBUG
+  // Hack: for a embedded function, this will not happen
   checkCppErrorsMsg(x.storage->device != Impl::DeviceType::CPU, "This operation is not supported on CUDA");
+#endif
 
   auto shape = x.sizes();
   shape.erase(shape.begin() + dim);
@@ -30,9 +33,12 @@ Impl::Tensor Impl::TensorOps::argmax(const Impl::Tensor &x, int dim) {
 }
 
 int Impl::TensorOps::sum_equal(const Impl::Tensor &lhs, const Impl::Tensor &rhs) {
+#if DEBUG
+  // Hack: for a embedded function, this will not happen
   checkCppErrorsMsg(lhs.sizes() != rhs.sizes(), "Tensor sizes are not equal");
   checkCppErrorsMsg(lhs.storage->device != Impl::DeviceType::CPU || rhs.storage->device != Impl::DeviceType::CPU,
                     "This operation is not supported on CUDA");
+#endif
 
   static const float eps = 1e-3;
   int num_elements = 0;
@@ -42,10 +48,12 @@ int Impl::TensorOps::sum_equal(const Impl::Tensor &lhs, const Impl::Tensor &rhs)
 }
 
 void Impl::TensorOps::add_(Impl::Tensor &x, const Impl::Tensor &y) {
+#if DEBUG
+  // Hack: for a embedded function, this will not happen
+
   // Check the shape of x and y
   auto x_shape = x.sizes();
   auto y_shape = y.sizes();
-
   if (x_shape.size() != y_shape.size()) {
     throw std::runtime_error("x_shape != y_shape");
   }
@@ -59,6 +67,7 @@ void Impl::TensorOps::add_(Impl::Tensor &x, const Impl::Tensor &y) {
   if (x.getDevice() != y.getDevice()) {
     throw std::runtime_error("x.getDevice() != y.getDevice()");
   }
+#endif
 
   ::add_(x.data_ptr(), y.data_ptr(), x.totalSize(), x.getDevice());
 }
