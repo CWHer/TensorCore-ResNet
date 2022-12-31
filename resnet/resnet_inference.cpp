@@ -167,6 +167,7 @@ int main()
     timer.printStat("forward");
     resnet18.printStat("resnet18");
 
+    freeMemCache();
 #else
     std::cout << "Please set RESNET18_ROOT to the directory of resnet18 model" << std::endl;
 #endif

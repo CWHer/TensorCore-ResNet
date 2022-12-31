@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.h"
+#include "mem_cache.h"
 
 class Tensor
 {
@@ -47,7 +48,7 @@ private:
                     data = new float[total_size];
                     break;
                 case DeviceType::CUDA:
-                    checkCudaErrors(cudaMalloc(&data, total_size * sizeof(float)));
+                    checkCudaErrors(cudaCacheMalloc((void **)&data, total_size * sizeof(float)));
                     break;
                 default:
                     checkCppErrorsMsg(true, "Unknown device type");
@@ -68,7 +69,7 @@ private:
                     delete[] data;
                     break;
                 case DeviceType::CUDA:
-                    checkCudaErrors(cudaFree(data));
+                    checkCudaErrors(cudaCacheFree(data));
                     break;
                 default:
                     checkCppErrorsMsg(true, "Unknown device type");
@@ -180,11 +181,11 @@ private:
                 data = new float[total_size];
                 checkCudaErrors(cudaMemcpy(data, this->data, total_size * sizeof(float),
                                            cudaMemcpyDeviceToHost));
-                checkCudaErrors(cudaFree(this->data));
+                checkCudaErrors(cudaCacheFree(this->data));
                 break;
 
             case DeviceType::CUDA:
-                checkCudaErrors(cudaMalloc(&data, total_size * sizeof(float)));
+                checkCudaErrors(cudaCacheMalloc((void **)&data, total_size * sizeof(float)));
                 checkCudaErrors(cudaMemcpy(data, this->data, total_size * sizeof(float),
                                            cudaMemcpyHostToDevice));
                 delete[] this->data;

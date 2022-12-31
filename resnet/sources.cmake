@@ -10,4 +10,5 @@ set(SOURCE_FILES
     src/functional/batchnorm.cu
     src/functional/pooling.cu
     src/common.cpp
+    src/mem_cache.cpp
 )

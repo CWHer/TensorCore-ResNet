@@ -14,6 +14,7 @@
 #include <cmath>
 #include <numeric>
 #include <random>
+#include <deque>
 #include <unordered_map>
 
 // utility functions
