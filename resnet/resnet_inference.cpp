@@ -29,7 +29,9 @@ int _main() {
 
   int num_correct = 0;
   int num_total = 0;
+  SimpleTimer timer;
   for (int i = 0; i < dataset.size(); i++) {
+    timer.start("forward");
     auto data = dataset.next();
     auto result = std::move(resnet18.forward(std::move(data.first.first)));
 
@@ -43,7 +45,9 @@ int _main() {
     auto correct = TensorOps::sum_equal(original_label, predicted_result);
     num_correct += correct;
     num_total += predicted_result.sizes()[0];
+    timer.end("forward");
   }
+  timer.printStat("forward");
 
   std::cout << "Accuracy Compared to PyTorch ResNet18 Implementation: " << num_correct << "/" << num_total << std::endl;
 #endif
