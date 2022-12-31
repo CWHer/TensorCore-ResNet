@@ -13,7 +13,7 @@
 
 using namespace Impl;
 
-Tensor::TensorStorage::TensorStorage() : data(nullptr), device(Impl::DeviceType::UNKNOWN) {}
+Tensor::TensorStorage::TensorStorage() : data(nullptr), device(Impl::DeviceType::CPU) {}
 
 Tensor::TensorStorage::TensorStorage(const std::vector<int> &shape, Impl::DeviceType device, float *data)
     : shape(shape), n_dim(shape.size()), device(device) {

@@ -26,7 +26,7 @@ typedef float float_32;
 // utility functions
 namespace Impl {
 enum DeviceType {
-  CPU, CUDA, UNKNOWN
+  CPU, CUDA
 };
 }
 
