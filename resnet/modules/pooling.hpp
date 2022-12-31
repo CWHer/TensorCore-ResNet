@@ -3,7 +3,7 @@
 #include "common.h"
 #include "module.hpp"
 
-#include "pooling.h"
+#include "functional/pooling.h"
 
 class MaxPool2d : public Module
 {

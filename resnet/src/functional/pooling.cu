@@ -1,4 +1,4 @@
-#include "pooling.h"
+#include "functional/pooling.h"
 
 template <int block_size>
 __global__ void deviceMaxPool2dKernel(float *input_data, int height, int width,

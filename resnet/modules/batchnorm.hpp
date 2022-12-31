@@ -3,7 +3,7 @@
 #include "common.h"
 #include "module.hpp"
 
-#include "batchnorm.h"
+#include "functional/batchnorm.h"
 
 class BatchNorm2d : public Module
 {

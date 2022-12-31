@@ -1,4 +1,4 @@
-#include "batchnorm.h"
+#include "functional/batchnorm.h"
 
 template <int block_size>
 __global__ void dimBatchNorm2dKernel(float *input_data, float *output_data,
