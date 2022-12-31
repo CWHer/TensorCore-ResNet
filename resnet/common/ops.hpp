@@ -2,18 +2,28 @@
 
 #include "common.h"
 #include "tensor.hpp"
+#include "functional/ops.h"
 
 class TensorOps
 {
 public:
     static void relu_(Tensor &x)
     {
-        // TODO
+        checkCppErrorsMsg(x.storage->device != DeviceType::CUDA,
+                          "This operation is only supported on CUDA");
+
+        hostRelu_(x.data_ptr(), x.totalSize());
     }
 
-    static void add_(Tensor &x, const Tensor &y)
+    static void add_(Tensor &x, Tensor &y)
     {
-        // TODO
+        checkCppErrorsMsg(x.sizes() != y.sizes(),
+                          "Tensor sizes are not equal");
+        checkCppErrorsMsg(x.storage->device != DeviceType::CUDA ||
+                              y.storage->device != DeviceType::CUDA,
+                          "This operation is only supported on CUDA");
+
+        hostAdd_(x.data_ptr(), y.data_ptr(), x.totalSize());
     }
 
     static Tensor argmax(const Tensor &x, int dim)
