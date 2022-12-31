@@ -4,6 +4,6 @@ set(TEST_SOURCE
     tests/test_tensor.cpp
     tests/test_tensor_ops.cpp
     tests/test_dataset.cpp
-    tests/test_batchnorm.cu
-    tests/test_pooling.cu
+    tests/test_batchnorm.cpp
+    tests/test_pooling.cpp
 )

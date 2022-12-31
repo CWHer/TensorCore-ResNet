@@ -7,4 +7,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/modules)
 
 # Common source files **without** main function
 set(SOURCE_FILES
+    src/functional/batchnorm.cu
+    src/functional/pooling.cu
+    src/common.cpp
 )
