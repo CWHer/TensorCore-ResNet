@@ -26,6 +26,17 @@ public:
         hostAdd_(x.data_ptr(), y.data_ptr(), x.totalSize());
     }
 
+    static void addRelu_(Tensor &x, Tensor &y)
+    {
+        checkCppErrorsMsg(x.sizes() != y.sizes(),
+                          "Tensor sizes are not equal");
+        checkCppErrorsMsg(x.storage->device != DeviceType::CUDA ||
+                              y.storage->device != DeviceType::CUDA,
+                          "This operation is only supported on CUDA");
+
+        hostAddRelu_(x.data_ptr(), y.data_ptr(), x.totalSize());
+    }
+
     static Tensor argmax(const Tensor &x, int dim)
     {
         checkCppErrorsMsg(x.storage->device != DeviceType::CPU,
