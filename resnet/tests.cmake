@@ -7,4 +7,5 @@ set(TEST_SOURCE
     tests/test_batchnorm.cpp
     tests/test_pooling.cpp
     tests/test_gemm.cpp
+    tests/test_linear.cpp
 )

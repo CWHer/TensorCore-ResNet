@@ -5,6 +5,7 @@ import torch
 import tqdm
 from PIL import Image
 from test_batchnorm import makeBatchNormTests
+from test_linear import makeLinearTests
 from test_pooling import makePoolingTests
 from torch.utils.data import DataLoader
 from torchvision import models, transforms
@@ -48,6 +49,7 @@ if __name__ == "__main__":
     # make tests
     if not os.path.exists(args.test_data_dir):
         os.mkdir(args.test_data_dir)
+    makeLinearTests(args.test_data_dir)
     makeBatchNormTests(args.test_data_dir)
     makePoolingTests(args.test_data_dir)
 
