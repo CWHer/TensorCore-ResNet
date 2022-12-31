@@ -9,4 +9,8 @@ void freeMemCache();
 
 cudaError_t cudaCacheMalloc(void **ptr, size_t size);
 
+cudaError_t cudaCacheMallocAsync(void **ptr, size_t size, cudaStream_t stream);
+
 cudaError_t cudaCacheFree(void *ptr);
+
+cudaError_t cudaCacheFreeAsync(void *ptr, cudaStream_t stream);
