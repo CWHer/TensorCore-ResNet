@@ -34,7 +34,7 @@ public:
         Tensor input = inputs.front();
         Tensor std_logit = std_logits.front();
         inputs.pop_front(), std_logits.pop_front();
-        input.to(device), std_logit.to(device);
+        input.to(device); // HACK: only move input to device
         return std::make_pair(input, std_logit);
     }
 
