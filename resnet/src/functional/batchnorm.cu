@@ -61,4 +61,5 @@ void hostBatchNorm2d(float *input_data, float *mean_data, float *var_data,
     dimBatchNorm2dKernel<<<grid_dim, block_dim>>>(
         input_data, mean_data, var_data, weight_data, bias_data,
         eps, batch_size, num_channels, height, width, height * width);
+    checkCudaErrors(cudaDeviceSynchronize());
 }

@@ -45,6 +45,7 @@ void hostMaxPool2d(int batch_size, int num_channels,
     deviceMaxPool2dKernel<4><<<grid_dim, block_dim>>>(
         input_data, height, width, output_data, out_height, out_width,
         kernel_size, padding, stride);
+    checkCudaErrors(cudaDeviceSynchronize());
 }
 
 __global__ void deviceAvgPool2dKernel(float *input_data, int height, int width,
@@ -92,4 +93,5 @@ void hostAvgPool2d(int batch_size, int num_channels,
     deviceAvgPool2dKernel<<<grid_dim, block_dim>>>(
         input_data, height, width, output_data, out_height, out_width,
         kernel_size, padding, stride);
+    checkCudaErrors(cudaDeviceSynchronize());
 }
