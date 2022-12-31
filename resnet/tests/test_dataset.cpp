@@ -59,9 +59,8 @@ TEST(dataset, load)
         auto data = dataset.next();
         auto x = data.first, y = data.second;
         EXPECT_EQ(x.getDevice(), DeviceType::CUDA);
-        EXPECT_EQ(y.getDevice(), DeviceType::CUDA);
+        EXPECT_EQ(y.getDevice(), DeviceType::CPU);
         x.to(DeviceType::CPU);
-        y.to(DeviceType::CPU);
 
         auto val_image = loadValData(TEST_DATA_ROOT, "image", i, MAX_INSPECT_DATA_LENGTH);
 
