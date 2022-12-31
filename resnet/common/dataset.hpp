@@ -6,52 +6,37 @@
 
 class ImageDataset
 {
-    std::vector<Tensor> batched_tensors;
-    std::vector<Tensor> batched_labels, predicted_logits;
+    std::deque<Tensor> inputs, std_logits;
     DeviceType device;
 
 public:
-    ImageDataset(DeviceType device =
-                     DeviceType::CUDA) : device(device) {}
+    ImageDataset(DeviceType device = DeviceType::CUDA) : device(device) {}
 
-    void load(const std::string &path, int num_tensors)
+    void load(const std::string &path, int num_batches)
     {
         // NOTE: HACK: use preprocess.py to generate the binary files
-        // Load batched tensors
-        for (int i = 0; i < num_tensors; i++)
+        for (int i = 0; i < num_batches; i++)
         {
-            batched_tensors.emplace_back();
-            batched_labels.emplace_back();
             std::string index = std::to_string(i);
             index = std::string(4 - index.size(), '0') + index;
-            batched_tensors.back().load(path + "/images_" + index + ".bin");
-            batched_labels.back().load(path + "/labels_" + index + ".bin");
+
+            Tensor input, std_logit;
+            input.load(path + "/images_" + index + ".bin");
+            std_logit.load(path + "/labels_" + index + ".bin");
+            inputs.push_back(input);
+            std_logits.push_back(std_logit);
         }
     }
 
-    Tensor operator[](int index)
+    std::pair<Tensor, Tensor> next()
     {
-        return batched_tensors[index];
+        checkCppErrorsMsg(inputs.empty(), "No more batches");
+        Tensor input = inputs.front();
+        Tensor std_logit = std_logits.front();
+        inputs.pop_front(), std_logits.pop_front();
+        input.to(device), std_logit.to(device);
+        return std::make_pair(input, std_logit);
     }
 
-    void logPredicted(Tensor logits)
-    {
-        predicted_logits.push_back(logits);
-    }
-
-    int size() const { return batched_tensors.size(); }
-
-    void printStats()
-    {
-        int num_correct = 0;
-        int total_num = 0;
-        for (int i = 0; i < this->size(); i++)
-        {
-            Tensor predicted_label = TensorOps::argmax(predicted_logits[i], 1);
-            num_correct += TensorOps::sum_equal(
-                batched_labels[i], predicted_label);
-            total_num += batched_labels[i].sizes()[0];
-        }
-        std::cout << "Accuracy: " << num_correct * 100.0 / total_num << "%" << std::endl;
-    }
+    int size() const { return inputs.size(); }
 };
