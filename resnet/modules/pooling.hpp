@@ -34,8 +34,6 @@ public:
 
         float *input_data = x.data_ptr();
 
-        // FIXME: can we find a way to pre-allocate and reuse the memory,
-        //  instead of allocating them every time (though this should be the way)
         Tensor output({batch_size, num_channels, output_height, output_width}, DeviceType::CUDA);
         float *output_data = output.data_ptr();
 
@@ -93,8 +91,6 @@ public:
 
         float *input_data = x.data_ptr();
 
-        // FIXME: can we find a way to pre-allocate and reuse the memory,
-        //  instead of allocating them every time (though this should be the way)
         Tensor output({batch_size, num_channels, output_height, output_width}, DeviceType::CUDA);
         float *output_data = output.data_ptr();
 

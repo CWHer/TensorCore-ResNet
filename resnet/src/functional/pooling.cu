@@ -38,11 +38,11 @@ void hostMaxPool2d(int batch_size, int num_channels,
                    float *output_data, int out_height, int out_width,
                    int kernel_size, int padding, int stride)
 {
-    static const int BLOCK_SIZE = 4;
+    static const int BLOCK_SIZE = 2;
     dim3 grid_dim(batch_size * num_channels);
     dim3 block_dim((out_height - 1) / BLOCK_SIZE + 1,
                    (out_width - 1) / BLOCK_SIZE + 1);
-    deviceMaxPool2dKernel<4><<<grid_dim, block_dim>>>(
+    deviceMaxPool2dKernel<BLOCK_SIZE><<<grid_dim, block_dim>>>(
         input_data, height, width, output_data, out_height, out_width,
         kernel_size, padding, stride);
     checkCudaErrors(cudaDeviceSynchronize());
