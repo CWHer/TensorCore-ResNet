@@ -18,10 +18,10 @@ def makeBatchNormTests(directory: str):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
-    batch_size = 2
+    batch_size = 23
     num_features = 3
-    height = 224
-    width = 224
+    height = 117
+    width = 16
 
     x_tensor = randomTensor(
         (batch_size, num_features, height, width), generator)
