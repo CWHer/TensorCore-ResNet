@@ -3,7 +3,7 @@
 #include "common.h"
 #include "module.hpp"
 
-#include "pooling.cuh"
+#include "pooling.h"
 
 class MaxPool2d : public Module
 {
@@ -20,10 +20,6 @@ public:
     {
         checkCppErrorsMsg(x.sizes().size() != 4, "MaxPool2d only support 4D tensor");
         checkCppErrorsMsg(x.getDevice() != DeviceType::CUDA, "MaxPool2d only support CUDA");
-        // FIXME: (or not) this is a shape (2N, 64, H, W) oriented implementation,
-        //  we DO NOT guarantee the correctness of inputs with other shapes
-        checkCppErrorsMsg(x.sizes()[0] % 2 != 0 || x.sizes()[1] != 64,
-                          "MaxPool2d is shape oriented, only support 2N x 64 x H x W");
 
         // NOTE: x is in NCHW format
         int batch_size = x.sizes()[0];
@@ -41,12 +37,10 @@ public:
         Tensor output({batch_size, num_channels, output_height, output_width}, DeviceType::CUDA);
         float *output_data = output.data_ptr();
 
-        static const int N_THREADS = 128;
-        dim3 block_dim(N_THREADS);
-        dim3 grid_dim(batch_size * num_channels / N_THREADS);
-        deviceMaxPool2dKernel<32><<<grid_dim, block_dim>>>(
-            input_data, height, width, output_data, output_height, output_width,
-            kernel_size, padding, stride);
+        hostMaxPool2d(batch_size, num_channels,
+                      input_data, height, width,
+                      output_data, output_height, output_width,
+                      kernel_size, padding, stride);
 
         return output;
     }
@@ -93,12 +87,10 @@ public:
         Tensor output({batch_size, num_channels, output_height, output_width}, DeviceType::CUDA);
         float *output_data = output.data_ptr();
 
-        static const int N_THREADS = 128;
-        dim3 block_dim(N_THREADS);
-        dim3 grid_dim(batch_size * num_channels / N_THREADS);
-        deviceAvgPool2dKernel<32><<<grid_dim, block_dim>>>(
-            input_data, height, width, output_data, output_height, output_width,
-            kernel_size, padding, stride);
+        hostAvgPool2d(batch_size, num_channels,
+                      input_data, height, width,
+                      output_data, output_height, output_width,
+                      kernel_size, padding, stride);
 
         return output;
     }

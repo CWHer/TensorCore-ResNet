@@ -1,6 +1,4 @@
-#pragma once
-
-#include "common.h"
+#include "batchnorm.h"
 
 // __global__ void hwBatchNorm2dKernel(float *input_data, float *mean_data, float *var_data,
 //                                     float *weight_data, float *bias_data,
