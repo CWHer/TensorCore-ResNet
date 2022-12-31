@@ -18,6 +18,7 @@
 #include <bitset>
 #include <array>
 #include <tuple>
+#include <sstream>
 
 namespace Sim
 {
@@ -42,19 +43,22 @@ namespace Sim
     };
 
     // clang-format off
-    class FatalError : public std::exception {};
+    class FatalError : public std::runtime_error {
+    public:
+        explicit FatalError(const std::string &msg) : std::runtime_error(msg) {}
+    };
     // clang-format on
 
     template <typename T>
     void printCppError(T result, char const *const msg,
                        const char *const file, int const line)
     {
-        if (result)
-        {
-            std::cerr << "[Error] at: " << file << ":" << line
-                      << " \"" << msg << "\"" << std::endl;
-            throw FatalError();
-        }
+      std::stringstream ss;
+      if (result) {
+        ss << "CPP [Error] at: " << file << ":" << line << " \"" << msg << "\"";
+        // Use throw to avoid gtest exiting.
+        throw FatalError(ss.str());
+      }
     }
 
     template <typename T>
