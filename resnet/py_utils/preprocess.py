@@ -62,6 +62,7 @@ if __name__ == "__main__":
     model = models.resnet18(weights=weights)
     if not os.path.exists(args.network_output_dir):
         os.mkdir(args.network_output_dir)
+    print("Exporting resnet18")
     writeNetwork(model, "resnet18", args.network_output_dir)
 
     transform = transforms.Compose([
@@ -85,6 +86,7 @@ if __name__ == "__main__":
     if not os.path.exists(args.dataset_output_dir):
         os.mkdir(args.dataset_output_dir)
 
+    print("Making dataset")
     with torch.no_grad() and tqdm.tqdm(total=len(dataset)) as pbar:
         for i, (images, dummy_labels) in enumerate(data_loader):
             writeTensor(images, os.path.join(

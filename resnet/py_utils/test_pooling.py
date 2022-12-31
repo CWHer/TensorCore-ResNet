@@ -6,6 +6,8 @@ from utils import randomInt, randomTensor, writeTensor
 
 
 def makePoolingTests(directory: str):
+    print("Making pooling tests")
+
     seed = 0
     generator = randomInt(5, 25, seed=seed)
 

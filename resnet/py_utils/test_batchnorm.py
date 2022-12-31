@@ -6,6 +6,8 @@ from utils import randomInt, randomTensor, writeTensor
 
 
 def makeBatchNormTests(directory: str):
+    print("Making batchnorm tests")
+
     seed = 0
     generator = randomInt(5, 25, seed=seed)
 
