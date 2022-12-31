@@ -32,3 +32,45 @@ TEST(tensor_ops, cpu_ops)
 
     EXPECT_NEAR(TensorOps::sum_equal(z, label), 6, eps);
 }
+
+TEST(tensor_ops, add_)
+{
+    // add_
+    float *a, *b;
+    a = new float[1000];
+    b = new float[1000];
+    for (int i = 0; i < 1000; i++)
+    {
+        a[i] = -i;
+        b[i] = 131 * i;
+    }
+
+    Tensor x({1000}, DeviceType::CPU, a);
+    Tensor y({1000}, DeviceType::CPU, b);
+    x.to(DeviceType::CUDA);
+    y.to(DeviceType::CUDA);
+
+    TensorOps::add_(x, y);
+    x.to(DeviceType::CPU);
+    float *result = x.data_ptr();
+    for (int i = 0; i < 1000; i++)
+        EXPECT_NEAR(result[i], 130 * i, 1e-5);
+}
+
+TEST(tensor_ops, relu_)
+{
+    // relu_
+    float *a;
+    a = new float[1000];
+    for (int i = 0; i < 1000; i++)
+        a[i] = i * (i % 2 ? -1 : 1);
+
+    Tensor x({1000}, DeviceType::CPU, a);
+    x.to(DeviceType::CUDA);
+
+    TensorOps::relu_(x);
+    x.to(DeviceType::CPU);
+    float *result = x.data_ptr();
+    for (int i = 0; i < 1000; i++)
+        EXPECT_NEAR(result[i], i * (i % 2 ? 0 : 1), 1e-5);
+}
