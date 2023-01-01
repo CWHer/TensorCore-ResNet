@@ -167,10 +167,16 @@ int main()
     timer.start("total_time");
     for (int i = 0; i < NUM_BATCHES; i++)
     {
+        timer.start("preprocess");
         auto data = dataset.next();
         auto inputs = data.first, std_logits = data.second;
+        timer.end("preprocess");
 
+        timer.start("forward");
         auto logits = resnet18.forward(inputs);
+        timer.end("forward");
+
+        timer.start("postprocess");
         logits.to(DeviceType::CPU);
 
         Tensor label = TensorOps::argmax(logits, 1);
@@ -178,32 +184,18 @@ int main()
 
         num_correct += TensorOps::sum_equal(label, std_label);
         num_total += inputs.sizes()[0];
+        timer.end("postprocess");
     }
     // clang-format off
     std::cout << "Accuracy Compared to PyTorch ResNet18 Implementation: "
               << num_correct << "/" << num_total << '\n' << std::endl;
     // clang-format on
     timer.end("total_time");
-    timer.printStat("total_time");
 
-    Tensor x({16, 3, 224, 224}, DeviceType::CPU);
-    Tensor y({16, 1000}, DeviceType::CPU);
-    for (int i = 0; i < 100; i++)
-    {
-        timer.start("inference");
-        x.to(DeviceType::CUDA);
-        timer.start("forward");
-        auto logits = resnet18.forward(x);
-        timer.end("forward");
-        logits.to(DeviceType::CPU);
-        Tensor label = TensorOps::argmax(logits, 1);
-        Tensor std_label = TensorOps::argmax(y, 1);
-        TensorOps::sum_equal(label, std_label);
-        timer.end("inference");
-        x.to(DeviceType::CPU);
-    }
-    timer.printStat("inference");
+    timer.printStat("total_time");
+    timer.printStat("preprocess");
     timer.printStat("forward");
+    timer.printStat("postprocess");
     resnet18.printStat("resnet18");
 
     freeMemCache();

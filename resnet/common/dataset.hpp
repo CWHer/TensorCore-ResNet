@@ -2,7 +2,6 @@
 
 #include "common.h"
 #include "tensor.hpp"
-#include "ops.hpp"
 
 class ImageDataset
 {
@@ -23,6 +22,8 @@ public:
             Tensor input, std_logit;
             input.load(path + "/images_" + index + ".bin");
             std_logit.load(path + "/labels_" + index + ".bin");
+            // HACK: only move input to device
+            input.to(device);
             inputs.push_back(input);
             std_logits.push_back(std_logit);
         }
@@ -34,7 +35,6 @@ public:
         Tensor input = inputs.front();
         Tensor std_logit = std_logits.front();
         inputs.pop_front(), std_logits.pop_front();
-        input.to(device); // HACK: only move input to device
         return std::make_pair(input, std_logit);
     }
 
