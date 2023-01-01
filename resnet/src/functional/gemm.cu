@@ -229,6 +229,7 @@ void gemm(f16 *a, f16 *b, f32 *c,
 {
     cudaStream_t stream = nullptr;
     gemmStream(a, b, c, m, n, k, major, stream);
+    cudaCacheCommit(stream);
     checkCudaErrors(cudaStreamSynchronize(stream));
 }
 
@@ -255,6 +256,7 @@ void gemmBatched(f16 *a, f16 *b, f32 *c,
     for (auto &stream : streams)
     {
         checkCudaErrors(cudaStreamSynchronize(stream));
+        cudaCacheCommit(stream);
         checkCudaErrors(cudaStreamDestroy(stream));
     }
 }

@@ -90,7 +90,7 @@ void im2col(float *input, f16 *output,
 
     cudaStream_t stream[N_STREAMS];
     for (int i = 0; i < N_STREAMS; i++)
-        cudaStreamCreate(&stream[i]);
+        checkCudaErrors(cudaStreamCreate(&stream[i]));
 
     for (unsigned long i = 0; i < minibatches; i++)
     {
@@ -109,7 +109,7 @@ void im2col(float *input, f16 *output,
 
     for (int i = 0; i < N_STREAMS; i++)
     {
-        cudaStreamSynchronize(stream[i]);
-        cudaStreamDestroy(stream[i]);
+        checkCudaErrors(cudaStreamSynchronize(stream[i]));
+        checkCudaErrors(cudaStreamDestroy(stream[i]));
     }
 }
