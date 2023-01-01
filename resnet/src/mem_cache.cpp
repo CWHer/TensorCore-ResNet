@@ -3,8 +3,13 @@
 void freeMemCache()
 {
     for (auto &kv : mem_cache)
+    {
         for (auto &ptr : kv.second)
             checkCudaErrors(cudaFree(ptr));
+        kv.second.clear();
+    }
+    for (auto &kv : stream_ptr)
+        checkCppErrorsMsg(!kv.second.empty(), "stream_ptr not empty");
 }
 
 cudaError_t cudaCacheMalloc(void **ptr, size_t size)
@@ -23,7 +28,6 @@ cudaError_t cudaCacheMalloc(void **ptr, size_t size)
     }
 }
 
-// TODO: is this efficient?
 cudaError_t cudaCacheMallocAsync(void **ptr, size_t size, cudaStream_t stream)
 {
     if (mem_cache.count(size) > 0 && !mem_cache[size].empty())
@@ -34,8 +38,8 @@ cudaError_t cudaCacheMallocAsync(void **ptr, size_t size, cudaStream_t stream)
     }
     else
     {
+        // HACK: this is sync
         auto err = cudaMalloc(ptr, size);
-        checkCudaErrors(cudaStreamSynchronize(stream));
         ptr_size[*ptr] = size;
         return err;
     }
@@ -48,11 +52,15 @@ cudaError_t cudaCacheFree(void *ptr)
     return cudaSuccess;
 }
 
-// TODO: is this efficient?
 cudaError_t cudaCacheFreeAsync(void *ptr, cudaStream_t stream)
 {
-    checkCudaErrors(cudaStreamSynchronize(stream));
-    size_t size = ptr_size[ptr];
-    mem_cache[size].push_back(ptr);
+    stream_ptr[stream].push_back(ptr);
     return cudaSuccess;
+}
+
+void cudaCacheCommit(cudaStream_t stream)
+{
+    for (auto &ptr : stream_ptr[stream])
+        mem_cache[ptr_size[ptr]].push_back(ptr);
+    stream_ptr[stream].clear();
 }

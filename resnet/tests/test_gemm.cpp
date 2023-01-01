@@ -110,9 +110,8 @@ static void funcTest(size_t m, size_t n, size_t k,
 
     if (average_diff > eps)
     {
-        std::stringstream ss;
-        ss << "Incorrect result: " << average_diff << " > " << eps << std::endl;
-        throw std::runtime_error(ss.str());
+        std::cout << "Incorrect result: " << average_diff << " > " << eps << std::endl;
+        throw std::runtime_error("Incorrect result");
     }
 }
 
@@ -174,9 +173,8 @@ static void unequal_B(int m, int n, int k, int batch_size)
 
     if (average_diff > eps)
     {
-        std::stringstream ss;
-        ss << "Incorrect result: " << average_diff << " > " << eps << std::endl;
-        throw std::runtime_error(ss.str());
+        std::cout << "Incorrect result: " << average_diff << " > " << eps << std::endl;
+        throw std::runtime_error("Incorrect result");
     }
 }
 
@@ -272,9 +270,8 @@ TEST(gemm, unaligned_pointer)
 
     if (average_diff > eps)
     {
-        std::stringstream ss;
-        ss << "Incorrect result: " << average_diff << " > " << eps << std::endl;
-        throw std::runtime_error(ss.str());
+        std::cout << "Incorrect result: " << average_diff << " > " << eps << std::endl;
+        throw std::runtime_error("Incorrect result");
     }
 }
 
