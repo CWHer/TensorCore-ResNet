@@ -13,34 +13,20 @@ static void checkLastCudaError()
         throw std::runtime_error(cudaGetErrorString(err));
 }
 
+// result = A * B
+// A: m * k, B: k * n, result: m * n
 static void gemmOnHost(const float *a, const float *b, float *result,
-                       size_t m, size_t n, size_t k,
-                       MatrixMajor major)
+                       size_t m, size_t n, size_t k)
 {
-    switch (major)
+    for (int i = 0; i < m; i++)
     {
-    case MatrixMajor::ColMajor:
-        // This is column-major
-        for (size_t i = 0; i < m; i++)
-            for (size_t j = 0; j < n; j++)
-            {
-                float sum = 0;
-                for (size_t l = 0; l < k; l++)
-                    sum += a[l * m + i] * b[j * k + l];
-                result[j * m + i] = sum;
-            }
-        break;
-    case MatrixMajor::RowMajor:
-        // This is row-major
-        for (size_t i = 0; i < m; i++)
-            for (size_t j = 0; j < n; j++)
-            {
-                float sum = 0;
-                for (size_t l = 0; l < k; l++)
-                    sum += a[i * k + l] * b[l * n + j];
-                result[i * n + j] = sum;
-            }
-        break;
+        for (int j = 0; j < n; j++)
+        {
+            float sum = 0;
+            for (int l = 0; l < k; l++)
+                sum += a[i * k + l] * b[l * n + j];
+            result[i * n + j] = sum;
+        }
     }
 }
 
@@ -49,7 +35,7 @@ typedef decltype(gemm) gemm16Func;
 
 static void funcTest(size_t m, size_t n, size_t k,
                      gemm16Func gemm16, gemm32Func gemm32,
-                     MatrixMajor major, float eps = 1e-3)
+                     float eps = 1e-3)
 {
     // Create float matrices A, B
     auto a = std::make_unique<float[]>(m * k);
@@ -84,8 +70,8 @@ static void funcTest(size_t m, size_t n, size_t k,
     checkCudaErrors(cudaMemcpy(d_a_f16, a_f16.get(), m * k * sizeof(f16), cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemcpy(d_b_f16, b_f16.get(), k * n * sizeof(f16), cudaMemcpyHostToDevice));
 
-    gemm32(a.get(), b.get(), c_ref.get(), m, n, k, major);
-    gemm16(d_a_f16, d_b_f16, d_c, m, n, k, major);
+    gemm32(a.get(), b.get(), c_ref.get(), m, n, k);
+    gemm16(d_a_f16, d_b_f16, d_c, m, n, k);
     checkLastCudaError();
 
     checkCudaErrors(cudaMemcpy(c.get(), d_c, m * n * sizeof(float), cudaMemcpyDeviceToHost));
@@ -144,7 +130,7 @@ static void unequal_B(int m, int n, int k, int batch_size)
     checkCudaErrors(cudaMemcpy(d_a, a.get(), m * k * sizeof(f16), cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemcpy(d_b, b.get(), batch_size * k * n * sizeof(f16), cudaMemcpyHostToDevice));
 
-    gemmBatched(d_a, d_b, d_c, m, n, k, batch_size, MatrixMajor::RowMajor);
+    gemmBatched(d_a, d_b, d_c, m, n, k, batch_size);
     checkLastCudaError();
 
     checkCudaErrors(cudaMemcpy(c.get(), d_c, batch_size * m * n * sizeof(float), cudaMemcpyDeviceToHost));
@@ -152,8 +138,7 @@ static void unequal_B(int m, int n, int k, int batch_size)
 
     for (int t = 0; t < batch_size; t++)
     {
-        gemm(d_a, d_b + t * k * n, d_c_ref + t * m * n,
-             m, n, k, MatrixMajor::RowMajor);
+        gemm(d_a, d_b + t * k * n, d_c_ref + t * m * n, m, n, k);
         checkLastCudaError();
         checkCudaErrors(cudaMemcpy(c_ref.get() + t * m * n, d_c_ref + t * m * n,
                                    m * n * sizeof(float), cudaMemcpyDeviceToHost));
@@ -180,26 +165,22 @@ static void unequal_B(int m, int n, int k, int batch_size)
 
 TEST(gemm, small_matrix)
 {
-    ASSERT_NO_THROW(funcTest(16, 16, 16, gemm, gemmOnHost, MatrixMajor::RowMajor));
-    ASSERT_NO_THROW(funcTest(16, 16, 16, gemm, gemmOnHost, MatrixMajor::ColMajor));
+    ASSERT_NO_THROW(funcTest(16, 16, 16, gemm, gemmOnHost));
 }
 
 TEST(gemm, square_matrix)
 {
-    ASSERT_NO_THROW(funcTest(256, 256, 256, gemm, gemmOnHost, MatrixMajor::ColMajor));
-    ASSERT_NO_THROW(funcTest(256, 256, 256, gemm, gemmOnHost, MatrixMajor::RowMajor));
+    ASSERT_NO_THROW(funcTest(256, 256, 256, gemm, gemmOnHost));
 }
 
 TEST(gemm, rectangular_matrix)
 {
-    ASSERT_NO_THROW(funcTest(256, 512, 1024, gemm, gemmOnHost, MatrixMajor::ColMajor));
-    ASSERT_NO_THROW(funcTest(256, 512, 1024, gemm, gemmOnHost, MatrixMajor::RowMajor));
+    ASSERT_NO_THROW(funcTest(256, 512, 1024, gemm, gemmOnHost));
 }
 
 TEST(gemm, irregular_matrix)
 {
-    ASSERT_NO_THROW(funcTest(17, 513, 1029, gemm, gemmOnHost, MatrixMajor::ColMajor));
-    ASSERT_NO_THROW(funcTest(17, 513, 1029, gemm, gemmOnHost, MatrixMajor::RowMajor));
+    ASSERT_NO_THROW(funcTest(17, 513, 1029, gemm, gemmOnHost));
 }
 
 TEST(gemm, unaligned_pointer)
@@ -247,8 +228,8 @@ TEST(gemm, unaligned_pointer)
     checkCppErrors(cudaMemcpy(d_a_f16 + 1, a_f16.get() + 1, m * k * sizeof(f16), cudaMemcpyHostToDevice));
     checkCppErrors(cudaMemcpy(d_b_f16 + 3, b_f16.get() + 3, k * n * sizeof(f16), cudaMemcpyHostToDevice));
 
-    gemm(d_a_loc, d_b_loc, d_c_ref, m, n, k, MatrixMajor::RowMajor);
-    gemm(d_a_f16 + 1, d_b_f16 + 3, d_c + 7, m, n, k, MatrixMajor::RowMajor);
+    gemm(d_a_loc, d_b_loc, d_c_ref, m, n, k);
+    gemm(d_a_f16 + 1, d_b_f16 + 3, d_c + 7, m, n, k);
 
     checkCppErrors(cudaMemcpy(c_ref.get(), d_c_ref, m * n * sizeof(float), cudaMemcpyDeviceToHost));
     checkCppErrors(cudaMemcpy(c.get() + 7, d_c + 7, m * n * sizeof(float), cudaMemcpyDeviceToHost));

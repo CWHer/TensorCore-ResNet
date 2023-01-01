@@ -43,7 +43,6 @@ void conv2d(float *input, float *output, f16 *weight,
                batch_size, c, h, w, kernel_size, stride, padding);
         gemmBatched(weight, reinterpret_cast<f16 *>(im2col_result.data_ptr()),
                     output + i * MINIBATCH_SIZE * out_channels * conv_result_size,
-                    out_channels, conv_result_size, expanded_kernel_size, batch_size,
-                    MatrixMajor::RowMajor);
+                    out_channels, conv_result_size, expanded_kernel_size, batch_size);
     }
 }

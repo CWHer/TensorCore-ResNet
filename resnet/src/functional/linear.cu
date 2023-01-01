@@ -7,8 +7,7 @@ void linear(f16 *input, float *output,
             int batch_size, int input_channel, int output_channel)
 {
     gemm(input, weight, output,
-         batch_size, output_channel, input_channel,
-         MatrixMajor::RowMajor);
+         batch_size, output_channel, input_channel);
     for (int t = 0; t < batch_size; ++t)
         hostAdd_(&output[t * output_channel], bias, output_channel);
 }
