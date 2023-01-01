@@ -29,6 +29,7 @@ f16 *float2half(f32 *f32_array, size_t size)
     static const int PER_THREAD = 4;
     dim3 grid_dim((size - 1) / N_THREADS / PER_THREAD + 1);
     float2halfKernel<<<grid_dim, N_THREADS>>>(f32_array, f16_array, size);
+    checkCudaErrors(cudaPeekAtLastError());
     checkCudaErrors(cudaDeviceSynchronize());
     return f16_array;
 }
@@ -41,6 +42,7 @@ f32 *half2float(f16 *f16_array, size_t size)
     static const int PER_THREAD = 4;
     dim3 grid_dim((size - 1) / N_THREADS / PER_THREAD + 1);
     half2floatKernel<<<grid_dim, N_THREADS>>>(f16_array, f32_array, size);
+    checkCudaErrors(cudaPeekAtLastError());
     checkCudaErrors(cudaDeviceSynchronize());
     return f32_array;
 }
@@ -127,6 +129,7 @@ static void gemmCaller(f16 *a, f16 *b, f32 *result,
     dim3 block(block_row_warps * WARP_SIZE, block_col_warps);
 
     gemmKernel<block_col_warps, block_row_warps><<<grid, block, 0, stream>>>(a, b, result, m, n, k);
+    checkCudaErrors(cudaPeekAtLastError());
 }
 
 template <typename T, bool require_copy>

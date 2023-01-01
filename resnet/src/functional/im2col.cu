@@ -105,6 +105,7 @@ void im2col(float *input, f16 *output,
             output + i * MINIBATCH_SIZE * single_result_size,
             cur_minibatch_size, c, h, w,
             kernel_size, stride, padding);
+        checkCudaErrors(cudaPeekAtLastError());
     }
 
     for (int i = 0; i < N_STREAMS; i++)

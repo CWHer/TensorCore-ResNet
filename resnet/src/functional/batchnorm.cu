@@ -49,6 +49,7 @@ void hostBatchNorm2d(float *input_data, float *output_data,
     deviceBatchNorm2dKernel<BLOCK_SIZE><<<grid_dim, block_dim>>>(
         input_data, output_data, mean_data, var_data, weight_data, bias_data,
         eps, batch_size, num_channels, height, width, batch_size * num_channels);
+    checkCudaErrors(cudaPeekAtLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 }
 
@@ -103,5 +104,6 @@ void hostBatchNorm2dRelu(float *input_data, float *output_data,
     deviceBatchNorm2dReluKernel<BLOCK_SIZE><<<grid_dim, block_dim>>>(
         input_data, output_data, mean_data, var_data, weight_data, bias_data,
         eps, batch_size, num_channels, height, width, batch_size * num_channels);
+    checkCudaErrors(cudaPeekAtLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 }
