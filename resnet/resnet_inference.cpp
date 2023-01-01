@@ -142,7 +142,9 @@ private:
 int main()
 {
 #ifdef DATASET_ROOT
-    const int NUM_BATCHES = 1;
+    const int N_IMAGES = 5000;
+    const int BATCH_SIZE = 16;
+    constexpr int NUM_BATCHES = (N_IMAGES - 1) / BATCH_SIZE + 1;
     ImageDataset dataset(DeviceType::CUDA);
     dataset.load(DATASET_ROOT, NUM_BATCHES);
 #else
@@ -159,8 +161,10 @@ int main()
     resnet18.printModule("resnet18");
     std::cout << std::endl;
 
+    SimpleTimer timer;
     int num_correct = 0;
     int num_total = 0;
+    timer.start("total_time");
     for (int i = 0; i < NUM_BATCHES; i++)
     {
         auto data = dataset.next();
@@ -179,10 +183,11 @@ int main()
     std::cout << "Accuracy Compared to PyTorch ResNet18 Implementation: "
               << num_correct << "/" << num_total << '\n' << std::endl;
     // clang-format on
+    timer.end("total_time");
+    timer.printStat("total_time");
 
     Tensor x({16, 3, 224, 224}, DeviceType::CPU);
     Tensor y({16, 1000}, DeviceType::CPU);
-    SimpleTimer timer;
     for (int i = 0; i < 100; i++)
     {
         timer.start("inference");
