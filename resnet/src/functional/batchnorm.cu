@@ -40,7 +40,7 @@ void hostBatchNorm2d(float *input_data, float *output_data,
 {
     // shape of input varies from (64, 112, 112) to (512, 7, 7)
     static const int N_THREADS = 128;
-    static const int BLOCK_SIZE = 7;
+    static const int BLOCK_SIZE = 4;
     int n_hblock = (width - 1) / BLOCK_SIZE + 1;
     int n_vblock = (height - 1) / BLOCK_SIZE + 1;
     int n_blocks = std::max(1, N_THREADS / (n_hblock * n_vblock));
@@ -95,7 +95,7 @@ void hostBatchNorm2dRelu(float *input_data, float *output_data,
 {
     // shape of input varies from (64, 112, 112) to (512, 7, 7)
     static const int N_THREADS = 128;
-    static const int BLOCK_SIZE = 7;
+    static const int BLOCK_SIZE = 4;
     int n_hblock = (width - 1) / BLOCK_SIZE + 1;
     int n_vblock = (height - 1) / BLOCK_SIZE + 1;
     int n_blocks = std::max(1, N_THREADS / (n_hblock * n_vblock));
