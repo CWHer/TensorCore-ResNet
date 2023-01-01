@@ -12,6 +12,7 @@ set(SOURCE_FILES
     src/functional/gemm.cu
     src/functional/linear.cu
     src/functional/im2col.cu
+    src/functional/conv.cu
     src/common.cpp
     src/mem_cache.cpp
 )
