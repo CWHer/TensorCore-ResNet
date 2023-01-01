@@ -192,8 +192,8 @@ static void gemmDeviceMemory(f16 *a, f16 *b, f32 *result,
     padded_b = paddingColMajor<f16, true>(b, n, k, padded_n, k, stream);
     padded_c = paddingColMajor<f32, false>(result, n, m, padded_n, padded_m, stream);
 
-    // Fixme: this template parameter is adjustable
-    gemmCaller<4, 4>(padded_a, padded_b, padded_c, padded_m, padded_n, k, stream);
+    // TODO: this template parameter is adjustable
+    gemmCaller<2, 2>(padded_a, padded_b, padded_c, padded_m, padded_n, k, stream);
 
     if (padded_a != a)
         checkCudaErrors(cudaCacheFreeAsync(padded_a, stream));
