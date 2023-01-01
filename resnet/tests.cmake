@@ -10,4 +10,5 @@ set(TEST_SOURCE
     tests/test_gemm.cpp
     tests/test_linear.cpp
     tests/test_im2col.cpp
+    tests/test_conv.cpp
 )
