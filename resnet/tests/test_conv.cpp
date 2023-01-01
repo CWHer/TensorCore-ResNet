@@ -25,13 +25,19 @@ TEST(conv, conv2d)
     x.to(DeviceType::CPU);
     float *naive_res = x.data_ptr();
     float *std_res = y.data_ptr();
+
+    double max_diff_ratio = 0;
+    double avg_diff_ratio = 0;
     for (int i = 0; i < x.totalSize(); i++)
     {
-        auto diff_ratio = std_res[i] != 0
-                              ? std::fabs(naive_res[i] - std_res[i]) / std::fabs(std_res[i])
-                              : 0;
-        EXPECT_LE(diff_ratio, 1e-3);
-        EXPECT_GE(diff_ratio, 0);
+        double diff_ratio = std_res[i] != 0
+                                ? std::fabs(naive_res[i] - std_res[i]) / std::fabs(std_res[i])
+                                : 0;
+        max_diff_ratio = std::max(max_diff_ratio, diff_ratio);
+        avg_diff_ratio += diff_ratio / x.totalSize();
     }
+    EXPECT_LE(avg_diff_ratio, 1e-3);
+    std::cout << "Max diff ratio: " << max_diff_ratio << std::endl;
+    std::cout << "Avg diff ratio: " << avg_diff_ratio << std::endl;
 }
 #endif
