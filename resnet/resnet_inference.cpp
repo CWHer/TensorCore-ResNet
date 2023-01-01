@@ -6,15 +6,14 @@ using namespace Impl;
 using namespace std;
 
 int _main() {
-  // 1. load resnet18 model
-  // 2. load image dataset
+  // 1. load_single resnet18 model
+  // 2. load_single image dataset
   // 3. inference
 
 #ifdef DATASET_ROOT
 #ifdef RESNET18_ROOT
 
-  // TODO: argument parsing
-#if SIMULATE
+#if SIMULATE || DEBUG_ONE_ROUND
   cout << "Only simulate one round." << endl;
   auto dataset = Impl::ImageDataset(DATASET_ROOT, Impl::DeviceType::CUDA, 1);
 #else
@@ -30,13 +29,22 @@ int _main() {
   int num_correct = 0;
   int num_total = 0;
   SimpleTimer timer;
+  timer.start("total_time");
   for (int i = 0; i < dataset.size(); i++) {
     timer.start("forward");
-    auto data = dataset.next();
-    auto result = std::move(resnet18.forward(std::move(data.first.first)));
 
-    result.to(Impl::DeviceType::CPU);
+    timer.start("preprocess");
+    auto data = dataset.next();
+    auto input = std::move(data.first.first);
     auto label = std::move(data.first.second);
+    timer.end("preprocess");
+
+    timer.start("forward");
+    auto result = std::move(resnet18.forward(std::move(input)));
+    timer.end("forward");
+
+    timer.start("postprocess");
+    result.to(Impl::DeviceType::CPU);
     label.to(Impl::DeviceType::CPU);
 
     Tensor original_label = TensorOps::argmax(label, 1);
@@ -45,11 +53,18 @@ int _main() {
     auto correct = TensorOps::sum_equal(original_label, predicted_result);
     num_correct += correct;
     num_total += predicted_result.sizes()[0];
-    timer.end("forward");
+    timer.end("postprocess");
   }
-  timer.printStat("forward");
+  std::cout << "Accuracy Compared to PyTorch ResNet18 Implementation: " << num_correct << "/" << num_total << std::endl
+            << std::endl;
 
-  std::cout << "Accuracy Compared to PyTorch ResNet18 Implementation: " << num_correct << "/" << num_total << std::endl;
+  timer.end("total_time");
+
+  timer.printStat("preprocess");
+  timer.printStat("forward");
+  timer.printStat("postprocess");
+  resnet18.printStat("resnet18");
+
 #endif
 #endif
 

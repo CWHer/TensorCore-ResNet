@@ -12,14 +12,14 @@ using namespace Impl;
 #ifdef TEST_DATA_ROOT
 TEST(batchnorm, bn)
 {
-    // load module
+    // load_single module
     BatchNorm2d bn(3);
     std::string filename = TEST_DATA_ROOT;
     filename += "/test_batchnorm_bn";
     bn.loadWeights(filename);
     bn.to(DeviceType::CUDA);
 
-    // load input
+    // load_single input
     Tensor x;
     filename = TEST_DATA_ROOT;
     filename += "/test_batchnorm_x.bin";
@@ -28,7 +28,7 @@ TEST(batchnorm, bn)
 
     x = bn.forward(x);
 
-    // load output & check correctness
+    // load_single output & check correctness
     Tensor y;
     filename = TEST_DATA_ROOT;
     filename += "/test_batchnorm_y.bin";

@@ -102,14 +102,19 @@ Impl::Tensor Impl::Linear::forward(const Tensor &x) {
     throw std::runtime_error("x_features != in_features");
   }
 #endif
-
-  return std::move(functional::linear(x, weight_f16, bias));
+  timer.start("forward");
+  auto result = std::move(functional::linear(x, weight_f16, bias));
+  timer.end("forward");
+  return std::move(result);
 }
 
 void Impl::Linear::printModule(const std::string &prefix) {
   std::cout << prefix << ":Linear" << std::endl;
 }
-
+void Linear::printStat(const std::string &prefix) {
+  printModule(prefix);
+  timer.printStat("forward");
+}
 Impl::Linear::~Linear() {
   if (weight_f16 != nullptr) {
     switch (weight.getDevice()) {
@@ -136,4 +141,5 @@ void Impl::Linear::setWeight(const Impl::Tensor &new_weight) {
 void Impl::Linear::setBias(const Impl::Tensor &new_bias) {
   bias = new_bias;
 }
+
 

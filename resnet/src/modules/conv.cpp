@@ -16,7 +16,7 @@ Conv2d::Conv2d(int in_channels,
                int groups,
                bool bias)
     : in_channels(in_channels), out_channels(out_channels), kernel_size(kernel_size), stride(stride), padding(padding),
-      dilation(dilation), groups(groups), weight_f16(nullptr) {
+      dilation(dilation), groups(groups), weight_f16(nullptr), biased(bias) {
 #if DEBUG
   if (dilation != 1 || groups != 1) {
     throw std::runtime_error("Not implemented");
@@ -30,6 +30,7 @@ Conv2d::Conv2d(int in_channels,
   this->bias = Tensor({out_channels});
   if (bias) {
     addTensor("bias", this->bias);
+    throw std::runtime_error("Not implemented");
   } else {
     // Set bias to zeroes
     for (int i = 0; i < this->bias.totalSize(); i++) {
@@ -43,7 +44,11 @@ Tensor Conv2d::forward(const Tensor &x) {
     weight_f16 = fp32_array_to_fp16_array(weight.data_ptr(), weight.totalSize(), weight.getDevice());
   }
 
-  return std::move(functional::conv2d(x, weight_f16, bias, out_channels, kernel_size, stride, padding, dilation, groups));
+  timer.start("forward");
+  auto result = std::move(functional::conv2d(x, weight_f16, bias, out_channels, kernel_size, stride, padding, dilation, groups));
+  timer.end("forward");
+
+  return std::move(result);
 }
 
 Tensor Conv2d::forward(Tensor &&x) {
@@ -52,6 +57,11 @@ Tensor Conv2d::forward(Tensor &&x) {
 
 void Conv2d::printModule(const std::string &prefix) {
   std::cout << prefix << ":Conv2d" << std::endl;
+}
+
+void Conv2d::printStat(const std::string &prefix) {
+  printModule(prefix);
+  timer.printStat("forward");
 }
 
 void Conv2d::setWeight(const Tensor &new_weight) {
@@ -91,7 +101,6 @@ void Conv2d::to(Impl::DeviceType device) {
     bias.to(device);
   }
 }
-
 
 // Perform the convert on-size, this could be inefficient
 Tensor functional::conv2d(const Tensor &input,
@@ -181,7 +190,7 @@ Tensor functional::conv2d(const Tensor &input,
   ::conv2d(input.data_ptr(),
            result.data_ptr(),
            weight,
-           bias.data_ptr(),
+           nullptr,
            minibatch,
            in_channels,
            in_height,

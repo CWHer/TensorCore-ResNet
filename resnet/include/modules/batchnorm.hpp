@@ -22,6 +22,7 @@ public:
     Tensor forward(Tensor &&x) override;
 
     void printModule(const std::string &prefix) override;
+    void printStat(const std::string &prefix) override;
 };
 
 class BatchNorm2dRelu : public Module
@@ -40,5 +41,6 @@ public:
   Tensor forward(Tensor &&x) override;
 
   void printModule(const std::string &prefix) override;
+  void printStat(const std::string &prefix) override;
 };
 }

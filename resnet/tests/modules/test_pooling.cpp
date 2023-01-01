@@ -13,10 +13,10 @@ using namespace std;
 #if WITH_DATA
 #ifdef TEST_DATA_ROOT
 TEST(pooling, max_pool) {
-  // load module
+  // load_single module
   MaxPool2d max_pool(3, 2, 1);
 
-  // load input
+  // load_single input
   Tensor x;
   string filename = TEST_DATA_ROOT;
   filename += "/test_maxpool_x.bin";
@@ -25,7 +25,7 @@ TEST(pooling, max_pool) {
 
   x = max_pool.forward(x);
 
-  // load output & check correctness
+  // load_single output & check correctness
   Tensor y;
   filename = TEST_DATA_ROOT;
   filename += "/test_maxpool_y.bin";
@@ -44,10 +44,10 @@ TEST(pooling, max_pool) {
 #if WITH_DATA
 #ifdef TEST_DATA_ROOT
 TEST(pooling, avg_pool) {
-  // load module
+  // load_single module
   AvgPool2d avg_pool(5, 2, 2);
 
-  // load input
+  // load_single input
   Tensor x;
   string filename = TEST_DATA_ROOT;
   filename += "/test_avgpool_x.bin";
@@ -56,7 +56,7 @@ TEST(pooling, avg_pool) {
 
   x = avg_pool.forward(x);
 
-  // load output & check correctness
+  // load_single output & check correctness
   Tensor y;
   filename = TEST_DATA_ROOT;
   filename += "/test_avgpool_y.bin";

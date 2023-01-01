@@ -81,12 +81,13 @@ def write_test_batchnorm_files(file_root):
     torch.manual_seed(seed)
     # Hack: not using torch CUDA part
 
-    batch_size = 2
+    batch_size = 23
     num_features = 3
-    height = 224
-    width = 224
+    height = 117
+    width = 16
 
     x_tensor = randomTensor((batch_size, num_features, height, width), generator)
+    x_tensor[:batch_size // 2, :, :, :] -= 5
     writeTensor(x_tensor, os.path.join(file_root, "test_batchnorm_x.bin"))
 
     net = torch.nn.BatchNorm2d(num_features=num_features)

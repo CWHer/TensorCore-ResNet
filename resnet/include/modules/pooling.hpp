@@ -16,6 +16,7 @@ public:
     Tensor forward(Tensor &&x) override;
 
     void printModule(const std::string &prefix) override;
+    void printStat(const std::string &prefix) override;
 };
 
 class AvgPool2d : public Module
@@ -30,6 +31,7 @@ public:
     Tensor forward(Tensor &&x) override;
 
     void printModule(const std::string &prefix) override;
+  void printStat(const std::string &prefix) override;
 };
 
 }

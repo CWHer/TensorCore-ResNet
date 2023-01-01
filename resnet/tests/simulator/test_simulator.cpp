@@ -69,7 +69,9 @@ TEST(gpu_simulator, launch_kernel)
     sim.cudaFree(d_matrix);
 
     // HACK: will not throw due to old target compiler
-    //EXPECT_THROW(sim.launchKernel(block_dim, dummy_kernel, (float *)d_matrix), Sim::FatalError);
+#if __GNUC_PREREQ(8, 2)
+    EXPECT_THROW(sim.launchKernel(block_dim, dummy_kernel, (float *)d_matrix), Sim::FatalError);
+#endif
 
     const float eps = 1e-6f;
     for (int i = 0; i < 16; i++)

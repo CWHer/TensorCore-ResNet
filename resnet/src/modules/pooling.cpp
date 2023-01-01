@@ -30,6 +30,7 @@ Impl::Tensor Impl::MaxPool2d::forward(const Impl::Tensor &x) {
   //  instead of allocating them every time (though this should be the way)
   Tensor output({batch_size, num_channels, output_height, output_width}, DeviceType::CUDA);
   if (x.getDevice() == DeviceType::CUDA) {
+    timer.start("forward");
     maxpool2d(x.data_ptr(),
               batch_size,
               num_channels,
@@ -41,10 +42,12 @@ Impl::Tensor Impl::MaxPool2d::forward(const Impl::Tensor &x) {
               kernel_size,
               padding,
               stride);
+    timer.end("forward");
   } else {
     // If not cuda, move to cuda
     Tensor x_cuda = x;
     x_cuda.to(DeviceType::CUDA);
+    timer.start("forward");
     maxpool2d(x_cuda.data_ptr(),
               batch_size,
               num_channels,
@@ -56,6 +59,7 @@ Impl::Tensor Impl::MaxPool2d::forward(const Impl::Tensor &x) {
               kernel_size,
               padding,
               stride);
+    timer.end("forward");
     output.to(DeviceType::CPU);
   }
 
@@ -68,7 +72,10 @@ Impl::Tensor Impl::MaxPool2d::forward(Impl::Tensor &&x) {
 void Impl::MaxPool2d::printModule(const std::string &prefix) {
   std::cout << prefix << ":MaxPool2d" << std::endl;
 }
-
+void Impl::MaxPool2d::printStat(const std::string &prefix) {
+  printModule(prefix);
+  timer.printStat("forward");
+}
 
 Impl::AvgPool2d::AvgPool2d(int kernel_size, int stride, int padding)
     : kernel_size(kernel_size), stride(stride), padding(padding) {
@@ -97,6 +104,7 @@ Impl::Tensor Impl::AvgPool2d::forward(const Impl::Tensor &x) {
   Tensor output({batch_size, num_channels, output_height, output_width}, DeviceType::CUDA);
 
   if (x.getDevice() == Impl::DeviceType::CUDA) {
+    timer.start("forward");
     avgpool2d(x.data_ptr(),
               batch_size,
               num_channels,
@@ -108,10 +116,12 @@ Impl::Tensor Impl::AvgPool2d::forward(const Impl::Tensor &x) {
               kernel_size,
               padding,
               stride);
+    timer.end("forward");
   } else {
     // If not cuda, move to cuda
     Tensor x_cuda = x;
     x_cuda.to(DeviceType::CUDA);
+    timer.start("forward");
     avgpool2d(x_cuda.data_ptr(),
               batch_size,
               num_channels,
@@ -123,6 +133,7 @@ Impl::Tensor Impl::AvgPool2d::forward(const Impl::Tensor &x) {
               kernel_size,
               padding,
               stride);
+    timer.end("forward");
     output.to(DeviceType::CPU);
   }
 
@@ -133,5 +144,10 @@ Impl::Tensor Impl::AvgPool2d::forward(Impl::Tensor &&x) {
 }
 void Impl::AvgPool2d::printModule(const std::string &prefix) {
   std::cout << prefix << ":AvgPool2d" << std::endl;
+}
+
+void Impl::AvgPool2d::printStat(const std::string &prefix) {
+  printModule(prefix);
+  timer.printStat("forward");
 }
 

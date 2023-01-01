@@ -51,53 +51,49 @@ __global__ static void im2col_cuda_kernel(const float *input,
                                           int C,
                                           int H,
                                           int W,
-                                          int filter_height,
-                                          int filter_width,
+                                          int kernel_size,
                                           int stride,
                                           int padding) {
-  // Use CUDA loop
-  int output_height = (H + 2 * padding - filter_height) / stride + 1;
-  int output_width = (W + 2 * padding - filter_width) / stride + 1;
+  int output_height = (H + 2 * padding - kernel_size) / stride + 1;
+  int output_width = (W + 2 * padding - kernel_size) / stride + 1;
   int output_size = output_height * output_width;
 
-  int filter_size = filter_height * filter_width;
-
-  int output_ldm = output_size;
-
+  int filter_size = kernel_size * kernel_size;
   int input_channel_size = H * W;
-  CUDA_KERNEL_LOOP(loop_idx, output_size * filter_size * C * N) {
+
+  for (int i = blockIdx.x * blockDim.x + threadIdx.x;
+       i < output_size * filter_size * C * N; i += blockDim.x * gridDim.x)
+  {
     // FIXME: unify the order with im2col_naive
-    // order: output_h, output_w, filter_h, filter_w, c
-    int curr_index = loop_idx;
-    int n = curr_index % N;
-    curr_index /= N;
-    int c = curr_index % C;
-    curr_index /= C;
-    int filter_w = curr_index % filter_width;
-    curr_index /= filter_width;
-    int filter_h = curr_index % filter_height;
-    curr_index /= filter_height;
-    int output_w = curr_index % output_width;
-    curr_index /= output_width;
-    int output_h = curr_index;
+    // order: output_h, output_w, filter_h, filter_w, C
+    int cur_index = i;
+    int cur_n = cur_index % N;
+    cur_index /= N;
+    int cur_c = cur_index % C;
+    cur_index /= C;
+    int filter_w = cur_index % kernel_size;
+    cur_index /= kernel_size;
+    int filter_h = cur_index % kernel_size;
+    cur_index /= kernel_size;
+    int output_w = cur_index % output_width;
+    cur_index /= output_width;
+    int output_h = cur_index;
 
     int index_h = output_h * stride + filter_h - padding;
     int index_w = output_w * stride + filter_w - padding;
-    int input_index = (n * C + c) * input_channel_size + index_h * W + index_w;
-    if (input_index > N * C * H * W) {
-      continue;
-    }
-    int output_index = (n * C + c) * filter_size + filter_h * filter_width + filter_w;
+    int input_index = (cur_n * C + cur_c) * input_channel_size + index_h * W + index_w;
+    // clang-format off
+    if (input_index > N * C * H * W) continue;
+    // clang-format on
+
+    int output_index = (cur_n * C + cur_c) * filter_size + filter_h * kernel_size + filter_w;
     int output_offset = output_h * output_width + output_w;
-    if (index_h >= 0 && index_h < H && index_w >= 0 && index_w < W && c < C && n < N) {
-      output[output_index * output_ldm + output_offset] = input[input_index];
-    } else {
-      output[output_index * output_ldm + output_offset] = 0;
-    }
+    output[output_index * output_size + output_offset] = index_h >= 0 && index_h < H &&
+        index_w >= 0 && index_w < W &&
+        cur_c < C && cur_n < N
+                                                         ? __float2half(input[input_index])
+                                                         : float_16(0);
   }
-
-  __syncthreads();
-
 }
 
 /**
@@ -121,7 +117,7 @@ static void im2col_device_memory(const float *input,
 
   cudaStream_t stream[stream_num];
   for (auto & i : stream) {
-    cudaStreamCreate(&i);
+    checkCudaErrors(cudaStreamCreate(&i));
   }
 
   for (unsigned long i = 0; i < minibatches; i++) {
@@ -136,9 +132,9 @@ static void im2col_device_memory(const float *input,
         H,
         W,
         filter_height,
-        filter_width,
         stride,
         padding);
+    checkCudaErrors(cudaPeekAtLastError());
   }
 
   for (auto & i : stream) {
@@ -162,20 +158,20 @@ static void im2col_host_memory(const float *input,
                                int padding) {
   // Copy input to device
   float *input_device;
-  Impl::cudaPooledMalloc(&input_device, sizeof(float) * N * C * H * W);
+  cudaMalloc(&input_device, sizeof(float) * N * C * H * W);
   cudaMemcpy(input_device, input, sizeof(float) * N * C * H * W, cudaMemcpyHostToDevice);
 
   auto result_size = im2col_result_size(N, C, H, W, filter_height, filter_width, stride, padding);
   float_16 *output_device;
-  Impl::cudaPooledMalloc(&output_device, sizeof(float_16) * result_size);
+  cudaMalloc(&output_device, sizeof(float_16) * result_size);
 
   im2col_device_memory(input_device, output_device, N, C, H, W, filter_height, filter_width, stride, padding);
 
   // Copy result back to host
   cudaMemcpy(output, output_device, sizeof(float_16) * result_size, cudaMemcpyDeviceToHost);
   // Free
-  Impl::cudaPooledFree(input_device);
-  Impl::cudaPooledFree(output_device);
+  cudaFree(input_device);
+  cudaFree(output_device);
 }
 
 /**

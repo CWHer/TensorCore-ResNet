@@ -50,8 +50,10 @@ Impl::Tensor Impl::BatchNorm2d::forward(Impl::Tensor &&x) {
   float *weight_data = weight.data_ptr();
   float *bias_data = bias.data_ptr();
 
+  timer.start("forward");
   hostBatchNorm2d(input_data, mean_data, var_data, weight_data, bias_data,
                   eps, batch_size, num_channels, height, width);
+  timer.end("forward");
   // When passed by value, the tensor is copied and can be safely modified
   if (x_device == DeviceType::CPU) {
     x.to(Impl::DeviceType::CPU);
@@ -83,8 +85,10 @@ Impl::Tensor Impl::BatchNorm2dRelu::forward(Impl::Tensor &&x) {
   float *weight_data = weight.data_ptr();
   float *bias_data = bias.data_ptr();
 
+  timer.start("forward");
   hostBatchNorm2dRelu(input_data, mean_data, var_data, weight_data, bias_data,
                   eps, batch_size, num_channels, height, width);
+  timer.end("forward");
   // When passed by value, the tensor is copied and can be safely modified
   if (x_device == DeviceType::CPU) {
     x.to(Impl::DeviceType::CPU);
@@ -115,7 +119,16 @@ Impl::Tensor Impl::BatchNorm2dRelu::forward(const Impl::Tensor &x) {
 void Impl::BatchNorm2d::printModule(const std::string &prefix) {
   std::cout << prefix << ":BatchNorm2d" << std::endl;
 }
+void Impl::BatchNorm2d::printStat(const std::string &prefix) {
+  printModule(prefix);
+  timer.printStat("forward");
+}
 
 void Impl::BatchNorm2dRelu::printModule(const std::string &prefix) {
   std::cout << prefix << ":BatchNorm2d" << std::endl;
+}
+
+void Impl::BatchNorm2dRelu::printStat(const std::string &prefix) {
+  printModule(prefix);
+  timer.printStat("forward");
 }

@@ -86,27 +86,11 @@ class SimpleTimer
   public:
   SimpleTimer() {}
 
-  void start(const std::string &name)
-  {
-    auto &timing_item = timing_items[name];
-    timing_item.last_time = std::chrono::system_clock::now();
-  }
+  void start(const std::string &name);
 
-  void end(const std::string &name)
-  {
-    auto &timing_item = timing_items[name];
-    auto duration = std::chrono::system_clock::now() - timing_item.last_time;
-    timing_item.total_duration += duration;
-    timing_item.count++;
-  }
+  void end(const std::string &name);
 
-  void printStat(const std::string &name)
-  {
-    auto &timing_item = timing_items[name];
-    std::cout << "Timing: " << name << " = "
-              << timing_item.total_duration.count() / timing_item.count
-              << " ms" << std::endl;
-  }
+  void printStat(const std::string &name);
 };
 
 [[maybe_unused]] int randomInt(int min, int max);

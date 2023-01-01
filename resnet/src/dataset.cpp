@@ -8,8 +8,10 @@
 using namespace Impl;
 using namespace std;
 
+constexpr unsigned int MAX_BATCH_SIZE = 256;
+
 ImageDataset::ImageDataset(std::string data_path, Impl::DeviceType device, unsigned int size)
-    : device(device), cur_idx(0), data_path(std::move(data_path)) {
+    : device(device), cur_idx(0), cur_loaded_idx(0), data_path(std::move(data_path)) {
   if (size == -1) {
     total_size = 0;
     // Traverse the directory to get the number of files
@@ -33,10 +35,10 @@ ImageDataset::ImageDataset(std::string data_path, Impl::DeviceType device, unsig
   } else {
     total_size = size;
   }
-
+  load_next_batch();
 }
 
-pair<Tensor, Tensor> ImageDataset::load(const std::string &path, unsigned int index) {
+pair<Tensor, Tensor> ImageDataset::load_single(const std::string &path, unsigned int index) {
   // NOTE: HACK: use preprocess.py to generate the binary files
   // Load batched tensors
   string index_str = std::to_string(index);
@@ -50,14 +52,36 @@ pair<Tensor, Tensor> ImageDataset::load(const std::string &path, unsigned int in
   return std::move(std::make_pair(std::move(image), std::move(label)));
 }
 
+void ImageDataset::load_next_batch() {
+  if (cur_loaded_idx >= total_size) {
+    return;
+  }
+  unsigned int batch_size = std::min(MAX_BATCH_SIZE, total_size - cur_loaded_idx);
+  for (unsigned int i = 0; i < batch_size; i++) {
+    auto il = load_single(data_path, cur_loaded_idx + i);
+    auto image = std::move(il.first);
+    auto label = std::move(il.second);
+    batched_tensors.emplace_back(std::move(image));
+    batched_labels.emplace_back(std::move(label));
+  }
+  cur_loaded_idx += batch_size;
+}
+
 pair<pair<Tensor, Tensor>, bool> Impl::ImageDataset::next() {
+  if (cur_idx >= cur_loaded_idx) {
+    load_next_batch();
+  }
   if (cur_idx >= total_size)
     return std::make_pair(std::make_pair(Tensor(), Tensor()), false);
-  auto data = load(data_path, cur_idx);
+  auto image = std::move(batched_tensors.front());
+  auto label = std::move(batched_labels.front());
+  batched_tensors.pop_front();
+  batched_labels.pop_front();
   cur_idx++;
-  return std::make_pair(std::move(data), true);
+  return std::make_pair(std::make_pair(std::move(image), std::move(label)), true);
 }
 
 unsigned int ImageDataset::size() const { return total_size; }
+
 
 

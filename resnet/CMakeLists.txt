@@ -102,6 +102,8 @@ find_package(Threads REQUIRED)
 include(sources.cmake)
 include(dataset.cmake)
 
+option(DEBUG_ONE_ROUND "Only debug one round of inference" OFF)
+
 # Build source files to a static library to avoid recompiling
 add_library(${PROJECT_NAME}_base STATIC ${SOURCE_FILES})
 add_library(${PROJECT_NAME}_gemm STATIC ${SOURCE_GEMM})
@@ -119,6 +121,11 @@ target_compile_definitions(main_simulator PRIVATE SIMULATE)
 target_compile_definitions(main PRIVATE ${DATASET_DEFINITIONS})
 target_compile_definitions(main_simulator PRIVATE ${DATASET_DEFINITIONS})
 
+if (DEBUG_ONE_ROUND)
+    message(STATUS "Debugging one round of inference")
+    target_compile_definitions(main PRIVATE DEBUG_ONE_ROUND)
+endif()
+
 target_link_libraries(main
         ${CUDA_EXTRA_LIB}
         ${PROJECT_NAME}_base
@@ -128,6 +135,8 @@ target_link_libraries(main_simulator
         ${CUDA_EXTRA_LIB}
         ${PROJECT_NAME}_base
         ${PROJECT_NAME}_simulator_gemm)
+
+
 
 # ################################### Docs ######################################
 

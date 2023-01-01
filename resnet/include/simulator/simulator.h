@@ -62,6 +62,8 @@ namespace Sim
                        u32 Rd, u32 Ra, u32 Sb, u32 Sc, u32 options, u32 imm, u32 Pd0, u32 Ps0);
         [[maybe_unused]] void EXIT_INSTR(const GPUSimulator::ThreadWarp &warp);
 
+
+
         // Launch kernel
         // NOTE: to simplify the simulator, we assume one SM is all-mighty
         //     that is, we fix the grid_dim to (1, 1, 1)
@@ -69,21 +71,21 @@ namespace Sim
         void launchKernel(const dim3 &block_dim,
                           Fn &&kernel_func, Args &&...args)
         {
-          // HACK: GCC 7.5 is too old.
+          // HACK: GCC 7.5 on the device is too old.
+#if __GNUC_PREREQ(8, 2)
             // NOTE: memory validation
-            // clang-format off
-//            ([&]{
-//                // HACK: FIXME: to avoid T *&x case
-//                printCppError(std::is_reference<Args>::value,
-//                              "DO NOT support reference type for kernel function arguments",
-//                              __FILE__, __LINE__);
-//                // HACK: FIXME: disable -Wint-to-pointer-cast warning
-//                if (std::is_pointer<Args>::value)
-//                    printCppError(!global_memory.isAllocated((void *)args),
-//                                  "Wrong address for kernel function arguments",
-//                                  __FILE__, __LINE__);
-//            }(), ...);
-            // clang-format on
+            ([&]{
+                // HACK: FIXME: to avoid T *&x case
+                printCppError(std::is_reference<Args>::value,
+                              "DO NOT support reference type for kernel function arguments",
+                              __FILE__, __LINE__);
+                // HACK: FIXME: disable -Wint-to-pointer-cast warning
+                if (std::is_pointer<Args>::value)
+                    printCppError(!global_memory.isAllocated((void *)args),
+                                  "Wrong address for kernel function arguments",
+                                  __FILE__, __LINE__);
+            }(), ...);
+#endif
 
             // TODO: move this to EXIT_INSTR
             reg_file.reset(), preg_file.reset(), sreg_file.reset();

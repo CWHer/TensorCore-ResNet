@@ -47,9 +47,9 @@ TEST(conv2d, tensors) {
     weight.data_ptr()[i] = matrix_dist(generator);
   }
 
-  // Randomize the bias
+  // no bias
   for (int i = 0; i < bias.totalSize(); i++) {
-    bias.data_ptr()[i] = matrix_dist(generator);
+    bias.data_ptr()[i] = 0;
   }
 
   auto input_at_tensor = torch::from_blob(input.data_ptr(), {batch, channel, input_height, input_width});

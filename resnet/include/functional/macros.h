@@ -31,12 +31,12 @@ inline cudaError_t cudaFreeAsyncIfAvailable(void *devPtr, cudaStream_t hStream) 
 
 #else
 #pragma message "Stream Ordered Memory Allocator is not available with this nvidia driver version.\n"
-template<class T> inline cudaError_t cudaMallocAsyncIfAvailable(T **ptr, size_t size, [[gnu::unused]] cudaStream_t stream) {
-  return Impl::cudaPooledMalloc((void **) (void *) ptr, size);
+template<class T> inline cudaError_t cudaMallocAsyncIfAvailable(T **ptr, size_t size, cudaStream_t stream) {
+  return Impl::cudaPooledMallocAsync((void **) (void *) ptr, size, stream);
 }
 
-inline cudaError_t cudaFreeAsyncIfAvailable(void *devPtr, [[gnu::unused]] cudaStream_t hStream) {
-  return Impl::cudaPooledFree(devPtr);
+inline cudaError_t cudaFreeAsyncIfAvailable(void *devPtr, cudaStream_t hStream) {
+  return Impl::cudaPooledFreeAsync(devPtr, hStream);
 }
 #endif
 

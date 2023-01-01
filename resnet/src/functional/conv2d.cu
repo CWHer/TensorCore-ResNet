@@ -18,52 +18,6 @@ static void check_cuda_error() {
   }
 }
 
-__global__ static void cuda_bias_extend(float *extended,
-                                        const float *bias,
-                                        int N,
-                                        int out_channels,
-                                        int conv_result_size) {
-  CUDA_KERNEL_LOOP(i, N * out_channels * conv_result_size) {
-    auto curr = i;
-    auto conv_result_idx = curr % conv_result_size;
-    curr /= conv_result_size;
-    auto out_channel_idx = curr % out_channels;
-    curr /= out_channels;
-    auto batch_idx = curr % N;
-
-    extended[batch_idx * out_channels * conv_result_size + out_channel_idx * conv_result_size + conv_result_idx] =
-        bias[out_channel_idx];
-  }
-}
-
-void bias_extend(float *Result,
-                 const float *bias,
-                 int N,
-                 int out_channels,
-                 int conv_result_size,
-                 Impl::DeviceType device_type) {
-  switch (device_type) {
-  case Impl::DeviceType::CPU: {
-    for (int i = 0; i < N; ++i) {
-      for (int j = 0; j < out_channels; ++j) {
-        for (int k = 0; k < conv_result_size; ++k) {
-          Result[i * out_channels * conv_result_size + j * conv_result_size + k] = bias[j];
-        }
-      }
-    }
-
-  }
-    break;
-  case Impl::DeviceType::CUDA:
-    cuda_bias_extend<<<KERNEL_LOOP_BLOCKS(N * out_channels * conv_result_size), KERNEL_LOOP_THREADS>>>(Result,
-                                                                                                       bias,
-                                                                                                       N,
-                                                                                                       out_channels,
-                                                                                                       conv_result_size);
-    break;
-  }
-}
-
 /**
  * @copydoc conv2d
  * @brief Convolutional layer result sizes
@@ -124,7 +78,9 @@ void conv2d(const float *input,
   int conv_result_size = output_height * output_width;
   int expanded_kernel_width = C * kernel_size * kernel_size;
 
-  float *bias_expanded;
+  if (bias) {
+    throw std::runtime_error("Conv2d with bias not implemented");
+  }
 
   int batched_n = 128;
 
@@ -177,7 +133,7 @@ void conv2d(const float *input,
       }
     }
 
-    Impl::cudaPooledMalloc(&bias_expanded, out_channels * conv_result_size * sizeof(float));
+    //Impl::cudaPooledMalloc(&bias_expanded, out_channels * conv_result_size * sizeof(float));
   } else {
     auto im2col_result = create_im2col_result_store_host(N, C, H, W, kernel_size, kernel_size, stride, padding);
     // After im2col, im2col_result is of shape (N, C * kernel_size * kernel_size, H_out * W_out)
@@ -197,80 +153,8 @@ void conv2d(const float *input,
                    N,
                    GEMM::Major::row_major,
                    device_type);
-
-    bias_expanded = new float[out_channels * conv_result_size];
-  }
-
-  bias_extend(bias_expanded, bias, 1, out_channels, conv_result_size, device_type);
-
-  constexpr int stream_num = 8;
-  cudaStream_t streams[stream_num];
-  for (auto & stream : streams) {
-    cudaStreamCreate(&stream);
-  }
-
-  for (int i = 0; i < N; ++i) {
-    add_(output + i * out_channels * conv_result_size,
-         bias_expanded,
-         out_channels * conv_result_size,
-         device_type,
-         streams[i % stream_num]);
-  }
-
-  for (auto & stream : streams) {
-    cudaStreamSynchronize(stream);
-    cudaStreamDestroy(stream);
-  }
-
-  if (device_type == Impl::DeviceType::CUDA) {
-    cudaPooledFree(bias_expanded);
-  } else {
-    delete[] bias_expanded;
   }
 
   check_cuda_error();
-}
-
-void conv2d(const float *input,
-            float *output,
-            const float *weight,
-            const float *bias,
-            int N,
-            int C,
-            int H,
-            int W,
-            int out_channels,
-            int kernel_size,
-            int stride,
-            int padding,
-            Impl::DeviceType device_type) {
-  int output_height = (H + 2 * padding - kernel_size) / stride + 1;
-  int output_width = (W + 2 * padding - kernel_size) / stride + 1;
-  int conv_result_size = output_height * output_width;
-  auto weight_shape = out_channels * conv_result_size;
-  // copy weight to float_16
-  switch (device_type) {
-  case Impl::DeviceType::CPU: {
-    auto weight_16 = new float_16[weight_shape];
-    for (int i = 0; i < weight_shape; i++) {
-      weight_16[i] = weight[i];
-    }
-    conv2d(input, output, weight_16, bias, N, C, H, W, out_channels, kernel_size, stride, padding, device_type);
-    delete[] weight_16;
-    break;
-  }
-  case Impl::DeviceType::CUDA: {
-    float_16 *weight_16;
-    Impl::cudaPooledMalloc(&weight_16, weight_shape * sizeof(float_16));
-    float_16 *weight_16_ptr = weight_16;
-    for (int i = 0; i < weight_shape; i++) {
-      *weight_16_ptr = weight[i];
-      weight_16_ptr++;
-    }
-    conv2d(input, output, weight_16, bias, N, C, H, W, out_channels, kernel_size, stride, padding, device_type);
-    cudaPooledFree(weight_16);
-    break;
-  }
-  }
 }
 

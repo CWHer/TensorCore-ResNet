@@ -12,6 +12,7 @@ private:
   float_16 *weight_f16;
   int in_channels;
   int out_channels, kernel_size, stride, padding, dilation, groups;
+  bool biased;
 
 public:
   Conv2d(int in_channels,
@@ -34,6 +35,7 @@ public:
   Tensor forward(Tensor &&x) override;
 
   void printModule(const std::string &prefix) override;
+  void printStat(const std::string &prefix) override;
 };
 
 }
