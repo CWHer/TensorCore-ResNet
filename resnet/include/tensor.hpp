@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.h"
+#include "common.hpp"
 
 namespace Impl {
 
@@ -19,8 +19,8 @@ public:
     friend class TensorOps;
 
   private:
-    int64_t total_size;
-    int32_t n_dim;
+    int64_t total_size{};
+    int32_t n_dim{};
     std::vector<int32_t> shape;
     std::vector<int32_t> strides;
     Impl::DeviceType device;
@@ -29,8 +29,8 @@ public:
   public:
     TensorStorage();
     explicit TensorStorage(const std::vector<int> &shape,
-                  Impl::DeviceType device = Impl::DeviceType::CPU,
-                  float *data = nullptr);
+                           Impl::DeviceType device = Impl::DeviceType::CPU,
+                           float *data = nullptr);
     TensorStorage(const TensorStorage &other);
     TensorStorage(TensorStorage &&other) noexcept;
     ~TensorStorage();
@@ -50,7 +50,9 @@ private:
 public:
   Tensor();
   explicit Tensor(std::shared_ptr<TensorStorage> storage);
-  explicit Tensor(const std::vector<int> &shape, Impl::DeviceType device = Impl::DeviceType::CPU, float *data = nullptr);
+  explicit Tensor(const std::vector<int> &shape,
+                  Impl::DeviceType device = Impl::DeviceType::CPU,
+                  float *data = nullptr);
   Tensor(const Tensor &other);
   Tensor(Tensor &&other) noexcept;
   void load(const std::string &file_path);

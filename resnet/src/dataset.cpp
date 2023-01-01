@@ -10,8 +10,8 @@ using namespace std;
 
 constexpr unsigned int MAX_BATCH_SIZE = 256;
 
-ImageDataset::ImageDataset(std::string data_path, Impl::DeviceType device, unsigned int size)
-    : device(device), cur_idx(0), cur_loaded_idx(0), data_path(std::move(data_path)) {
+ImageDataset::ImageDataset(std::string data_path, Impl::DeviceType device, int size)
+    : device(device), data_path(std::move(data_path)), cur_idx(0), cur_loaded_idx(0) {
   if (size == -1) {
     total_size = 0;
     // Traverse the directory to get the number of files

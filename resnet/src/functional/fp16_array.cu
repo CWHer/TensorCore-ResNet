@@ -1,7 +1,7 @@
 /** @file fp16_array.cu
 */
 #include "functional/gemm.hpp"
-#include "functional/macros.h"
+#include "functional/macros.hpp"
 
 static void check_cuda_error() {
   cudaError_t err = cudaPeekAtLastError();
@@ -24,12 +24,11 @@ static __global__ void fp16_to_fp32_kernel(const float_16 *input, float_32 *outp
   __syncthreads();
 }
 
-
 float_16 *fp32_array_to_fp16_array(const float_32 *fp32_array, size_t size, Impl::DeviceType device_type) {
-  float_16 *fp16_array;
+  float_16 *fp16_array = nullptr;
   switch (device_type) {
   case Impl::DeviceType::CPU:fp16_array = new float_16[size];
-    for (int i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
       fp16_array[i] = float_16(fp32_array[i]);
     }
     break;
@@ -42,10 +41,10 @@ float_16 *fp32_array_to_fp16_array(const float_32 *fp32_array, size_t size, Impl
 }
 
 float_32 *fp16_array_to_fp32_array(const float_16 *fp16_array, size_t size, Impl::DeviceType device_type) {
-  float_32 *fp32_array;
+  float_32 *fp32_array = nullptr;
   switch (device_type) {
   case Impl::DeviceType::CPU:fp32_array = new float_32[size];
-    for (int i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
       fp32_array[i] = __half2float(fp16_array[i]);
     }
     break;

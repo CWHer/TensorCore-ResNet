@@ -1,7 +1,6 @@
 #pragma once
 
-
-#include "common.h"
+#include "common.hpp"
 #include "tensor.hpp"
 #include "ops.hpp"
 
@@ -20,7 +19,7 @@ private:
 public:
   explicit ImageDataset(std::string data_path,
                         Impl::DeviceType device = Impl::DeviceType::CUDA,
-                        unsigned int size = -1);
+                        int size = -1);
 
   std::pair<Tensor, Tensor> load_single(const std::string &path, unsigned int index);
   void load_next_batch();

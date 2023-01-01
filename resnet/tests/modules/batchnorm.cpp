@@ -2,14 +2,13 @@
  * @file test/test_batchnorm.cpp
  * @brief Test bn functionality
  */
-
+#if WITH_DATA
+#ifdef TEST_DATA_ROOT
 #include <gtest/gtest.h>
 #include "batchnorm.hpp"
 
 using namespace Impl;
 
-#if WITH_DATA
-#ifdef TEST_DATA_ROOT
 TEST(batchnorm, bn)
 {
     // load_single module

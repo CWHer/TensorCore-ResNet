@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.h"
+#include "common.hpp"
 #include "tensor.hpp"
 #include "functional/add.hpp"
 

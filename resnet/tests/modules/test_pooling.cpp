@@ -2,7 +2,8 @@
  * @file test/test_pooling.cpp
  * @brief Test pooling functionality
  */
-
+#if WITH_DATA
+#ifdef TEST_DATA_ROOT
 #include <gtest/gtest.h>
 #include "pooling.hpp"
 #include <string>
@@ -10,8 +11,6 @@
 using namespace Impl;
 using namespace std;
 
-#if WITH_DATA
-#ifdef TEST_DATA_ROOT
 TEST(pooling, max_pool) {
   // load_single module
   MaxPool2d max_pool(3, 2, 1);
@@ -38,11 +37,7 @@ TEST(pooling, max_pool) {
   for (int i = 0; i < N_TEST; i++)
     EXPECT_NEAR(naive_res[i], std_res[i], 1e-5);
 }
-#endif
-#endif
 
-#if WITH_DATA
-#ifdef TEST_DATA_ROOT
 TEST(pooling, avg_pool) {
   // load_single module
   AvgPool2d avg_pool(5, 2, 2);

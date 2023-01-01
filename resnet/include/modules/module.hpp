@@ -2,7 +2,7 @@
 
 #include <utility>
 
-#include "common.h"
+#include "common.hpp"
 #include "tensor.hpp"
 
 namespace Impl {
@@ -11,7 +11,7 @@ class Module {
 private:
   struct NamedTensor {
     std::string name;
-    Tensor& tensor;
+    Tensor &tensor;
   };
 
   std::vector<NamedTensor> tensor_list;
@@ -22,15 +22,15 @@ protected:
 public:
   virtual Tensor forward(const Tensor &x) = 0;
 
-  virtual Tensor forward(Tensor&& x) {
+  virtual Tensor forward(Tensor &&x) {
     return forward(x);
   }
 
   virtual void printModule(const std::string &prefix) = 0;
 
-  virtual void printStat(const std::string &prefix) {}
+  virtual void printStat(const std::string &prefix) = 0;
 
-  void addTensor(const std::string &name, Tensor& tensor) {
+  void addTensor(const std::string &name, Tensor &tensor) {
     tensor_list.emplace_back(NamedTensor{name, tensor});
   }
 
@@ -74,7 +74,7 @@ public:
     return result;
   }
 
-  Tensor forward(Tensor&& x) override {
+  Tensor forward(Tensor &&x) override {
     for (auto &named_module : module_list)
       x = named_module.module->forward(std::move(x));
     return x;
@@ -90,8 +90,7 @@ public:
       named_module.module->printModule(prefix + "_" + named_module.name);
   }
 
-  void printStat(const std::string &prefix) override
-  {
+  void printStat(const std::string &prefix) override {
     for (auto &named_module : module_list)
       named_module.module->printStat(prefix + "_" + named_module.name);
   }

@@ -5,7 +5,7 @@
 #include <sstream>
 #include <random>
 #include "functional/conv2d.hpp"
-#include "common.h"
+#include "common.hpp"
 
 #if WITH_TORCH
 #include <torch/torch.h>
@@ -86,7 +86,7 @@ static string python_command_invoke(const string &script) {
 
   // write the script to the child process
   ssize_t written = write(in_fd[1], script.c_str(), script.size());
-  if (written != script.size() || written == -1) {
+  if (static_cast<size_t>(written) != script.size() || written == -1) {
     perror("write");
     exit(EXIT_FAILURE);
   }
@@ -170,7 +170,7 @@ static void conv2d_torch(float *input,
   // Assert the output size is correct.
   auto shape = output_tensor.sizes();
   auto ref_shape = conv2d_result_shape(N, C, H, W, out_channels, kernel_size, stride, padding);
-  for (int i = 0; i < shape.size(); i++) {
+  for (size_t i = 0; i < shape.size(); i++) {
     assert(shape[i] == ref_shape[i]);
   }
   memcpy(output, output_tensor.data_ptr(), output_tensor.numel() * sizeof(float));
@@ -338,9 +338,6 @@ TEST(conv2d, basic_conv2d_conv1) {
   auto filter_channel = 64;
   auto filter_size = 7;
 
-  auto output_layers = 64;
-  auto output_height = 112;
-  auto output_width = 112;
 
   // Check if shapes are correct
   auto shape =

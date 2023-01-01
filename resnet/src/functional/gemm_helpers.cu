@@ -1,7 +1,7 @@
 /** @file gemm_helpers.cu
 */
 
-#include "common.h"
+#include "common.hpp"
 #include "functional/gemm.hpp"
 #include "mem_pool.h"
 

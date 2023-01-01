@@ -2,7 +2,7 @@
 */
 #if not DISABLE_MEM_POOL
 #include <cuda.h>
-#include "common.h"
+#include "common.hpp"
 #include "mem_pool.h"
 
 using namespace Impl;
@@ -38,9 +38,12 @@ void deinit_mem_pool() {
   cout << "mem_pool: total " << total << "MB" << endl;
 #endif
 
-  for (auto &kv : mem_cache)
+  for (auto &kv : mem_cache) {
     for (auto &ptr : kv.second)
       checkCudaErrors(cudaFree(ptr));
+    kv.second.clear();
+  }
+
   for (auto &kv : stream_ptr)
     checkCppErrorsMsg(!kv.second.empty(), "stream_ptr not empty");
 }
@@ -60,7 +63,7 @@ cudaError_t cudaPooledMalloc(void **devPtr, size_t size) {
   }
 }
 
-cudaError_t cudaPooledMallocAsync(void **ptr, size_t size, cudaStream_t stream){
+cudaError_t cudaPooledMallocAsync(void **ptr, size_t size, [[gnu::unused]] cudaStream_t stream) {
   return cudaPooledMalloc(ptr, size);
 }
 
@@ -70,12 +73,12 @@ cudaError_t cudaPooledFree(void *devPtr) {
   return cudaSuccess;
 }
 
-cudaError_t cudaPooledFreeAsync(void *ptr, cudaStream_t stream){
+cudaError_t cudaPooledFreeAsync(void *ptr, cudaStream_t stream) {
   stream_ptr[stream].push_back(ptr);
   return cudaSuccess;
 }
 
-void cudaCacheCommit(cudaStream_t stream){
+void cudaCacheCommit(cudaStream_t stream) {
   for (auto &ptr : stream_ptr[stream])
     mem_cache[mem_size[ptr]].push_back(ptr);
   stream_ptr[stream].clear();

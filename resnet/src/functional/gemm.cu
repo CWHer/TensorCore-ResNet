@@ -4,20 +4,12 @@
 #include <cublas_v2.h>
 #include <cublasLt.h>
 #include <cuda_gl_interop.h>
-#include <cuda_runtime_api.h>
-#include "common.h"
-#include "functional/macros.h"
+#include "common.hpp"
+#include "functional/macros.hpp"
 #include "functional/gemm.hpp"
 
 using namespace nvcuda;
 using namespace Impl;
-
-static void check_cuda_error() {
-  cudaError_t err = cudaPeekAtLastError();
-  if (err != cudaSuccess) {
-    throw std::runtime_error(cudaGetErrorString(err));
-  }
-}
 
 static const int warp_size = 32;
 
@@ -273,7 +265,7 @@ void gemm_batched_B(const float_16 *A,
                     size_t N,
                     size_t K,
                     size_t batch_size,
-                    GEMM::Major major,
+                    [[maybe_unused]] GEMM::Major major,
                     Impl::DeviceType device_type) {
 #if DEBUG
   if (major != GEMM::Major::row_major) {
@@ -288,7 +280,7 @@ void gemm_batched_B(const float_16 *A,
     cudaStreamCreate(&stream);
   }
 
-  for (int i = 0; i < batch_size; i++) {
+  for (size_t i = 0; i < batch_size; i++) {
     auto B_ptr = B + i * K * N;
     auto C_ptr = C + i * M * N;
     gemm_stream(A, B_ptr, C_ptr, M, N, K, GEMM::Major::row_major, device_type, streams[i % stream_count]);

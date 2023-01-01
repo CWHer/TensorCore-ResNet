@@ -1,10 +1,10 @@
+import argparse
 import os
 from typing import Iterable
 
+import numpy as np
 import torch
 import tqdm
-import numpy as np
-import argparse
 from PIL import Image
 from torch.utils.data import DataLoader
 from torchvision import models, transforms
@@ -104,6 +104,7 @@ def write_test_batchnorm_files(file_root):
         y = net(x_tensor)
     writeTensor(y, os.path.join(file_root, "test_batchnorm_y.bin"))
 
+
 def write_test_pooling_files(file_root):
     print("Creating Pooling test files")
     seed = 0
@@ -121,7 +122,7 @@ def write_test_pooling_files(file_root):
 
     x_tensor = randomTensor(
         (batch_size, num_features, height, width), generator)
-    writeTensor(x_tensor,os.path.join(file_root, "test_maxpool_x.bin"))
+    writeTensor(x_tensor, os.path.join(file_root, "test_maxpool_x.bin"))
 
     net = torch.nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
@@ -198,7 +199,7 @@ if __name__ == "__main__":
             writeTensor(images, os.path.join(output_dir, f"images_{i:04d}.bin"))
             image_device = images.to(device)
             outputs = model(image_device)
-            #_, predicted = torch.max(outputs.data, 1)
+            # _, predicted = torch.max(outputs.data, 1)
             predicted_label = outputs.cpu().detach()
             writeTensor(predicted_label, os.path.join(output_dir, f"labels_{i:04d}.bin"))
             total += labels.size(0)

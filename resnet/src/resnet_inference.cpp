@@ -5,7 +5,7 @@
 using namespace Impl;
 using namespace std;
 
-int _main() {
+int inference_main() {
   // 1. load_single resnet18 model
   // 2. load_single image dataset
   // 3. inference
@@ -30,7 +30,7 @@ int _main() {
   int num_total = 0;
   SimpleTimer timer;
   timer.start("total_time");
-  for (int i = 0; i < dataset.size(); i++) {
+  for (size_t i = 0; i < dataset.size(); i++) {
     timer.start("forward");
 
     timer.start("preprocess");
@@ -55,14 +55,16 @@ int _main() {
     num_total += predicted_result.sizes()[0];
     timer.end("postprocess");
   }
+  timer.end("total_time");
   std::cout << "Accuracy Compared to PyTorch ResNet18 Implementation: " << num_correct << "/" << num_total << std::endl
             << std::endl;
 
-  timer.end("total_time");
-
+  timer.printStat("total_time");
+  std::cout << std::endl;
   timer.printStat("preprocess");
   timer.printStat("forward");
   timer.printStat("postprocess");
+  std::cout << "Per-layer details:" << std::endl;
   resnet18.printStat("resnet18");
 
 #endif
@@ -82,7 +84,7 @@ int _main() {
 
 int main() {
   init_mem_pool();
-  _main();
+  inference_main();
   deinit_mem_pool();
   return 0;
 }

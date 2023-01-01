@@ -8,7 +8,7 @@ using namespace Impl;
 BasicBlock::BasicBlock(int64_t inplanes, int64_t planes, int64_t stride, ModuleList downsample)
     : conv1(std::make_shared<Conv2d>(inplanes, planes, 3, stride, 1, 1)),
 #if DISABLE_FUSE
-      bn1(std::make_shared<BatchNorm2d>(planes)),
+    bn1(std::make_shared<BatchNorm2d>(planes)),
 #else
       bn1(std::make_shared<BatchNorm2dRelu>(planes)),
 #endif
@@ -59,7 +59,7 @@ Tensor BasicBlock::forward(Tensor &&x) {
 ResNet18::ResNet18(const std::string &model_path, std::vector<int> layers, int64_t num_classes)
     : conv1(std::make_shared<Conv2d>(3, inplanes, 7, 2, 3)),
 #if DISABLE_FUSE
-      bn1(std::make_shared<BatchNorm2d>(inplanes)),
+    bn1(std::make_shared<BatchNorm2d>(inplanes)),
 #else
       bn1(std::make_shared<BatchNorm2dRelu>(inplanes)),
 #endif

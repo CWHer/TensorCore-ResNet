@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.h"
+#include "common.hpp"
 #include "module.hpp"
 #include "functional/linear.hpp"
 

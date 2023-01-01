@@ -7,7 +7,7 @@ if (NOT GENERATE_DATASET)
     message(STATUS "Dataset generation is disabled")
     message(STATUS "Set CMake option GENERATE_DATASET to ON to enable it")
     return()
-endif()
+endif ()
 
 execute_process(COMMAND
         python "${PROJECT_SOURCE_DIR}/src/python_helpers/test_dependencies.py"

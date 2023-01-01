@@ -2,7 +2,7 @@
 */#ifndef TENSORCORE_RESNET_COMMON_FUNCTIONAL_GEMM_HPP
 #define TENSORCORE_RESNET_COMMON_FUNCTIONAL_GEMM_HPP
 
-#include "common.h"
+#include "common.hpp"
 
 namespace GEMM {
 enum Major {

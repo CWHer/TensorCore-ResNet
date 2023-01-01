@@ -3,7 +3,7 @@
 #ifndef TENSORCORE_RESNET_COMMON_FUNCTIONAL_LINEAR_HPP
 #define TENSORCORE_RESNET_COMMON_FUNCTIONAL_LINEAR_HPP
 
-#include "common.h"
+#include "common.hpp"
 
 void linear(const float_16 *input,
             float *output,

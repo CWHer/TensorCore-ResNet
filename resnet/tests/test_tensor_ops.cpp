@@ -116,4 +116,24 @@ TEST(tensor_ops, add_) {
   }
 }
 
+TEST(tensor_ops, add_relu_) {
+  // add_
+  float *a, *b;
+  a = new float[1000];
+  b = new float[1000];
+  for (int i = 0; i < 1000; i++) {
+    a[i] = static_cast<float>(-i * (i % 2 ? -1 : 1));
+    b[i] = static_cast<float>(131 * i * (i % 2 ? -1 : 1));
+  }
 
+  Tensor x({1000}, DeviceType::CPU, a);
+  Tensor y({1000}, DeviceType::CPU, b);
+  x.to(DeviceType::CUDA);
+  y.to(DeviceType::CUDA);
+
+  TensorOps::add_relu_(x, y);
+  x.to(DeviceType::CPU);
+  float *result = x.data_ptr();
+  for (int i = 0; i < 1000; i++)
+    EXPECT_NEAR(result[i], 130 * i * (i % 2 ? 0 : 1), 1e-5);
+}

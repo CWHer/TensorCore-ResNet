@@ -64,12 +64,14 @@ TEST(linear, functional) {
   auto close = torch::isclose(output_ref_at_tensor, output_at_tensor, 1e0, 5e-1);
   auto close_count = close.sum().item<int64_t>();
 
-  EXPECT_LE(output.totalSize() - close_count, output.totalSize() * tolerance) << "Reference and output are not close enough";
+  EXPECT_LE(output.totalSize() - close_count, output.totalSize() * tolerance)
+          << "Reference and output are not close enough";
 
   close = torch::isclose(output_at_tensor, output_d_at_tensor, 1e0, 5e-1);
   close_count = close.sum().item<int64_t>();
 
-  EXPECT_LE(output.totalSize() - close_count, output.totalSize() * tolerance) << "CUDA and CPU results are not close enough";
+  EXPECT_LE(output.totalSize() - close_count, output.totalSize() * tolerance)
+          << "CUDA and CPU results are not close enough";
 
 }
 #endif
@@ -129,12 +131,14 @@ TEST(linear, layer) {
   auto close = torch::isclose(output_ref_at_tensor, output_at_tensor, 1e0, 5e-1);
   auto close_count = close.sum().item<int64_t>();
 
-  EXPECT_LE(output.totalSize() - close_count, output.totalSize() * tolerance) << "Reference and output are not close enough";
+  EXPECT_LE(output.totalSize() - close_count, output.totalSize() * tolerance)
+          << "Reference and output are not close enough";
 
   close = torch::isclose(output_at_tensor, output_d_at_tensor, 1e0, 5e-1);
   close_count = close.sum().item<int64_t>();
 
-  EXPECT_LE(output.totalSize() - close_count, output.totalSize() * tolerance) << "CUDA and CPU results are not close enough";
+  EXPECT_LE(output.totalSize() - close_count, output.totalSize() * tolerance)
+          << "CUDA and CPU results are not close enough";
 
 }
 #endif

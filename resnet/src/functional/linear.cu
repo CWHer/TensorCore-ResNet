@@ -6,7 +6,7 @@
 #include "functional/gemm.hpp"
 #include "functional/add.hpp"
 #include "functional/linear.hpp"
-#include "functional/macros.h"
+#include "functional/macros.hpp"
 
 /**
  * @brief Linear layer implementation.
@@ -53,7 +53,7 @@ void linear(const float_16 *input,
 
   constexpr int stream_num = 8;
   cudaStream_t streams[stream_num];
-  for (auto & stream : streams) {
+  for (auto &stream : streams) {
     cudaStreamCreate(&stream);
   }
 
@@ -61,7 +61,7 @@ void linear(const float_16 *input,
     add_(&output[batch * output_channel], bias, output_channel, device_type, streams[batch % stream_num]);
   }
 
-  for (auto & stream : streams) {
+  for (auto &stream : streams) {
     cudaStreamSynchronize(stream);
     cudaStreamDestroy(stream);
   }
@@ -69,8 +69,8 @@ void linear(const float_16 *input,
 
 __global__ void transpose_kernel(const float *input, float_16 *output, int m, int n) {
   CUDA_KERNEL_LOOP(index, m * n) {
-    int i = index / n;
-    int j = index % n;
+    auto i = index / n;
+    auto j = index % n;
     if (i < m && j < n) {
       output[j * m + i] = __float2half(input[i * n + j]);
     }

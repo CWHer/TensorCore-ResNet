@@ -1,6 +1,6 @@
 /** @file common.cpp
 */
-#include "common.h"
+#include "common.hpp"
 
 [[maybe_unused]] int randomInt(int min, int max) {
   static std::random_device rd;
@@ -31,6 +31,6 @@ void SimpleTimer::end(const std::string &name) {
 void SimpleTimer::printStat(const std::string &name) {
   auto &timing_item = timing_items[name];
   std::cout << name << " = "
-            << timing_item.total_duration.count() / timing_item.count
+            << timing_item.total_duration.count() / static_cast<double>(timing_item.count)
             << " ms" << std::endl;
 }

@@ -6,8 +6,11 @@
 #include <cuda_runtime_api.h>
 #include "mem_pool.h"
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "bugprone-macro-parentheses"
 #define CUDA_KERNEL_LOOP(i, n) \
-  for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < (n); i += blockDim.x * gridDim.x)
+  for (size_t i = blockIdx.x * blockDim.x + threadIdx.x; i < (n); i += blockDim.x * gridDim.x)
+#pragma clang diagnostic pop
 
 const int KERNEL_LOOP_THREADS = 512;
 
@@ -41,3 +44,4 @@ inline cudaError_t cudaFreeAsyncIfAvailable(void *devPtr, cudaStream_t hStream) 
 #endif
 
 #endif //TENSORCORE_RESNET_COMMON_FUNCTIONAL_MACROS_H
+

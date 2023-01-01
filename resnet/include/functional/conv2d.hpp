@@ -3,7 +3,7 @@
 #ifndef TENSORCORE_RESNET_COMMON_FUNCTIONAL_CONV2D_HPP
 #define TENSORCORE_RESNET_COMMON_FUNCTIONAL_CONV2D_HPP
 
-#include "common.h"
+#include "common.hpp"
 #include <memory>
 #include "mem_pool.h"
 
@@ -19,13 +19,13 @@ std::unique_ptr<float_16[]> create_im2col_result_store_host(int N,
                                                             int padding);
 
 std::unique_ptr<float_16[], decltype(&Impl::cudaPooledFree)> create_im2col_result_store_device(int N,
-                                                                                   int C,
-                                                                                   int H,
-                                                                                   int W,
-                                                                                   int filter_height,
-                                                                                   int filter_width,
-                                                                                   int stride,
-                                                                                   int padding);
+                                                                                               int C,
+                                                                                               int H,
+                                                                                               int W,
+                                                                                               int filter_height,
+                                                                                               int filter_width,
+                                                                                               int stride,
+                                                                                               int padding);
 
 void im2col(const float *input,
             float_16 *output,

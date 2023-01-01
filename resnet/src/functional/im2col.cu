@@ -2,9 +2,9 @@
 */
 
 #include <memory>
-#include "common.h"
+#include "common.hpp"
 #include "functional/conv2d.hpp"
-#include "functional/macros.h"
+#include "functional/macros.hpp"
 #include "mem_pool.h"
 
 using namespace Impl;
@@ -32,17 +32,17 @@ std::unique_ptr<float_16[]> create_im2col_result_store_host(int N,
 }
 
 std::unique_ptr<float_16[], decltype(&cudaPooledFree)> create_im2col_result_store_device(int N,
-                                                                                   int C,
-                                                                                   int H,
-                                                                                   int W,
-                                                                                   int filter_height,
-                                                                                   int filter_width,
-                                                                                   int stride,
-                                                                                   int padding) {
+                                                                                         int C,
+                                                                                         int H,
+                                                                                         int W,
+                                                                                         int filter_height,
+                                                                                         int filter_width,
+                                                                                         int stride,
+                                                                                         int padding) {
   auto im2col_size = im2col_result_size(N, C, H, W, filter_height, filter_width, stride, padding);
   float_16 *ptr;
   Impl::cudaPooledMalloc(&ptr, im2col_size * sizeof(float_16));
-  return std::unique_ptr<float_16[], decltype(&cudaPooledFree)>(ptr, &cudaPooledFree);
+  return {ptr, &cudaPooledFree};
 }
 
 __global__ static void im2col_cuda_kernel(const float *input,
@@ -61,12 +61,11 @@ __global__ static void im2col_cuda_kernel(const float *input,
   int filter_size = kernel_size * kernel_size;
   int input_channel_size = H * W;
 
-  for (int i = blockIdx.x * blockDim.x + threadIdx.x;
-       i < output_size * filter_size * C * N; i += blockDim.x * gridDim.x)
-  {
+  for (auto i = blockIdx.x * blockDim.x + threadIdx.x;
+       i < output_size * filter_size * C * N; i += blockDim.x * gridDim.x) {
     // FIXME: unify the order with im2col_naive
     // order: output_h, output_w, filter_h, filter_w, C
-    int cur_index = i;
+    int cur_index = static_cast<int>(i);
     int cur_n = cur_index % N;
     cur_index /= N;
     int cur_c = cur_index % C;
@@ -83,7 +82,8 @@ __global__ static void im2col_cuda_kernel(const float *input,
     int index_w = output_w * stride + filter_w - padding;
     int input_index = (cur_n * C + cur_c) * input_channel_size + index_h * W + index_w;
     // clang-format off
-    if (input_index > N * C * H * W) continue;
+    if (input_index > N * C * H * W)
+      continue;
     // clang-format on
 
     int output_index = (cur_n * C + cur_c) * filter_size + filter_h * kernel_size + filter_w;
@@ -116,7 +116,7 @@ static void im2col_device_memory(const float *input,
   unsigned long minibatches = (N + minibatch_size - 1) / minibatch_size;
 
   cudaStream_t stream[stream_num];
-  for (auto & i : stream) {
+  for (auto &i : stream) {
     checkCudaErrors(cudaStreamCreate(&i));
   }
 
@@ -137,7 +137,7 @@ static void im2col_device_memory(const float *input,
     checkCudaErrors(cudaPeekAtLastError());
   }
 
-  for (auto & i : stream) {
+  for (auto &i : stream) {
     cudaStreamSynchronize(i);
     cudaStreamDestroy(i);
   }
@@ -198,27 +198,29 @@ void im2col(const float *input,
             int padding,
             Impl::DeviceType device_type) {
   switch (device_type) {
-  case Impl::DeviceType::CPU: return im2col_host_memory(input,
-                                                        output,
-                                                        N,
-                                                        C,
-                                                        H,
-                                                        W,
-                                                        filter_height,
-                                                        filter_width,
-                                                        stride,
-                                                        padding);
+  case Impl::DeviceType::CPU:
+    return im2col_host_memory(input,
+                              output,
+                              N,
+                              C,
+                              H,
+                              W,
+                              filter_height,
+                              filter_width,
+                              stride,
+                              padding);
 
-  case Impl::DeviceType::CUDA: return im2col_device_memory(input,
-                                                           output,
-                                                           N,
-                                                           C,
-                                                           H,
-                                                           W,
-                                                           filter_height,
-                                                           filter_width,
-                                                           stride,
-                                                           padding);
+  case Impl::DeviceType::CUDA:
+    return im2col_device_memory(input,
+                                output,
+                                N,
+                                C,
+                                H,
+                                W,
+                                filter_height,
+                                filter_width,
+                                stride,
+                                padding);
   }
 
 }

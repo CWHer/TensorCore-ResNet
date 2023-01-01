@@ -4,10 +4,10 @@
 
 #include "functional/gemm.hpp"
 #include "functional/conv2d.hpp"
-#include "functional/macros.h"
+#include "functional/macros.hpp"
 #include "functional/add.hpp"
 
-#include "common.h"
+#include "common.hpp"
 
 using namespace Impl;
 
@@ -32,7 +32,7 @@ int conv2d_output_sizes(int N, int C, int H, int W, int out_channels, int kernel
  * @brief Convolutional layer result shape
  */
 std::vector<int> conv2d_result_shape(int N,
-                                     int C,
+                                     [[gnu::unused]] int C,
                                      int H,
                                      int W,
                                      int out_channels,

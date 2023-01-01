@@ -1,36 +1,34 @@
 #pragma once
 
-#include "common.h"
+#include "common.hpp"
 #include "module.hpp"
 
 namespace Impl {
-class MaxPool2d : public Module
-{
+class MaxPool2d : public Module {
 private:
-    int kernel_size, stride, padding;
+  int kernel_size, stride, padding;
 
 public:
-    explicit MaxPool2d(int kernel_size, int stride = 1, int padding = 0);
+  explicit MaxPool2d(int kernel_size, int stride = 1, int padding = 0);
 
-    Tensor forward(const Tensor &x) override;
-    Tensor forward(Tensor &&x) override;
+  Tensor forward(const Tensor &x) override;
+  Tensor forward(Tensor &&x) override;
 
-    void printModule(const std::string &prefix) override;
-    void printStat(const std::string &prefix) override;
+  void printModule(const std::string &prefix) override;
+  void printStat(const std::string &prefix) override;
 };
 
-class AvgPool2d : public Module
-{
+class AvgPool2d : public Module {
 private:
-    int kernel_size, stride, padding;
+  int kernel_size, stride, padding;
 
 public:
-    explicit AvgPool2d(int kernel_size, int stride = 1, int padding = 0);
+  explicit AvgPool2d(int kernel_size, int stride = 1, int padding = 0);
 
-    Tensor forward(const Tensor &x) override;
-    Tensor forward(Tensor &&x) override;
+  Tensor forward(const Tensor &x) override;
+  Tensor forward(Tensor &&x) override;
 
-    void printModule(const std::string &prefix) override;
+  void printModule(const std::string &prefix) override;
   void printStat(const std::string &prefix) override;
 };
 

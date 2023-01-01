@@ -9,14 +9,16 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
+#include <utility>
 #include "mem_pool.h"
 
 using namespace Impl;
 
-Tensor::TensorStorage::TensorStorage() : data(nullptr), device(Impl::DeviceType::CPU) {}
+Tensor::TensorStorage::TensorStorage() : total_size(0), n_dim(0), device(Impl::DeviceType::CPU), data(nullptr) {}
 
 Tensor::TensorStorage::TensorStorage(const std::vector<int> &shape, Impl::DeviceType device, float *data)
-    : shape(shape), n_dim(shape.size()), device(device) {
+    : n_dim(static_cast<int>(shape.size())), shape(shape), device(device) {
   strides = std::vector<int>(n_dim);
   strides.back() = 1;
   for (int i = n_dim - 1; i > 0; i--)
@@ -36,7 +38,7 @@ Tensor::TensorStorage::TensorStorage(const std::vector<int> &shape, Impl::Device
 }
 
 Tensor::TensorStorage::TensorStorage(const Tensor::TensorStorage &other)
-    : shape(other.shape), n_dim(other.n_dim), strides(other.strides), total_size(other.total_size),
+    : total_size(other.total_size), n_dim(other.n_dim), shape(other.shape), strides(other.strides),
       device(other.device) {
   switch (device) {
   case Impl::DeviceType::CPU:data = new float[total_size];
@@ -49,8 +51,8 @@ Tensor::TensorStorage::TensorStorage(const Tensor::TensorStorage &other)
 }
 
 Tensor::TensorStorage::TensorStorage(Tensor::TensorStorage &&other) noexcept
-    : shape(std::move(other.shape)), n_dim(other.n_dim), strides(std::move(other.strides)),
-      total_size(other.total_size), data(other.data), device(other.device) {
+    : total_size(other.total_size), n_dim(other.n_dim), shape(std::move(other.shape)),
+      strides(std::move(other.strides)), device(other.device), data(other.data) {
   other.data = nullptr;
 }
 
@@ -71,7 +73,7 @@ void Tensor::TensorStorage::load(const std::string &file_path) {
   //   indefinite data (float_32)
   static const int DATA_OFFSET = 1024;
 
-  struct stat file_stat;
+  struct stat file_stat{};
   stat(file_path.c_str(), &file_stat);
   auto file_size = file_stat.st_size;
 
@@ -87,19 +89,19 @@ void Tensor::TensorStorage::load(const std::string &file_path) {
     return;
   }
 
-  int32_t *header_ptr = (int32_t *) mmap_ptr;
-  float *data_ptr = (float *) ((char *) mmap_ptr + DATA_OFFSET);
+  auto *header_ptr = reinterpret_cast<int32_t *>(mmap_ptr);
+  auto *data_ptr = reinterpret_cast<float *>((char *) mmap_ptr + DATA_OFFSET);
 
   auto maximum_shape_length = DATA_OFFSET / sizeof(int32_t);
   shape = std::vector<int32_t>(header_ptr, header_ptr + maximum_shape_length);
-  for (int i = 0; i < maximum_shape_length; i++) {
+  for (size_t i = 0; i < maximum_shape_length; i++) {
     if (shape[i] == 0) {
       shape.resize(i);
       break;
     }
   }
 
-  n_dim = shape.size();
+  n_dim = static_cast<int>(shape.size());
   strides = std::vector<int>(n_dim);
   strides.back() = 1;
   for (int i = n_dim - 1; i > 0; i--)
@@ -129,7 +131,7 @@ std::shared_ptr<Tensor::TensorStorage> Tensor::TensorStorage::clone() {
 
 float Tensor::TensorStorage::index(const std::vector<int> &indices) {
   int offset = 0;
-  for (int i = 0; i < indices.size(); i++)
+  for (size_t i = 0; i < indices.size(); i++)
     offset += indices[i] * strides[i];
 
   switch (device) {
@@ -174,7 +176,7 @@ Tensor::TensorStorage &Tensor::TensorStorage::operator=(const Tensor::TensorStor
 void Tensor::TensorStorage::reshape(const std::vector<int> &shape) {
   // HACK: DO NOT support -1
   this->shape = shape;
-  n_dim = shape.size();
+  n_dim = static_cast<int>(shape.size());
   strides.resize(n_dim);
   strides.back() = 1;
   for (int i = n_dim - 1; i > 0; i--)
@@ -230,13 +232,13 @@ std::ostream &operator<<(std::ostream &out, const Tensor &x) {
   return out << x.storage;
 }
 }
-Tensor::Tensor(std::shared_ptr<TensorStorage> storage) : storage(storage) {}
+Tensor::Tensor(std::shared_ptr<TensorStorage> storage) : storage(std::move(storage)) {}
 Tensor::Tensor(const Tensor &other) {
   Tensor::TensorStorage other_storage = *other.storage;
   storage = std::make_shared<TensorStorage>(std::move(other_storage));
 }
 Tensor::Tensor(Tensor &&other) noexcept {
-    storage = std::move(other.storage);
+  storage = std::move(other.storage);
 }
 Tensor &Tensor::operator=(const Tensor &other) {
   if (this == &other)

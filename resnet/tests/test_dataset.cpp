@@ -9,6 +9,7 @@ struct validation_data {
   std::vector<float_32> flatten_data;
 };
 
+[[maybe_unused]]
 static struct validation_data validation_data_load(const std::string &path,
                                                    const string &category,
                                                    const int id,
@@ -58,10 +59,10 @@ TEST(dataset, load) {
     auto validation_image = validation_data_load(TEST_DATA_ROOT, "image", dataset_idx, max_inspect_data_length);
 
     ASSERT_EQ(x.sizes().size(), validation_image.sizes.size());
-    for (int i = 0; i < x.sizes().size(); i++)
+    for (size_t i = 0; i < x.sizes().size(); i++)
       ASSERT_EQ(x.sizes()[i], validation_image.sizes[i]);
 
-    for (int i = 0; i < max_inspect_data_length; i++)
+    for (size_t i = 0; i < max_inspect_data_length; i++)
       EXPECT_EQ(x.data_ptr()[i], validation_image.flatten_data[i]);
 
     x = std::move(data.first.second);

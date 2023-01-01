@@ -162,7 +162,7 @@ TEST(conv2d, im2col_naive_impl_correctness_1) {
   auto result_size =
       im2col_result_size(input_N, input_C, input_H, input_W, filter_height, filter_width, stride, padding);
 
-  for (int i = 0; i < result_size; i++) {
+  for (size_t i = 0; i < result_size; i++) {
     EXPECT_NEAR(result[i], ref_result[i], 1e-3);
   }
 }
@@ -233,7 +233,7 @@ TEST(conv2d, im2col_naive_impl_correctness_2) {
   auto result_size =
       im2col_result_size(input_N, input_C, input_H, input_W, filter_height, filter_width, stride, padding);
 
-  for (int i = 0; i < result_size; i++) {
+  for (size_t i = 0; i < result_size; i++) {
     EXPECT_NEAR(result[i], ref_result[i], 1e-3);
   }
 }
@@ -305,7 +305,7 @@ TEST(conv2d, im2col_cuda_impl) {
   auto result_size =
       im2col_result_size(input_N, input_C, input_H, input_W, filter_height, filter_width, stride, padding);
 
-  for (int i = 0; i < result_size; i++) {
+  for (size_t i = 0; i < result_size; i++) {
     EXPECT_NEAR(result[i], ref_result[i], 1e-3);
   }
 }

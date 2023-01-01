@@ -1,10 +1,10 @@
 option(GENERATE_DOCS "Build documentation" OFF)
 
-if(NOT GENERATE_DOCS)
+if (NOT GENERATE_DOCS)
     message(STATUS "Reference documentation generation is disabled.")
     message(STATUS "Set CMake option GENERATE_DOCS to ON to enable it.")
     return()
-endif()
+endif ()
 
 # Documentation
 message(CHECK_START "Check if Doxygen is installed")

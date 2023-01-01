@@ -29,8 +29,6 @@ TEST(conv2d, tensors) {
   auto filter_size = 3;
 
   auto output_layers = 64;
-  auto output_height = 56;
-  auto output_width = 56;
 
   auto input = Impl::Tensor({batch, channel, input_height, input_width});
   auto weight = Impl::Tensor({output_layers, filter_channel, filter_size, filter_size});
@@ -75,7 +73,7 @@ TEST(conv2d, tensors) {
   ASSERT_EQ(output_ref_shape.size(), output_shape.size());
   ASSERT_EQ(output_ref_shape.size(), output_layer_shape.size());
 
-  for (int i = 0; i < output_ref_shape.size(); i++) {
+  for (size_t i = 0; i < output_ref_shape.size(); i++) {
     ASSERT_EQ(output_ref_shape[i], output_shape[i]);
     ASSERT_EQ(output_ref_shape[i], output_layer_shape[i]);
   }
@@ -112,8 +110,6 @@ TEST(conv2d, tensors_cuda) {
   auto filter_size = 3;
 
   auto output_layers = 64;
-  auto output_height = 56;
-  auto output_width = 56;
 
   auto input = Impl::Tensor({batch, channel, input_height, input_width});
   auto weight = Impl::Tensor({output_layers, filter_channel, filter_size, filter_size});
@@ -165,7 +161,7 @@ TEST(conv2d, tensors_cuda) {
   ASSERT_EQ(output_ref_shape.size(), output_shape.size());
   ASSERT_EQ(output_ref_shape.size(), output_layer_shape.size());
 
-  for (int i = 0; i < output_ref_shape.size(); i++) {
+  for (size_t i = 0; i < output_ref_shape.size(); i++) {
     ASSERT_EQ(output_ref_shape[i], output_shape[i]);
     ASSERT_EQ(output_ref_shape[i], output_layer_shape[i]);
   }

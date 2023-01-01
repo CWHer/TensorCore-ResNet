@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.h"
+#include "common.hpp"
 #include "module.hpp"
 #include "functional/conv2d.hpp"
 
@@ -12,7 +12,6 @@ private:
   float_16 *weight_f16;
   int in_channels;
   int out_channels, kernel_size, stride, padding, dilation, groups;
-  bool biased;
 
 public:
   Conv2d(int in_channels,

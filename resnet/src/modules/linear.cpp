@@ -8,8 +8,8 @@
 using namespace Impl;
 
 Impl::Linear::Linear(int in_features, int out_features) : weight({out_features, in_features}), bias({out_features}),
-                                                          in_features(in_features), out_features(out_features),
-                                                          weight_f16(nullptr) {
+                                                          weight_f16(nullptr), in_features(in_features),
+                                                          out_features(out_features) {
   addTensor("weight", weight);
   addTensor("bias", bias);
 }
@@ -103,9 +103,9 @@ Impl::Tensor Impl::Linear::forward(const Tensor &x) {
   }
 #endif
   timer.start("forward");
-  auto result = std::move(functional::linear(x, weight_f16, bias));
+  auto result = functional::linear(x, weight_f16, bias);
   timer.end("forward");
-  return std::move(result);
+  return result;
 }
 
 void Impl::Linear::printModule(const std::string &prefix) {

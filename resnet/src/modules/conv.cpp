@@ -15,8 +15,8 @@ Conv2d::Conv2d(int in_channels,
                int dilation,
                int groups,
                bool bias)
-    : in_channels(in_channels), out_channels(out_channels), kernel_size(kernel_size), stride(stride), padding(padding),
-      dilation(dilation), groups(groups), weight_f16(nullptr), biased(bias) {
+    : weight_f16(nullptr), in_channels(in_channels), out_channels(out_channels), kernel_size(kernel_size),
+      stride(stride), padding(padding), dilation(dilation), groups(groups) {
 #if DEBUG
   if (dilation != 1 || groups != 1) {
     throw std::runtime_error("Not implemented");
@@ -45,14 +45,15 @@ Tensor Conv2d::forward(const Tensor &x) {
   }
 
   timer.start("forward");
-  auto result = std::move(functional::conv2d(x, weight_f16, bias, out_channels, kernel_size, stride, padding, dilation, groups));
+  auto result =
+      functional::conv2d(x, weight_f16, bias, out_channels, kernel_size, stride, padding, dilation, groups);
   timer.end("forward");
 
-  return std::move(result);
+  return result;
 }
 
 Tensor Conv2d::forward(Tensor &&x) {
-  return std::move(forward(x));
+  return forward(x);
 }
 
 void Conv2d::printModule(const std::string &prefix) {
@@ -162,13 +163,13 @@ Tensor functional::conv2d(const Tensor &input,
 
 Tensor functional::conv2d(const Tensor &input,
                           const float_16 *weight,
-                          const Tensor &bias,
+                          [[gnu::unused]] const Tensor &bias,
                           int out_channels,
                           int kernel_size,
                           int stride,
                           int padding,
-                          int dilation,
-                          int groups) {
+                          [[maybe_unused]] int dilation,
+                          [[maybe_unused]] int groups) {
   auto shape_input = input.sizes();
 
 #if DEBUG

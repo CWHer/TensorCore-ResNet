@@ -10,28 +10,28 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # set the default build type to Release
 set(default_build_type "Release")
 
-if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
     set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
             STRING "Choose the type of build." FORCE)
     # Set the possible values of build type for cmake-gui
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
             "Debug" "Release")
-endif()
+endif ()
 
 message(STATUS "Current build type is: ${CMAKE_BUILD_TYPE}.")
 
 # Optimization options
 add_compile_options(
+        # Release options for demonstration: Ofast
+        "$<$<CONFIG:RELEASE>:$<$<COMPILE_LANGUAGE:CXX>:-Ofast>>"
+        "$<$<CONFIG:RELEASE>:$<$<COMPILE_LANGUAGE:CUDA>:-O3>>"
+        "$<$<CONFIG:RELEASE>:$<$<COMPILE_LANGUAGE:CUDA>:--compiler-options=-Ofast>>"
 
-    # Release options for demonstration: Ofast
-    "$<$<CONFIG:RELEASE>:$<$<COMPILE_LANGUAGE:CXX>:-Ofast>>"
-    "$<$<CONFIG:RELEASE>:$<$<COMPILE_LANGUAGE:CUDA>:-O3>>"
-
-    # Debugging options: no optimization, debug symbols
-    "$<$<CONFIG:DEBUG>:-O0>"
-    "$<$<CONFIG:DEBUG>:-g>"
-    "$<$<CONFIG:DEBUG>:$<$<COMPILE_LANGUAGE:CUDA>:-G>>"
+        # Debugging options: no optimization, debug symbols
+        "$<$<CONFIG:DEBUG>:-O0>"
+        "$<$<CONFIG:DEBUG>:-g>"
+        "$<$<CONFIG:DEBUG>:$<$<COMPILE_LANGUAGE:CUDA>:-G>>"
 )
 
 # ######################### CUDA Related Thingy #################################
@@ -44,6 +44,9 @@ link_directories(${CUDA_LIBRARY_DIRS})
 include_directories(${CUDA_INCLUDE_DIRS})
 
 set(CUDA_EXTRA_LIB cudart)
+
+# Set RANDOM_SEED to 42
+set(TEST_ADDITIONAL_DEFINITIONS "${TEST_ADDITIONAL_DEFINITIONS};RANDOM_SEED=42")
 
 find_package(CUDAToolkit)
 
@@ -102,7 +105,7 @@ find_package(Threads REQUIRED)
 include(sources.cmake)
 include(dataset.cmake)
 
-option(DEBUG_ONE_ROUND "Only debug one round of inference" OFF)
+option(DEBUG_ONE_ROUND "Only run one round of inference" OFF)
 
 # Build source files to a static library to avoid recompiling
 add_library(${PROJECT_NAME}_base STATIC ${SOURCE_FILES})
@@ -114,8 +117,8 @@ set_property(TARGET ${PROJECT_NAME}_simulator PROPERTY CXX_STANDARD 17)
 set_property(TARGET ${PROJECT_NAME}_simulator_gemm PROPERTY CXX_STANDARD 17)
 target_link_libraries(${PROJECT_NAME}_simulator_gemm ${PROJECT_NAME}_simulator)
 
-add_executable(main resnet_inference.cpp)
-add_executable(main_simulator resnet_inference.cpp)
+add_executable(main src/resnet_inference.cpp)
+add_executable(main_simulator src/resnet_inference.cpp)
 target_compile_definitions(main_simulator PRIVATE SIMULATE)
 
 target_compile_definitions(main PRIVATE ${DATASET_DEFINITIONS})
@@ -124,7 +127,7 @@ target_compile_definitions(main_simulator PRIVATE ${DATASET_DEFINITIONS})
 if (DEBUG_ONE_ROUND)
     message(STATUS "Debugging one round of inference")
     target_compile_definitions(main PRIVATE DEBUG_ONE_ROUND)
-endif()
+endif ()
 
 target_link_libraries(main
         ${CUDA_EXTRA_LIB}
@@ -135,7 +138,6 @@ target_link_libraries(main_simulator
         ${CUDA_EXTRA_LIB}
         ${PROJECT_NAME}_base
         ${PROJECT_NAME}_simulator_gemm)
-
 
 
 # ################################### Docs ######################################
@@ -153,13 +155,16 @@ if (GTest_FOUND)
     message(CHECK_PASS "Found")
     message(STATUS "GTest Found, you can use ctest to run all tests.")
     enable_testing()
-    add_executable(gtest_main ${TEST_SOURCE} ${SIMULATOR_TEST_SOURCE})
+    add_executable(gtest_main ${TEST_SOURCE})
+
+    add_library(${PROJECT_NAME}_simulator_test OBJECT ${SIMULATOR_TEST_SOURCE})
+    set_property(TARGET ${PROJECT_NAME}_simulator_test PROPERTY CXX_STANDARD 17)
+
     target_compile_definitions(gtest_main PRIVATE ${DATASET_DEFINITIONS})
     target_compile_definitions(gtest_main PRIVATE ${TEST_ADDITIONAL_DEFINITIONS})
 
-    set_property(SOURCE ${SIMULATOR_TEST_SOURCE} PROPERTY CXX_STANDARD 17)
-
     target_link_libraries(gtest_main
+            ${PROJECT_NAME}_simulator_test
             ${PROJECT_NAME}_base
             ${PROJECT_NAME}_gemm
             ${PROJECT_NAME}_simulator

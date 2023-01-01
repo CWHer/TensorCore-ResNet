@@ -67,11 +67,9 @@ template<typename T> void printWarning(T result, char const *const msg, const ch
 #define checkWarning(result) printWarning((result), #result, __FILE__, __LINE__)
 #define checkWarningMsg(result, msg) printWarning((result), msg, __FILE__, __LINE__)
 
-class SimpleTimer
-{
-  private:
-  struct TimingItem
-  {
+class SimpleTimer {
+private:
+  struct TimingItem {
     std::chrono::system_clock::time_point last_time;
     std::chrono::duration<double, std::milli> total_duration;
     uint64_t count;
@@ -83,8 +81,8 @@ class SimpleTimer
 
   std::unordered_map<std::string, TimingItem> timing_items;
 
-  public:
-  SimpleTimer() {}
+public:
+  SimpleTimer() = default;
 
   void start(const std::string &name);
 
