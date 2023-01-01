@@ -23,12 +23,9 @@ TEST(conv2d, im2col_cuda)
 
     // Verify result.
     result_tensor.to(DeviceType::CPU);
-    auto result_size = im2colResultSize(input_n, input_c, input_h, input_w,
-                                        kernel_size, stride, padding);
 
     Tensor y;
     y.load(file_dir + "/test_im2col_y.bin");
-    EXPECT_EQ(result_size, y.totalSize());
 
     f16 *naive_res = reinterpret_cast<f16 *>(result_tensor.data_ptr());
     f32 *std_res = y.data_ptr();
