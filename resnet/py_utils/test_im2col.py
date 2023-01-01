@@ -24,7 +24,7 @@ def makeIm2colTests(directory: str):
     width = 191
 
     x_tensor = randomTensor(
-        (batch_size, num_features, height, width), generator)
+        (batch_size, num_features, height, width), generator) - 1
     writeTensor(x_tensor, os.path.join(directory, "test_im2col_x.bin"))
 
     net = nn.Unfold(kernel_size=3, stride=2, padding=1)

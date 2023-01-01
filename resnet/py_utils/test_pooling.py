@@ -25,7 +25,7 @@ def makePoolingTests(directory: str):
     width = 112
 
     x_tensor = randomTensor(
-        (batch_size, num_features, height, width), generator)
+        (batch_size, num_features, height, width), generator) - 1
     writeTensor(x_tensor, os.path.join(directory, "test_maxpool_x.bin"))
 
     net = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
@@ -43,7 +43,7 @@ def makePoolingTests(directory: str):
     width = 10
 
     x_tensor = randomTensor(
-        (batch_size, num_features, height, width), generator)
+        (batch_size, num_features, height, width), generator) - 1
     writeTensor(x_tensor, os.path.join(directory, "test_avgpool_x.bin"))
 
     net = nn.AvgPool2d(kernel_size=5, stride=2, padding=2)

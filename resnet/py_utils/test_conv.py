@@ -24,7 +24,7 @@ def makeConv2DTests(directory: str):
     width = 191
 
     x_tensor = randomTensor(
-        (batch_size, num_features, height, width), generator)
+        (batch_size, num_features, height, width), generator) - 1
     writeTensor(x_tensor, os.path.join(directory, "test_conv2d_x.bin"))
 
     net = nn.Conv2d(in_channels=num_features, out_channels=3,
@@ -32,7 +32,7 @@ def makeConv2DTests(directory: str):
     state_dict = net.state_dict()
     for name, tensor in state_dict.items():
         print("generate {}".format(name))
-        new_tensor = randomTensor(tensor.shape, generator)
+        new_tensor = randomTensor(tensor.shape, generator) - 1
         state_dict[name] = new_tensor
         writeTensor(new_tensor, os.path.join(
             directory, f"test_conv_conv2d_{name}.bin"))
