@@ -9,14 +9,6 @@
 
 using namespace Impl;
 
-/* @brief im2col result shape
- */
-constexpr size_t im2col_result_size(int N, int C, int H, int W, int filter_height, int filter_width, int stride, int padding) {
-  int output_height = (H + 2 * padding - filter_height) / stride + 1;
-  int output_width = (W + 2 * padding - filter_width) / stride + 1;
-  int output_size = output_height * output_width;
-  return N * C * filter_height * filter_width * output_size;
-}
 
 std::unique_ptr<float_16[]> create_im2col_result_store_host(int N,
                                                             int C,

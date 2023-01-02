@@ -31,8 +31,6 @@ int inference_main() {
   SimpleTimer timer;
   timer.start("total_time");
   for (size_t i = 0; i < dataset.size(); i++) {
-    timer.start("forward");
-
     timer.start("preprocess");
     auto data = dataset.next();
     auto input = std::move(data.first.first);
