@@ -10,21 +10,21 @@ static void check_cuda_error() {
   }
 }
 
-static __global__ void fp32_to_fp16_kernel(const float_32 *input, float_16 *output, size_t size) {
+static __global__ void fp32_to_fp16_kernel(const float_32 * RESTRICT input, float_16 * RESTRICT output, size_t size) {
   CUDA_KERNEL_LOOP(index, size) {
     output[index] = __float2half(input[index]);
   }
   __syncthreads();
 }
 
-static __global__ void fp16_to_fp32_kernel(const float_16 *input, float_32 *output, size_t size) {
+static __global__ void fp16_to_fp32_kernel(const float_16 * RESTRICT input, float_32 * RESTRICT output, size_t size) {
   CUDA_KERNEL_LOOP(index, size) {
     output[index] = __half2float(input[index]);
   }
   __syncthreads();
 }
 
-float_16 *fp32_array_to_fp16_array(const float_32 *fp32_array, size_t size, Impl::DeviceType device_type) {
+float_16 *fp32_array_to_fp16_array(const float_32 * RESTRICT fp32_array, size_t size, Impl::DeviceType device_type) {
   float_16 *fp16_array = nullptr;
   switch (device_type) {
   case Impl::DeviceType::CPU:fp16_array = new float_16[size];
@@ -40,7 +40,7 @@ float_16 *fp32_array_to_fp16_array(const float_32 *fp32_array, size_t size, Impl
   return fp16_array;
 }
 
-float_32 *fp16_array_to_fp32_array(const float_16 *fp16_array, size_t size, Impl::DeviceType device_type) {
+float_32 *fp16_array_to_fp32_array(const float_16 * RESTRICT fp16_array, size_t size, Impl::DeviceType device_type) {
   float_32 *fp32_array = nullptr;
   switch (device_type) {
   case Impl::DeviceType::CPU:fp32_array = new float_32[size];

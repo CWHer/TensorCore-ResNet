@@ -46,11 +46,11 @@ Impl::Tensor Impl::BatchNorm2d::forward(Impl::Tensor &&x) {
   auto height = x.sizes()[2];
   auto width = x.sizes()[3];
 
-  float *input_data = x.data_ptr();
-  float *mean_data = running_mean.data_ptr();
-  float *var_data = running_var.data_ptr();
-  float *weight_data = weight.data_ptr();
-  float *bias_data = bias.data_ptr();
+  float * RESTRICT input_data = x.data_ptr();
+  float * RESTRICT mean_data = running_mean.data_ptr();
+  float * RESTRICT var_data = running_var.data_ptr();
+  float * RESTRICT weight_data = weight.data_ptr();
+  float * RESTRICT bias_data = bias.data_ptr();
 
   timer.start("forward");
   hostBatchNorm2d(input_data, mean_data, var_data, weight_data, bias_data,
@@ -81,11 +81,11 @@ Impl::Tensor Impl::BatchNorm2dRelu::forward(Impl::Tensor &&x) {
   auto height = x.sizes()[2];
   auto width = x.sizes()[3];
 
-  float *input_data = x.data_ptr();
-  float *mean_data = running_mean.data_ptr();
-  float *var_data = running_var.data_ptr();
-  float *weight_data = weight.data_ptr();
-  float *bias_data = bias.data_ptr();
+  float * RESTRICT input_data = x.data_ptr();
+  float * RESTRICT mean_data = running_mean.data_ptr();
+  float * RESTRICT var_data = running_var.data_ptr();
+  float * RESTRICT weight_data = weight.data_ptr();
+  float * RESTRICT bias_data = bias.data_ptr();
 
   timer.start("forward");
   hostBatchNorm2dRelu(input_data, mean_data, var_data, weight_data, bias_data,

@@ -47,8 +47,8 @@ std::unique_ptr<float_16[], decltype(&cudaPooledFree)> create_im2col_result_stor
 
 
 // borrowed from https://github.com/pytorch/pytorch/blob/master/aten/src/ATen/native/cuda/im2col.cuh
-__global__ static void im2col_cuda_kernel(const float *input,
-                                          float_16 *output,
+__global__ static void im2col_cuda_kernel(const float * RESTRICT input,
+                                          float_16 * RESTRICT output,
                                           const int num_kernels,
                                           const int height,
                                           const int width,
@@ -80,7 +80,7 @@ __global__ static void im2col_cuda_kernel(const float *input,
   }
 }
 
-static void im2colStream(const float *input, float_16 *output,
+static void im2colStream(const float * RESTRICT input, float_16 * RESTRICT output,
                          int channels, int height, int width,
                          int kernel_size, int stride, int padding,
                          int out_height, int out_width,
@@ -106,8 +106,8 @@ static void im2colStream(const float *input, float_16 *output,
 /**
  * @copydoc im2col
  */
-static void im2col_device_memory(const float *input,
-                                 float_16 *output,
+static void im2col_device_memory(const float * RESTRICT input,
+                                 float_16 * RESTRICT output,
                                  int N,
                                  int C,
                                  int H,
@@ -149,8 +149,8 @@ static void im2col_device_memory(const float *input,
 /**
  * @copydoc im2col
  */
-static void im2col_host_memory(const float *input,
-                               float_16 *output,
+static void im2col_host_memory(const float * RESTRICT input,
+                               float_16 * RESTRICT output,
                                int N,
                                int C,
                                int H,
@@ -189,8 +189,8 @@ static void im2col_host_memory(const float *input,
  *
  * Data are arranged per channel of columns, this results in factor C.
  */
-void im2col(const float *input,
-            float_16 *output,
+void im2col(const float * RESTRICT input,
+            float_16 * RESTRICT output,
             int N,
             int C,
             int H,

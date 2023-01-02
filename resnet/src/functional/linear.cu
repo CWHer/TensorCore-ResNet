@@ -18,10 +18,10 @@
  * @param input_channel
  * @param output_channel
  */
-void linear(const float_16 *input,
-            float *output,
-            const float_16 *weight,
-            const float *bias,
+void linear(const float_16 * RESTRICT input,
+            float * RESTRICT output,
+            const float_16 * RESTRICT weight,
+            const float * RESTRICT bias,
             int batch_size,
             int input_channel,
             int output_channel,
@@ -67,7 +67,7 @@ void linear(const float_16 *input,
   }
 }
 
-__global__ void transpose_kernel(const float *input, float_16 *output, int m, int n) {
+__global__ void transpose_kernel(const float * RESTRICT input, float_16 * RESTRICT output, int m, int n) {
   CUDA_KERNEL_LOOP(index, m * n) {
     auto i = index / n;
     auto j = index % n;
@@ -77,7 +77,7 @@ __global__ void transpose_kernel(const float *input, float_16 *output, int m, in
   }
 }
 
-void prepare_linear_weight(const float *input, float_16 *output, int row, int col, Impl::DeviceType device_type) {
+void prepare_linear_weight(const float *RESTRICT input, float_16 *RESTRICT output, int row, int col, Impl::DeviceType device_type) {
   switch (device_type) {
   case Impl::DeviceType::CPU : {
     for (int i = 0; i < row; ++i) {

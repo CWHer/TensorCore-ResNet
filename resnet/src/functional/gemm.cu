@@ -25,7 +25,7 @@ template<int block_col_warps, int block_row_warps> static __global__ void gemm_n
                                                                                             size_t N,
                                                                                             size_t K) {
 
-  const int block_threads = warp_size * (block_row_warps * block_col_warps);
+  constexpr int block_threads = warp_size * (block_row_warps * block_col_warps);
 
   constexpr int tile_m = block_row_warps * volta_m_factor;
   constexpr int tile_n = block_col_warps * volta_n_factor;
@@ -34,10 +34,10 @@ template<int block_col_warps, int block_row_warps> static __global__ void gemm_n
   __shared__ float_16 As[tile_k][tile_m];
   __shared__ float_16 Bs[tile_n][tile_k];
 
-  auto tid = threadIdx.y * blockDim.x + threadIdx.x;
+  const auto tid = threadIdx.y * blockDim.x + threadIdx.x;
 
-  auto aRow = blockIdx.x * tile_m;
-  auto bCol = blockIdx.y * tile_n;
+  const auto aRow = blockIdx.x * tile_m;
+  const auto bCol = blockIdx.y * tile_n;
 
   wmma::fragment<wmma::matrix_a, volta_m_factor, volta_n_factor, volta_k_factor, float_16, wmma::col_major> a_frag;
   wmma::fragment<wmma::matrix_b, volta_m_factor, volta_n_factor, volta_k_factor, float_16, wmma::col_major> b_frag;
@@ -47,12 +47,12 @@ template<int block_col_warps, int block_row_warps> static __global__ void gemm_n
   for (int k = 0; k < K; k += tile_k) {
     // Parallel loading
     for (int i = 0; i < tile_m * tile_k; i += block_threads) {
-      auto idx = (tid + i);
+      const auto idx = (tid + i);
 
-      auto As_row = idx % tile_m;
-      auto As_col = idx / tile_m;
-      auto Bs_row = idx % tile_k;
-      auto Bs_col = idx / tile_k;
+      const auto As_row = idx % tile_m;
+      const auto As_col = idx / tile_m;
+      const auto Bs_row = idx % tile_k;
+      const auto Bs_col = idx / tile_k;
 
       if (aRow + As_row < M && k + As_col < K) {
         As[As_col][As_row] = A[(k + As_col) * M + aRow + As_row];
@@ -70,8 +70,8 @@ template<int block_col_warps, int block_row_warps> static __global__ void gemm_n
     __syncthreads();
 
     for (int i = 0; i < tile_k; i += volta_k_factor) {
-      auto As_offset = i * tile_m + volta_m_factor * (threadIdx.x / warp_size);
-      auto Bs_offset = volta_n_factor * threadIdx.y * tile_k + i;
+      const auto As_offset = i * tile_m + volta_m_factor * (threadIdx.x / warp_size);
+      const auto Bs_offset = volta_n_factor * threadIdx.y * tile_k + i;
 
       wmma::load_matrix_sync(a_frag, (half *) As + As_offset, tile_m);
       wmma::load_matrix_sync(b_frag, (half *) Bs + Bs_offset, tile_k);
@@ -80,9 +80,9 @@ template<int block_col_warps, int block_row_warps> static __global__ void gemm_n
     }
   }
 
-  auto cRow = (blockIdx.x * blockDim.x + threadIdx.x) / warp_size * volta_m_factor;
-  auto cCol = (blockIdx.y * blockDim.y + threadIdx.y) * volta_n_factor;
-  auto c_offset = cRow + cCol * M;
+  const auto cRow = (blockIdx.x * blockDim.x + threadIdx.x) / warp_size * volta_m_factor;
+  const auto cCol = (blockIdx.y * blockDim.y + threadIdx.y) * volta_n_factor;
+  const auto c_offset = cRow + cCol * M;
 
   if (cRow < M && cCol < N) {
     wmma::store_matrix_sync(Result + c_offset, result_frag, M, wmma::mem_col_major);
@@ -105,13 +105,13 @@ template<int block_col_warps, int block_row_warps> static void gemm_naive_caller
   gemm_naive_kernel<block_col_warps, block_row_warps><<<grid, block, 0, stream>>>(A, B, Result, M, N, K);
 }
 
-template<typename T, cudaMemcpyKind memcpy_kind, bool require_copy> static T *gemm_padding_col_major(const T *source,
+template<typename T, cudaMemcpyKind memcpy_kind, bool require_copy> static T *gemm_padding_col_major(const T * RESTRICT source,
                                                                                                      size_t row,
                                                                                                      size_t col,
                                                                                                      size_t pad_row,
                                                                                                      size_t pad_col,
                                                                                                      cudaStream_t &stream,
-                                                                                                     T *padded = nullptr) {
+                                                                                                     T * padded = nullptr) {
   if ((col == pad_col) && (row == pad_row)
       && (memcpy_kind == cudaMemcpyHostToHost || memcpy_kind == cudaMemcpyDeviceToDevice))
     return (T *) source;
@@ -135,8 +135,8 @@ template<typename T, cudaMemcpyKind memcpy_kind, bool require_copy> static T *ge
   return padded;
 }
 
-template<typename T, cudaMemcpyKind memcpy_kind> static void gemm_unpad_col_major(T *source,
-                                                                                  T *padded,
+template<typename T, cudaMemcpyKind memcpy_kind> static void gemm_unpad_col_major(T * RESTRICT source,
+                                                                                  T * RESTRICT padded,
                                                                                   size_t row,
                                                                                   size_t col,
                                                                                   size_t pad_row,
@@ -198,9 +198,9 @@ static void gemm_device_memory(const float_16 *A,
 
 }
 
-static void gemm_host_memory(const float_16 *A,
-                             const float_16 *B,
-                             float_32 *Result,
+static void gemm_host_memory(const float_16 * RESTRICT A,
+                             const float_16 * RESTRICT B,
+                             float_32 * RESTRICT Result,
                              size_t M,
                              size_t N,
                              size_t K,
@@ -229,9 +229,9 @@ static void gemm_host_memory(const float_16 *A,
   checkCudaErrors(cudaFreeAsyncIfAvailable(padded_C, stream));
 }
 
-void gemm_stream(const float_16 *A,
-                 const float_16 *B,
-                 float_32 *C,
+void gemm_stream(const float_16 * RESTRICT A,
+                 const float_16 *RESTRICT B,
+                 float_32 * RESTRICT C,
                  size_t M,
                  size_t N,
                  size_t K,
@@ -258,9 +258,9 @@ void gemm_stream(const float_16 *A,
   }
 }
 
-void gemm_batched_B(const float_16 *A,
-                    const float_16 *B,
-                    float_32 *C,
+void gemm_batched_B(const float_16 * RESTRICT A,
+                    const float_16 * RESTRICT B,
+                    float_32 * RESTRICT C,
                     size_t M,
                     size_t N,
                     size_t K,
@@ -296,9 +296,9 @@ void gemm_batched_B(const float_16 *A,
 }
 
 
-void gemm(const float_16 *A,
-          const float_16 *B,
-          float_32 *C,
+void gemm(const float_16 * RESTRICT A,
+          const float_16 * RESTRICT B,
+          float_32 * RESTRICT C,
           size_t M,
           size_t N,
           size_t K,

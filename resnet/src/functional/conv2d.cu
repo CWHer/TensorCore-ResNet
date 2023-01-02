@@ -60,10 +60,10 @@ std::vector<int> conv2d_result_shape(int N,
  *  @param stride Stride of convolution.
  *  @param padding Padding of convolution.
  */
-void conv2d(const float *input,
-            float *output,
-            const float_16 *weight,
-            const float *bias,
+void conv2d(const float * RESTRICT input,
+            float * RESTRICT output,
+            const float_16 * RESTRICT weight,
+            const float * RESTRICT bias,
             int N,
             int C,
             int H,

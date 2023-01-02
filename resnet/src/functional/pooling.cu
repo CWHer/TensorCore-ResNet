@@ -2,8 +2,8 @@
 #include "common.hpp"
 
 template<int block_size>
-__global__ void deviceMaxPool2dKernel(const float *input_data, int height, int width,
-                                      float *output_data, int out_height, int out_width,
+__global__ void deviceMaxPool2dKernel(const float * RESTRICT input_data, int height, int width,
+                                      float * RESTRICT output_data, int out_height, int out_width,
                                       int kernel_size, int padding, int stride) {
   // HACK: NOTE: Max-pooling uses implicit negative infinity padding,
   //  not zero-padding as indicated in documentation
@@ -35,8 +35,8 @@ __global__ void deviceMaxPool2dKernel(const float *input_data, int height, int w
 
 // TODO: tiling and leverage cache
 template<int block_size>
-__global__ void deviceAvgPool2dKernel(const float *input_data, int height, int width,
-                                      float *output_data, int out_height, int out_width,
+__global__ void deviceAvgPool2dKernel(const float * RESTRICT input_data, int height, int width,
+                                      float * RESTRICT output_data, int out_height, int out_width,
                                       int kernel_size, int padding, int stride) {
   // NOTE: B/2 (block) x 128 (thread) x H x W (within)
   auto input_grid_offset = blockDim.x * height * width;
@@ -66,12 +66,12 @@ __global__ void deviceAvgPool2dKernel(const float *input_data, int height, int w
     }
 }
 
-void maxpool2d(const float *input_data,
+void maxpool2d(const float * RESTRICT input_data,
                int batch_size,
                int num_channels,
                int height,
                int width,
-               float *output_data,
+               float * RESTRICT output_data,
                int out_height,
                int out_width,
                int kernel_size,
@@ -89,12 +89,12 @@ void maxpool2d(const float *input_data,
       kernel_size, padding, stride);
 }
 
-void avgpool2d(const float *input_data,
+void avgpool2d(const float * RESTRICT input_data,
                int batch_size,
                int num_channels,
                int height,
                int width,
-               float *output_data,
+               float * RESTRICT output_data,
                int out_height,
                int out_width,
                int kernel_size,

@@ -15,7 +15,7 @@ Impl::Linear::Linear(int in_features, int out_features) : weight({out_features, 
 }
 
 Impl::Tensor functional::linear(const Impl::Tensor &input, const Impl::Tensor &weight, const Impl::Tensor &bias) {
-  float_16 *weight_f16 = nullptr;
+  float_16 * weight_f16 = nullptr;
   auto weight_shape = weight.sizes();
 #if DEBUG
   if (weight_shape.size() != 2) {

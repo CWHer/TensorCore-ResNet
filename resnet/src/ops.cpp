@@ -48,6 +48,9 @@ int Impl::TensorOps::sum_equal(const Impl::Tensor &lhs, const Impl::Tensor &rhs)
 }
 
 void Impl::TensorOps::add_(Impl::Tensor &x, const Impl::Tensor &y) {
+  if(unlikely(x.storage == y.storage)) {
+    throw std::runtime_error("Inplace operation on the same operator is not supported");
+  }
 #if DEBUG
   // Hack: for a embedded function, this will not happen
 
@@ -77,5 +80,8 @@ void Impl::TensorOps::relu_(Impl::Tensor &x) {
 }
 
 void Impl::TensorOps::add_relu_(Impl::Tensor &x, const Impl::Tensor &y) {
+  if(unlikely(x.storage == y.storage)) {
+    throw std::runtime_error("Inplace operation on the same operator is not supported");
+  }
   ::add_relu_(x.data_ptr(), y.data_ptr(), x.totalSize(), x.getDevice());
 }
