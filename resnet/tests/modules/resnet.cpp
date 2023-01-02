@@ -52,7 +52,7 @@ TEST(resnet, inference_all_dataset) {
 
     for (int j = 0; j < result.totalSize(); j++) {
       double diff = std::fabs((result.data_ptr()[j] - label.data_ptr()[j]) / label_range);
-      current_diff += diff / result.totalSize();
+      current_diff += diff / static_cast<double>(result.totalSize());
     }
     total_diff += current_diff / batches;
   }

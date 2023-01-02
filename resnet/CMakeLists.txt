@@ -32,6 +32,10 @@ add_compile_options(
         "$<$<CONFIG:DEBUG>:-O0>"
         "$<$<CONFIG:DEBUG>:-g>"
         "$<$<CONFIG:DEBUG>:$<$<COMPILE_LANGUAGE:CUDA>:-G>>"
+
+        # Use all available CPU tunes
+        "$<$<COMPILE_LANGUAGE:CUDA>:--compiler-options=-march=native>"
+        "$<$<COMPILE_LANGUAGE:CXX>:-march=native>"
 )
 
 # ######################### CUDA Related Thingy #################################
