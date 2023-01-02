@@ -34,7 +34,7 @@ Impl::Tensor Impl::BatchNorm2d::forward(Impl::Tensor &&x) {
   auto x_device = x.getDevice();
   // HACK: to support CPU input based batchnorm
   // HUGE OVERHEAD
-  if (x_device == DeviceType::CPU) {
+  if (unlikely(x_device == DeviceType::CPU)) {
     x.to(Impl::DeviceType::CUDA);
     this->to(Impl::DeviceType::CUDA);
   }
@@ -57,7 +57,7 @@ Impl::Tensor Impl::BatchNorm2d::forward(Impl::Tensor &&x) {
                   eps, batch_size, num_channels, height, width);
   timer.end("forward");
   // When passed by value, the tensor is copied and can be safely modified
-  if (x_device == DeviceType::CPU) {
+  if (unlikely(x_device == DeviceType::CPU)) {
     x.to(Impl::DeviceType::CPU);
     this->to(Impl::DeviceType::CPU);
   }
@@ -69,7 +69,7 @@ Impl::Tensor Impl::BatchNorm2dRelu::forward(Impl::Tensor &&x) {
   auto x_device = x.getDevice();
   // HACK: to support CPU input based batchnorm
   // HUGE OVERHEAD
-  if (x_device == DeviceType::CPU) {
+  if (unlikely(x_device == DeviceType::CPU)) {
     x.to(Impl::DeviceType::CUDA);
     this->to(Impl::DeviceType::CUDA);
   }
@@ -92,7 +92,7 @@ Impl::Tensor Impl::BatchNorm2dRelu::forward(Impl::Tensor &&x) {
                       eps, batch_size, num_channels, height, width);
   timer.end("forward");
   // When passed by value, the tensor is copied and can be safely modified
-  if (x_device == DeviceType::CPU) {
+  if (unlikely(x_device == DeviceType::CPU)) {
     x.to(Impl::DeviceType::CPU);
     this->to(Impl::DeviceType::CPU);
   }

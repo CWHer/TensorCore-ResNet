@@ -42,12 +42,12 @@ Impl::Tensor functional::linear(const Impl::Tensor &input, const Impl::Tensor &w
 }
 
 Impl::Tensor functional::linear(const Tensor &input, const float_16 *weight, const Tensor &bias) {
-  auto input_shape = input.sizes();
-  auto bias_shape = bias.sizes();
+  const auto input_shape = input.sizes();
+  const auto bias_shape = bias.sizes();
 
-  auto batch_size = input_shape[0];
-  auto input_channel = input_shape[1];
-  auto output_channel = bias_shape[0];
+  const auto batch_size = input_shape[0];
+  const auto input_channel = input_shape[1];
+  const auto output_channel = bias_shape[0];
 
   auto result = Impl::Tensor({batch_size, output_channel});
   result.to(input.getDevice());

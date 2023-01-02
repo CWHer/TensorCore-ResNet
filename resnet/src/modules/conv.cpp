@@ -111,7 +111,7 @@ Tensor functional::conv2d(const Tensor &input,
                           int padding,
                           int dilation,
                           int groups) {
-  auto shape_input = input.sizes();
+  const auto shape_input = input.sizes();
 
 #if DEBUG
   if (shape_input.size() != 4) {
@@ -119,13 +119,13 @@ Tensor functional::conv2d(const Tensor &input,
   }
 #endif
 
-  auto minibatch = shape_input[0];
-  auto in_channels = shape_input[1];
-  auto in_height = shape_input[2];
-  auto in_width = shape_input[3];
+  const auto minibatch = shape_input[0];
+  const auto in_channels = shape_input[1];
+  const auto in_height = shape_input[2];
+  const auto in_width = shape_input[3];
 
   auto shape_weight = weight.sizes();
-  auto out_channels = shape_weight[0];
+  const auto out_channels = shape_weight[0];
 
 #if DEBUG
   auto weight_in_channels = shape_weight[1];
@@ -134,7 +134,7 @@ Tensor functional::conv2d(const Tensor &input,
   }
 #endif
 
-  auto kernel_height = shape_weight[2];
+  const auto kernel_height = shape_weight[2];
 
 #if DEBUG
   auto kernel_width = shape_weight[3];
@@ -144,7 +144,7 @@ Tensor functional::conv2d(const Tensor &input,
   }
 #endif
 
-  auto shape_output =
+  const auto shape_output =
       conv2d_result_shape(minibatch, in_channels, in_height, in_width, out_channels, kernel_height, stride, padding);
 
   auto weight_16 = fp32_array_to_fp16_array(weight.data_ptr(), weight.totalSize(), weight.getDevice());
@@ -170,7 +170,7 @@ Tensor functional::conv2d(const Tensor &input,
                           int padding,
                           [[maybe_unused]] int dilation,
                           [[maybe_unused]] int groups) {
-  auto shape_input = input.sizes();
+  const auto shape_input = input.sizes();
 
 #if DEBUG
   if (shape_input.size() != 4) {
@@ -178,10 +178,10 @@ Tensor functional::conv2d(const Tensor &input,
   }
 #endif
 
-  auto minibatch = shape_input[0];
-  auto in_channels = shape_input[1];
-  auto in_height = shape_input[2];
-  auto in_width = shape_input[3];
+  const auto& minibatch = shape_input[0];
+  const auto& in_channels = shape_input[1];
+  const auto& in_height = shape_input[2];
+  const auto& in_width = shape_input[3];
 
   auto shape_output =
       conv2d_result_shape(minibatch, in_channels, in_height, in_width, out_channels, kernel_size, stride, padding);

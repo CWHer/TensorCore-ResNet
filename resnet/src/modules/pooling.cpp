@@ -17,19 +17,19 @@ Impl::Tensor Impl::MaxPool2d::forward(const Impl::Tensor &x) {
 #endif
 
   // NOTE: x is in NCHW format
-  int batch_size = x.sizes()[0];
-  int num_channels = x.sizes()[1];
-  int height = x.sizes()[2];
-  int width = x.sizes()[3];
+  const auto batch_size = x.sizes()[0];
+  const auto num_channels = x.sizes()[1];
+  const auto height = x.sizes()[2];
+  const auto width = x.sizes()[3];
 
-  int output_height = (height + 2 * padding - (kernel_size - 1) - 1) / stride + 1;
-  int output_width = (width + 2 * padding - (kernel_size - 1) - 1) / stride + 1;
+  const auto output_height = (height + 2 * padding - (kernel_size - 1) - 1) / stride + 1;
+  const auto output_width = (width + 2 * padding - (kernel_size - 1) - 1) / stride + 1;
 
 
   // FIXME: can we find a way to pre-allocate and reuse the memory,
   //  instead of allocating them every time (though this should be the way)
   Tensor output({batch_size, num_channels, output_height, output_width}, DeviceType::CUDA);
-  if (x.getDevice() == DeviceType::CUDA) {
+  if (likely(x.getDevice() == DeviceType::CUDA)) {
     timer.start("forward");
     maxpool2d(x.data_ptr(),
               batch_size,
@@ -90,20 +90,20 @@ Impl::Tensor Impl::AvgPool2d::forward(const Impl::Tensor &x) {
 #endif
 
   // NOTE: x is in NCHW format
-  int batch_size = x.sizes()[0];
-  int num_channels = x.sizes()[1];
-  int height = x.sizes()[2];
-  int width = x.sizes()[3];
+  const auto batch_size = x.sizes()[0];
+  const auto num_channels = x.sizes()[1];
+  const auto height = x.sizes()[2];
+  const auto width = x.sizes()[3];
 
-  int output_height = (height + 2 * padding - (kernel_size - 1) - 1) / stride + 1;
-  int output_width = (width + 2 * padding - (kernel_size - 1) - 1) / stride + 1;
+  const auto output_height = (height + 2 * padding - (kernel_size - 1) - 1) / stride + 1;
+  const auto output_width = (width + 2 * padding - (kernel_size - 1) - 1) / stride + 1;
 
 
   // FIXME: can we find a way to pre-allocate and reuse the memory,
   //  instead of allocating them every time (though this should be the way)
   Tensor output({batch_size, num_channels, output_height, output_width}, DeviceType::CUDA);
 
-  if (x.getDevice() == Impl::DeviceType::CUDA) {
+  if (likely(x.getDevice() == Impl::DeviceType::CUDA)) {
     timer.start("forward");
     avgpool2d(x.data_ptr(),
               batch_size,

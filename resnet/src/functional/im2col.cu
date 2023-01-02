@@ -11,7 +11,7 @@ using namespace Impl;
 
 /* @brief im2col result shape
  */
-size_t im2col_result_size(int N, int C, int H, int W, int filter_height, int filter_width, int stride, int padding) {
+constexpr size_t im2col_result_size(int N, int C, int H, int W, int filter_height, int filter_width, int stride, int padding) {
   int output_height = (H + 2 * padding - filter_height) / stride + 1;
   int output_width = (W + 2 * padding - filter_width) / stride + 1;
   int output_size = output_height * output_width;

@@ -77,7 +77,7 @@ void maxpool2d(const float * RESTRICT input_data,
                int kernel_size,
                int padding,
                int stride) {
-  static const int N_THREADS = 16;
+  constexpr int N_THREADS = 16;
   dim3 grid_dim(batch_size * num_channels);
   dim3 block_dim(N_THREADS, N_THREADS);
 #if DEBUG
@@ -100,7 +100,7 @@ void avgpool2d(const float * RESTRICT input_data,
                int kernel_size,
                int padding,
                int stride) {
-  static const int N_THREADS = 128;
+  constexpr int N_THREADS = 128;
   dim3 block_dim(N_THREADS);
   dim3 grid_dim(batch_size * num_channels / N_THREADS);
   deviceAvgPool2dKernel<32><<<grid_dim, block_dim>>>(

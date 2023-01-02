@@ -71,7 +71,7 @@ __global__ void transpose_kernel(const float * RESTRICT input, float_16 * RESTRI
   CUDA_KERNEL_LOOP(index, m * n) {
     auto i = index / n;
     auto j = index % n;
-    if (i < m && j < n) {
+    if (likely(i < m && j < n)) {
       output[j * m + i] = __float2half(input[i * n + j]);
     }
   }

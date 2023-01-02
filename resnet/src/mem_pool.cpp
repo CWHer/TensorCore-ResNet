@@ -56,7 +56,7 @@ cudaError_t cudaPooledMalloc(void **devPtr, size_t size) {
     return cudaSuccess;
   } else {
     auto ret = cudaMalloc(devPtr, stepped_size);
-    if (ret == cudaSuccess) {
+    if (likely(ret == cudaSuccess)) {
       mem_size[*devPtr] = stepped_size;
     }
     return ret;

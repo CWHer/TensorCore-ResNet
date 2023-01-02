@@ -11,13 +11,6 @@
 
 using namespace Impl;
 
-static void check_cuda_error() {
-  cudaError_t err = cudaPeekAtLastError();
-  if (err != cudaSuccess) {
-    throw std::runtime_error(cudaGetErrorString(err));
-  }
-}
-
 /**
  * @copydoc conv2d
  * @brief Convolutional layer result sizes
@@ -78,15 +71,15 @@ void conv2d(const float * RESTRICT input,
   int conv_result_size = output_height * output_width;
   int expanded_kernel_width = C * kernel_size * kernel_size;
 
-  if (bias) {
+  if (unlikely(bias != nullptr)) {
     throw std::runtime_error("Conv2d with bias not implemented");
   }
 
   int batched_n = 128;
 
-  if (device_type == Impl::DeviceType::CUDA) {
+  if (likely(device_type == Impl::DeviceType::CUDA)) {
     auto total_batch_size = (N + batched_n - 1) / batched_n;
-    if (total_batch_size == 1) {
+    if (unlikely(total_batch_size == 1)) {
       auto im2col_result = create_im2col_result_store_device(N, C, H, W, kernel_size, kernel_size, stride, padding);
       im2col(input, im2col_result.get(), N, C, H, W, kernel_size, kernel_size, stride, padding, device_type);
       gemm_batched_B(weight,
@@ -154,7 +147,5 @@ void conv2d(const float * RESTRICT input,
                    GEMM::Major::row_major,
                    device_type);
   }
-
-  check_cuda_error();
 }
 

@@ -25,7 +25,7 @@ __global__ static void dimBatchNorm2dKernel(float *RESTRICT input_data, const fl
 
   for (int i = 0; i < block_size; i++)
     for (int j = 0; j < block_size; j++)
-      if (row + i < height && col + j < width)
+      if (likely(row + i < height && col + j < width))
         input_data[(row + i) * width + col + j] =
             ((input_data[(row + i) * width + col + j] - cur_mean) * r) * cur_weight + cur_bias;
 }
@@ -37,7 +37,7 @@ __global__ static void dimBatchNorm2dReluKernel(float *RESTRICT to_be_modified_d
                                                 unsigned int num_channels, unsigned int height, unsigned int width,
                                                 unsigned int total_channels) {
   const auto channel_num = blockIdx.x * blockDim.z + threadIdx.z;
-  if (channel_num >= total_channels)
+  if (unlikely(channel_num >= total_channels))
     return;
 
   const auto row = block_size * threadIdx.y;
@@ -55,7 +55,7 @@ __global__ static void dimBatchNorm2dReluKernel(float *RESTRICT to_be_modified_d
 
   for (int i = 0; i < block_size; i++)
     for (int j = 0; j < block_size; j++)
-      if (row + i < height && col + j < width) {
+      if (likely(row + i < height && col + j < width)) {
         auto value = ((to_be_modified_data[(row + i) * width + col + j] - cur_mean) * r) * cur_weight + cur_bias;
         to_be_modified_data[(row + i) * width + col + j] = value > 0.0f ? value : 0.0f;
       }

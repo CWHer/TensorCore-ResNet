@@ -54,13 +54,13 @@ template<int block_col_warps, int block_row_warps> static __global__ void gemm_n
       const auto Bs_row = idx % tile_k;
       const auto Bs_col = idx / tile_k;
 
-      if (aRow + As_row < M && k + As_col < K) {
+      if (likely(aRow + As_row < M && k + As_col < K)) {
         As[As_col][As_row] = A[(k + As_col) * M + aRow + As_row];
       } else {
         As[As_col][As_row] = 0;
       }
 
-      if (k + Bs_row < K && bCol + Bs_col < N) {
+      if (likely(k + Bs_row < K && bCol + Bs_col < N)) {
         Bs[Bs_col][Bs_row] = B[(bCol + Bs_col) * K + k + Bs_row];
       } else {
         Bs[Bs_col][Bs_row] = 0;
@@ -84,7 +84,7 @@ template<int block_col_warps, int block_row_warps> static __global__ void gemm_n
   const auto cCol = (blockIdx.y * blockDim.y + threadIdx.y) * volta_n_factor;
   const auto c_offset = cRow + cCol * M;
 
-  if (cRow < M && cCol < N) {
+  if (likely(cRow < M && cCol < N)) {
     wmma::store_matrix_sync(Result + c_offset, result_frag, M, wmma::mem_col_major);
   }
 }
@@ -112,8 +112,8 @@ template<typename T, cudaMemcpyKind memcpy_kind, bool require_copy> static T *ge
                                                                                                      size_t pad_col,
                                                                                                      cudaStream_t &stream,
                                                                                                      T * padded = nullptr) {
-  if ((col == pad_col) && (row == pad_row)
-      && (memcpy_kind == cudaMemcpyHostToHost || memcpy_kind == cudaMemcpyDeviceToDevice))
+  constexpr bool same_device = (memcpy_kind == cudaMemcpyHostToHost || memcpy_kind == cudaMemcpyDeviceToDevice);
+  if ((col == pad_col) && (row == pad_row) && same_device)
     return (T *) source;
 
   if (padded == nullptr) {
@@ -142,7 +142,8 @@ template<typename T, cudaMemcpyKind memcpy_kind> static void gemm_unpad_col_majo
                                                                                   size_t pad_row,
                                                                                   size_t pad_col,
                                                                                   cudaStream_t &stream) {
-  if (source == padded && (memcpy_kind == cudaMemcpyHostToHost || memcpy_kind == cudaMemcpyDeviceToDevice)) {
+  constexpr bool same_device = (memcpy_kind == cudaMemcpyHostToHost || memcpy_kind == cudaMemcpyDeviceToDevice);
+  if (source == padded && same_device) {
     return;
   }
 
